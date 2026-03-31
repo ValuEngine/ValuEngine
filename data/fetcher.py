@@ -1,4 +1,5 @@
 import yfinance as yf
+import streamlit as st
 
 SECTOR_PEERS = {
     "Technology": ["AAPL", "MSFT", "GOOGL", "META", "NVDA"],
@@ -14,6 +15,7 @@ SECTOR_PEERS = {
     "Utilities": ["NEE", "DUK", "SO", "D", "AEP"],
 }
 
+@st.cache_data(ttl=3600)
 def get_company_data(ticker: str) -> dict:
     stock = yf.Ticker(ticker)
     info = stock.info
@@ -41,6 +43,7 @@ def get_company_data(ticker: str) -> dict:
         "profit_margins": info.get("profitMargins", 0),
     }
 
+@st.cache_data(ttl=3600)
 def get_peers_data(sector: str, exclude_ticker: str) -> list:
     peers = SECTOR_PEERS.get(sector, [])
     peers = [p for p in peers if p != exclude_ticker][:4]
