@@ -1,6 +1,9 @@
 import os
 import streamlit as st
 from anthropic import Anthropic
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def get_client():
     try:
