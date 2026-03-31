@@ -1,47 +1,139 @@
-def calculate_dcf(data: dict, growth_rate: float = 0.08, terminal_growth: float = 0.03, wacc: float = 0.10, years: int = 5) -> dict:
-    fcf = data["free_cashflow"]
-    shares = data["shares_outstanding"]
-    cash = data["cash"]
-    debt = data["total_debt"]
+import numpy as np
+import pandas as pd
 
-    if fcf <= 0 or shares <= 0:
-        return {"error": "Données insuffisantes pour le DCF"}
 
-    projected_fcf = [fcf * (1 + growth_rate) ** i for i in range(1, years + 1)]
-    discounted_fcf = [cf / (1 + wacc) ** (i + 1) for i, cf in enumerate(projected_fcf)]
-    terminal_value = projected_fcf[-1] * (1 + terminal_growth) / (wacc - terminal_growth)
-    discounted_terminal = terminal_value / (1 + wacc) ** years
-    enterprise_value = sum(discounted_fcf) + discounted_terminal
-    equity_value = enterprise_value + cash - debt
-    intrinsic_price = equity_value / shares
-    upside = ((intrinsic_price - data["current_price"]) / data["current_price"]) * 100
+def calculate_dcf(
+    fcf: float,
+    growth_rate: float,
+    wacc: float,
+    terminal_growth: float,
+    years: int,
+    shares_outstanding: float,
+    net_debt: float
+) -> dict:
+    """
+    Calcule la valeur intrinseque par action via un modele DCF.
+
+    Parametres:
+        fcf               : Free Cash Flow de base (en dollars)
+        growth_rate       : Taux de croissance annuel du FCF (ex: 0.08 pour 8%)
+        wacc              : Cout moyen pondere du capital (ex: 0.10 pour 10%)
+        terminal_growth   : Taux de croissance terminale (ex: 0.03 pour 3%)
+        years             : Horizon de projection (3, 5, 7 ou 10 ans)
+        shares_outstanding: Nombre d'actions en circulation
+        net_debt          : Dette nette (dette totale - cash)
+
+    Retourne un dict avec:
+        - enterprise_value           : Valeur d'entreprise totale
+        - equity_value               : Valeur des fonds propres
+        - intrinsic_value_per_share  : Valeur intrinseque par action
+        - terminal_value_pv          : Valeur terminale actualisee
+        - fcf_projections            : Liste des FCF projetes par annee
+        - pv_fcfs                    : Liste des FCF actualises par annee
+    """
+    if fcf <= 0:
+        fcf = max(fcf, 1)
+
+    if wacc <= terminal_growth:
+        terminal_growth = wacc - 0.01
+
+    # Projections FCF
+    fcf_projections = []
+    pv_fcfs = []
+
+    for i in range(1, years + 1):
+        projected_fcf = fcf * ((1 + growth_rate) ** i)
+        discount_factor = (1 + wacc) ** i
+        pv = projected_fcf / discount_factor
+        fcf_projections.append(projected_fcf)
+        pv_fcfs.append(pv)
+
+    # Valeur terminale (Gordon Growth Model)
+    last_fcf = fcf_projections[-1]
+    terminal_value = last_fcf * (1 + terminal_growth) / (wacc - terminal_growth)
+    terminal_value_pv = terminal_value / ((1 + wacc) ** years)
+
+    # Valeur d'entreprise = somme des FCF actualises + valeur terminale actualisee
+    enterprise_value = sum(pv_fcfs) + terminal_value_pv
+
+    # Valeur des fonds propres = EV - dette nette
+    equity_value = enterprise_value - net_debt
+
+    # Valeur par action
+    if shares_outstanding and shares_outstanding > 0:
+        intrinsic_value_per_share = equity_value / shares_outstanding
+    else:
+        intrinsic_value_per_share = 0.0
 
     return {
-        "intrinsic_price": round(intrinsic_price, 2),
-        "current_price": data["current_price"],
-        "upside": round(upside, 2),
-        "enterprise_value": round(enterprise_value / 1e9, 2),
-        "equity_value": round(equity_value / 1e9, 2),
-        "projected_fcf": [round(x / 1e9, 2) for x in projected_fcf],
-        "discounted_fcf": [round(x / 1e9, 2) for x in discounted_fcf],
-        "terminal_value": round(discounted_terminal / 1e9, 2),
-        "wacc": wacc,
-        "growth_rate": growth_rate,
-        "terminal_growth": terminal_growth,
+        "enterprise_value": enterprise_value,
+        "equity_value": equity_value,
+        "intrinsic_value_per_share": intrinsic_value_per_share,
+        "terminal_value_pv": terminal_value_pv,
+        "fcf_projections": fcf_projections,
+        "pv_fcfs": pv_fcfs,
     }
 
 
-def sensitivity_analysis(data: dict, terminal_growth: float, years: int) -> list:
-    growth_rates = [0.04, 0.06, 0.08, 0.10, 0.12]
-    waccs = [0.08, 0.09, 0.10, 0.11, 0.12]
-    table = []
-    for g in growth_rates:
-        row = {"Croissance FCF": f"{int(g*100)}%"}
-        for w in waccs:
-            result = calculate_dcf(data, g, terminal_growth, w, years)
-            if "error" not in result:
-                row[f"WACC {int(w*100)}%"] = f"${result['intrinsic_price']}"
-            else:
-                row[f"WACC {int(w*100)}%"] = "N/A"
-        table.append(row)
-    return table
+def sensitivity_analysis(
+    fcf: float,
+    base_growth: float,
+    base_wacc: float,
+    terminal_growth: float,
+    years: int,
+    shares_outstanding: float,
+    net_debt: float
+) -> pd.DataFrame:
+    """
+    Genere une matrice de sensibilite 5x5 du prix intrinseque
+    en faisant varier le taux de croissance FCF et le WACC.
+
+    Retourne un DataFrame pandas avec:
+        - Index   : taux de croissance FCF (lignes)
+        - Colonnes: WACC (colonnes)
+        - Valeurs : prix intrinseque par action ($)
+    """
+    growth_range = [
+        base_growth - 0.04,
+        base_growth - 0.02,
+        base_growth,
+        base_growth + 0.02,
+        base_growth + 0.04,
+    ]
+    wacc_range = [
+        base_wacc - 0.02,
+        base_wacc - 0.01,
+        base_wacc,
+        base_wacc + 0.01,
+        base_wacc + 0.02,
+    ]
+
+    # Garde les valeurs positives et coherentes
+    growth_range = [max(0.01, g) for g in growth_range]
+    wacc_range   = [max(0.01, w) for w in wacc_range]
+
+    results = {}
+
+    for w in wacc_range:
+        col_label = f"{w*100:.0f}%"
+        col_data = {}
+        for g in growth_range:
+            row_label = f"{g*100:.0f}%"
+            term_g = min(terminal_growth, w - 0.005)
+            try:
+                res = calculate_dcf(
+                    fcf=fcf,
+                    growth_rate=g,
+                    wacc=w,
+                    terminal_growth=term_g,
+                    years=years,
+                    shares_outstanding=shares_outstanding,
+                    net_debt=net_debt
+                )
+                col_data[row_label] = round(res["intrinsic_value_per_share"], 2)
+            except Exception:
+                col_data[row_label] = 0.0
+        results[col_label] = col_data
+
+    df = pd.DataFrame(results)
+    return df
