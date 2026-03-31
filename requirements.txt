@@ -5,5 +5,3 @@ numpy
 python-dotenv
 requests
 plotly
-yfinance
-curl_cffi
