@@ -525,7 +525,7 @@ st.markdown('<div class="sec-label">COMPARAISON SECTORIELLE - Trading Comps</div
 with st.spinner("Chargement des pairs sectoriels..."):
     peers_df = get_peers_data(ticker, sector)
 
-if not peers_df.empty:
+if peers_df is not None and isinstance(peers_df, pd.DataFrame) and not peers_df.empty:
     st.dataframe(peers_df, use_container_width=True, hide_index=True)
 else:
     st.info("Donnees des pairs non disponibles.")
