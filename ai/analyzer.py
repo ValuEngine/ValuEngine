@@ -1,9 +1,16 @@
 import os
+import streamlit as st
 from anthropic import Anthropic
 
-client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+def get_client():
+    try:
+        api_key = st.secrets["ANTHROPIC_API_KEY"]
+    except:
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+    return Anthropic(api_key=api_key)
 
 def generate_analysis(data: dict, dcf_result: dict) -> dict:
+    client = get_client()
     prompt = f"""
 Tu es un analyste financier sell-side senior. Analyse cette entreprise et fournis une analyse structurée.
 
