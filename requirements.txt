@@ -1,0 +1,6 @@
+yfinance
+streamlit
+anthropic
+pandas
+numpy
+python-dotenv
