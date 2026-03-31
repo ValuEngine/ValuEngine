@@ -20,18 +20,23 @@ with st.sidebar:
     ticker = st.text_input("Ticker", value="AAPL", placeholder="AAPL, MC.PA, LVMH.PA").upper()
     st.markdown("---")
     st.markdown("**Hypothèses DCF**")
-    growth_rate = st.slider("Croissance FCF", 0.01, 0.25, 0.08, 0.01, format="%.0f%%")
-    wacc = st.slider("WACC", 0.05, 0.20, 0.10, 0.005, format="%.1f%%")
-    terminal_growth = st.slider("Croissance terminale", 0.01, 0.05, 0.03, 0.005, format="%.1f%%")
+    growth_rate = st.slider("Croissance FCF", min_value=1, max_value=25, value=8, step=1)
+    wacc = st.slider("WACC", min_value=5, max_value=20, value=10, step=1)
+    terminal_growth = st.slider("Croissance terminale", min_value=1, max_value=5, value=3, step=1)
     years = st.selectbox("Horizon de projection", [3, 5, 7, 10], index=1)
     st.markdown("---")
+    st.write(f"Croissance FCF : **{growth_rate}%** | WACC : **{wacc}%** | Terminale : **{terminal_growth}%**")
     run = st.button("🚀 Lancer l'analyse", use_container_width=True)
+
+growth_rate_f = growth_rate / 100
+wacc_f = wacc / 100
+terminal_growth_f = terminal_growth / 100
 
 if run and ticker:
     with st.spinner(f"Chargement des données de {ticker}..."):
         try:
             data = get_company_data(ticker)
-            result = calculate_dcf(data, growth_rate, terminal_growth, wacc, years)
+            result = calculate_dcf(data, growth_rate_f, terminal_growth_f, wacc_f, years)
 
             if "error" in result:
                 st.error(result["error"])
@@ -40,7 +45,6 @@ if run and ticker:
                 st.caption(f"Secteur : {data['sector']}")
                 st.divider()
 
-                # KPIs
                 st.markdown("### 📌 Vue d'ensemble")
                 k1, k2, k3, k4, k5, k6 = st.columns(6)
                 k1.metric("Prix actuel", f"${data['current_price']:.2f}")
@@ -52,7 +56,6 @@ if run and ticker:
 
                 st.divider()
 
-                # DCF + Fondamentaux
                 col_left, col_right = st.columns(2)
                 with col_left:
                     st.markdown("### 💰 Résultats DCF")
@@ -60,7 +63,7 @@ if run and ticker:
                     st.write(f"**Valeur des fonds propres :** ${result['equity_value']}B")
                     st.write(f"**Valeur terminale actualisée :** ${result['terminal_value']}B")
                     st.markdown("---")
-                    st.write(f"WACC : {wacc*100:.1f}% | Croissance FCF : {growth_rate*100:.1f}% | Terminale : {terminal_growth*100:.1f}%")
+                    st.write(f"WACC : {wacc}% | Croissance FCF : {growth_rate}% | Terminale : {terminal_growth}%")
 
                 with col_right:
                     st.markdown("### 📊 Fondamentaux clés")
@@ -73,7 +76,6 @@ if run and ticker:
 
                 st.divider()
 
-                # FCF projetés
                 st.markdown("### 📈 Free Cash Flows Projetés")
                 df_fcf = pd.DataFrame({
                     "Année": [f"An {i+1}" for i in range(years)],
@@ -85,30 +87,26 @@ if run and ticker:
 
                 st.divider()
 
-                # Sensibilité
                 st.markdown("### 🔢 Analyse de Sensibilité — Prix Intrinsèque ($)")
                 st.caption("Prix intrinsèque selon différentes hypothèses de croissance FCF (lignes) et WACC (colonnes)")
                 df_sensitivity = pd.DataFrame(
-                    sensitivity_analysis(data, terminal_growth, years)
+                    sensitivity_analysis(data, terminal_growth_f, years)
                 ).set_index("Croissance FCF")
                 st.dataframe(df_sensitivity, use_container_width=True)
 
                 st.divider()
 
-                # Trading Comps
                 st.markdown("### 🏢 Comparaison Sectorielle — Trading Comps")
                 st.caption(f"Pairs du secteur {data['sector']}")
                 with st.spinner("Chargement des comparables..."):
                     peers = get_peers_data(data['sector'], ticker)
                     if peers:
-                        df_peers = pd.DataFrame(peers)
-                        st.dataframe(df_peers, use_container_width=True, hide_index=True)
+                        st.dataframe(pd.DataFrame(peers), use_container_width=True, hide_index=True)
                     else:
                         st.info("Pas de comparables disponibles pour ce secteur.")
 
                 st.divider()
 
-                # Analyse Claude
                 st.markdown("### 🧠 Analyse ValuEngine — Bull & Bear Case")
                 with st.spinner("Claude analyse l'entreprise..."):
                     ai_result = generate_analysis(data, result)
@@ -116,7 +114,6 @@ if run and ticker:
 
                 st.divider()
 
-                # Verdict
                 st.markdown("### 🎯 Verdict ValuEngine")
                 if result['upside'] > 20:
                     st.success(f"✅ **SOUS-ÉVALUÉ** — Potentiel de {result['upside']:.1f}%. Attractif selon ce DCF.")
