@@ -5,57 +5,96 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 def get_client():
     try:
         api_key = st.secrets["ANTHROPIC_API_KEY"]
-    except:
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
+    except Exception:
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     return Anthropic(api_key=api_key)
 
-def generate_analysis(data: dict, dcf_result: dict) -> dict:
-    client = get_client()
-    prompt = f"""
-Tu es un analyste financier sell-side senior. Analyse cette entreprise et fournis une analyse structurée.
 
-DONNÉES FINANCIÈRES :
-- Entreprise : {data['name']} ({data['sector']})
-- Prix actuel : ${data['current_price']}
-- Valeur intrinsèque DCF : ${dcf_result['intrinsic_price']}
-- Potentiel : {dcf_result['upside']}%
-- Market Cap : ${data['market_cap']/1e9:.1f}B
-- Chiffre d'affaires : ${data['revenue']/1e9:.1f}B
-- EBIT : ${data['ebit']/1e9:.1f}B
-- Résultat net : ${data['net_income']/1e9:.1f}B
-- Free Cash Flow : ${data['free_cashflow']/1e9:.1f}B
-- Dette nette : ${(data['total_debt']-data['cash'])/1e9:.1f}B
-- P/E : {data['pe_ratio']:.1f}x
-- EV/EBITDA : {data['ev_ebitda']:.1f}x
-- WACC utilisé : {dcf_result['wacc']*100:.1f}%
-- Taux de croissance FCF : {dcf_result['growth_rate']*100:.1f}%
+def get_bull_bear_analysis(data: dict, dcf_result: dict) -> dict:
+    """
+    Genere un Bull Case et un Bear Case via Claude AI.
+    Retourne un dict avec les cles 'bull_case' et 'bear_case'.
+    """
+    try:
+        client = get_client()
 
-Réponds EXACTEMENT dans ce format :
+        ticker        = data.get("ticker", "N/A")
+        name          = data.get("name", ticker)
+        sector        = data.get("sector", "N/A")
+        price         = data.get("price", 0)
+        revenue       = data.get("revenue", 0)
+        net_income    = data.get("netIncome", 0)
+        fcf           = data.get("freeCashFlow", 0)
+        rev_growth    = data.get("revenueGrowth", 0)
+        pe            = data.get("peRatio", 0)
+        ev_ebitda     = data.get("evToEbitda", 0)
+        roe           = data.get("roe", 0)
+        debt          = data.get("totalDebt", 0)
+        cash          = data.get("cashAndEquivalents", 0)
+        mkt_cap       = data.get("mktCap", 0)
+        intrinsic     = dcf_result.get("intrinsic_value_per_share", 0)
+        upside        = ((intrinsic - price) / price * 100) if price else 0
 
-THÈSE D'INVESTISSEMENT
-[2-3 phrases résumant la situation de l'entreprise et son attractivité]
+        prompt = f"""Tu es un analyste financier senior specialise dans l'analyse fondamentale des actions.
 
-BULL CASE 🟢
-- [Argument haussier 1 — précis et chiffré si possible]
-- [Argument haussier 2 — précis et chiffré si possible]
-- [Argument haussier 3 — précis et chiffré si possible]
+Analyse l'action {name} ({ticker}) du secteur {sector} et genere:
+1. Un BULL CASE (scenario haussier) de 3-4 arguments solides pourquoi l'action pourrait surperformer
+2. Un BEAR CASE (scenario baissier) de 3-4 risques concrets qui pourraient faire baisser l'action
 
-BEAR CASE 🔴
-- [Risque baissier 1 — précis et concret]
-- [Risque baissier 2 — précis et concret]
-- [Risque baissier 3 — précis et concret]
+Donnees financieres cles:
+- Prix actuel: ${price:,.2f}
+- Valeur intrinseque DCF: ${intrinsic:,.2f} ({upside:+.1f}% de potentiel)
+- Market Cap: ${mkt_cap/1e9:.1f}B
+- Chiffre d'affaires: ${revenue/1e9:.1f}B
+- Resultat net: ${net_income/1e9:.1f}B
+- Free Cash Flow: ${fcf/1e9:.1f}B
+- Croissance CA: {rev_growth*100:.1f}%
+- P/E: {pe:.1f}x
+- EV/EBITDA: {ev_ebitda:.1f}x
+- ROE: {roe*100:.1f}%
+- Dette nette: ${(debt-cash)/1e9:.1f}B
 
-CONCLUSION
-[1 phrase de verdict clair et actionnable]
-"""
+FORMAT REQUIS (reponds exactement comme ca):
+BULL_CASE:
+[Tes 3-4 arguments haussiers ici, en francais, concis et percutants]
 
-    message = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=1024,
-        messages=[{"role": "user", "content": prompt}]
-    )
+BEAR_CASE:
+[Tes 3-4 risques baissiers ici, en francais, concis et percutants]"""
 
-    return {"analysis": message.content[0].text}
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        response = message.content[0].text
+
+        bull_case = ""
+        bear_case = ""
+
+        if "BULL_CASE:" in response and "BEAR_CASE:" in response:
+            parts = response.split("BEAR_CASE:")
+            bull_part = parts[0].replace("BULL_CASE:", "").strip()
+            bear_part = parts[1].strip() if len(parts) > 1 else ""
+            bull_case = bull_part
+            bear_case = bear_part
+        else:
+            # Fallback si le format n'est pas respecte
+            half = len(response) // 2
+            bull_case = response[:half].strip()
+            bear_case = response[half:].strip()
+
+        return {
+            "bull_case": bull_case,
+            "bear_case": bear_case
+        }
+
+    except Exception as e:
+        return {
+            "bull_case": f"Erreur lors de la generation de l'analyse : {str(e)}",
+            "bear_case": f"Verifiez votre cle API Anthropic dans les secrets Streamlit."
+        }
