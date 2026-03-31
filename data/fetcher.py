@@ -4,149 +4,126 @@ import pandas as pd
 
 BASE_URL = "https://www.alphavantage.co/query"
 
-SECTOR_PEERS = {
-    "Technology": ["AAPL", "MSFT", "GOOGL", "META", "NVDA"],
-    "Financial Services": ["JPM", "BAC", "GS", "MS", "WFC"],
-    "Healthcare": ["JNJ", "UNH", "PFE", "ABBV", "MRK"],
-    "Consumer Cyclical": ["AMZN", "TSLA", "HD", "NKE", "MCD"],
-    "Energy": ["XOM", "CVX", "COP", "SLB", "EOG"],
-    "Industrials": ["CAT", "BA", "HON", "UPS", "GE"],
-    "Communication Services": ["GOOGL", "META", "NFLX", "DIS", "T"],
-    "Utilities": ["NEE", "DUK", "SO", "D", "AEP"],
-    "Real Estate": ["AMT", "PLD", "CCI", "EQIX", "SPG"],
-    "Basic Materials": ["LIN", "APD", "SHW", "FCX", "NEM"],
-    "Consumer Defensive": ["WMT", "PG", "KO", "PEP", "COST"],
-}
+# 3 keys → 75 req/jour, rotation automatique
+AV_KEYS = [
+    st.secrets.get("AV_KEY_1", "REDACTED_AV1"),
+    st.secrets.get("AV_KEY_2", "REDACTED_AV2"),
+    st.secrets.get("AV_KEY_3", "REDACTED_AV3"),
+]
 
-
-def _get_key():
-    try:
-        return st.secrets["ALPHA_VANTAGE_KEY"].strip()
-    except Exception:
-        import os as _os
-        return _os.environ.get("ALPHA_VANTAGE_KEY", "").strip()
-
-
-def _fetch(function, symbol, key):
-    r = requests.get(BASE_URL, params={
-        "function": function, "symbol": symbol, "apikey": key
-    }, timeout=15)
-    r.raise_for_status()
-    data = r.json()
-    if "Note" in data:
-        raise Exception("Limite Alpha Vantage atteinte (25 req/jour). Reessayez demain.")
-    if "Information" in data:
-        raise Exception("Limite Alpha Vantage depassee. Reessayez dans quelques minutes.")
-    return data
+def _fetch(function, symbol):
+    """Essaie chaque clé jusqu'à en trouver une qui fonctionne."""
+    last_error = None
+    for key in AV_KEYS:
+        try:
+            r = requests.get(
+                BASE_URL,
+                params={"function": function, "symbol": symbol, "apikey": key},
+                timeout=15
+            )
+            data = r.json()
+            # Rate limit détecté → essayer la clé suivante
+            if "Note" in data or "Information" in data:
+                last_error = "rate_limit"
+                continue
+            return data
+        except Exception as e:
+            last_error = str(e)
+            continue
+    if last_error == "rate_limit":
+        raise Exception("Toutes les clés Alpha Vantage sont épuisées aujourd'hui (75 req/jour max). Revenez demain.")
+    raise Exception(f"Erreur réseau : {last_error}")
 
 
 def _f(d, *keys, default=0.0):
+    """Extraction sécurisée d'un float depuis un dict."""
     for k in keys:
         v = d.get(k)
-        if v and str(v).strip() not in ("None", "N/A", "-", ""):
+        if v and v not in ("None", "N/A", "-", ""):
             try:
-                return float(str(v).replace(",", "").strip())
-            except Exception:
+                return float(str(v).replace(",", "").replace("%", ""))
+            except (ValueError, TypeError):
                 continue
     return default
 
 
 @st.cache_data(ttl=86400)
-def get_company_data(ticker: str) -> dict:
-    key = _get_key()
-    if not key:
-        st.error("ALPHA_VANTAGE_KEY manquante dans les secrets Streamlit.")
-        return {}
+def get_company_data(ticker: str) -> dict | None:
+    ticker = ticker.upper().strip()
     try:
-        # CALL 1 — OVERVIEW (donnees fondamentales)
-        ov = _fetch("OVERVIEW", ticker, key)
-        if not ov.get("Symbol"):
-            st.error(f"Ticker '{ticker}' introuvable sur Alpha Vantage.")
-            return {}
+        # CALL 1 : OVERVIEW (fondamentaux)
+        ov = _fetch("OVERVIEW", ticker)
+        if not ov or "Symbol" not in ov:
+            return None
 
-        # CALL 2 — GLOBAL_QUOTE (prix en temps reel)
-        gq = _fetch("GLOBAL_QUOTE", ticker, key)
-        price = _f(gq.get("Global Quote", {}), "05. price")
+        # CALL 2 : GLOBAL_QUOTE (prix actuel)
+        gq = _fetch("GLOBAL_QUOTE", ticker)
+        quote = gq.get("Global Quote", {})
 
-        # Donnees directes depuis OVERVIEW
-        revenue       = _f(ov, "RevenueTTM")
-        ebitda        = _f(ov, "EBITDA")
-        profit_margin = _f(ov, "ProfitMargin")
-        shares        = _f(ov, "SharesOutstanding")
-        mkt_cap       = _f(ov, "MarketCapitalization")
-        ev_ebitda     = _f(ov, "EVToEBITDA")
-        rev_growth    = _f(ov, "QuarterlyRevenueGrowthYOY")
+        # --- Données brutes ---
+        price       = _f(quote, "05. price")
+        revenue     = _f(ov, "RevenueTTM")
+        ebitda      = _f(ov, "EBITDA")
+        profit_m    = _f(ov, "ProfitMargin")
+        shares      = _f(ov, "SharesOutstanding")
+        mktcap      = _f(ov, "MarketCapitalization")
+        ev_ebitda   = _f(ov, "EVToEBITDA")
+        pe          = _f(ov, "TrailingPE")
+        pbv         = _f(ov, "PriceToBookRatio")
+        roe         = _f(ov, "ReturnOnEquityTTM")
+        beta        = _f(ov, "Beta")
+        rev_growth  = _f(ov, "QuarterlyRevenueGrowthYOY")
 
-        # Calculs derives
-        net_income = revenue * profit_margin if revenue and profit_margin else 0.0
-        fcf = net_income  # FCF approxime par le resultat net (conservateur)
-
-        # Dette nette : derive de EV et Market Cap
-        # EV = EBITDA x EV/EBITDA => Dette nette = EV - Market Cap
-        net_debt = 0.0
-        if ebitda and ev_ebitda and mkt_cap:
-            ev = ebitda * ev_ebitda
-            net_debt = ev - mkt_cap
-
-        total_debt = max(0.0, net_debt)
-        cash       = max(0.0, -net_debt)
+        # --- Dérivés ---
+        net_income  = revenue * profit_m if profit_m else 0.0
+        fcf         = net_income  # approximation FCF ≈ Net Income
+        net_debt    = max((ebitda * ev_ebitda) - mktcap, 0.0) if ev_ebitda and ebitda else 0.0
 
         return {
-            "ticker":             ticker,
-            "name":               ov.get("Name", ticker),
-            "sector":             ov.get("Sector", "Unknown"),
-            "price":              price,
-            "mktCap":             mkt_cap,
-            "sharesOutstanding":  shares,
-            "beta":               _f(ov, "Beta", default=1.0),
-            "revenue":            revenue,
-            "netIncome":          net_income,
-            "ebitda":             ebitda,
-            "eps":                _f(ov, "EPS"),
-            "freeCashFlow":       fcf,
-            "fcf_history":        [],
-            "revenueGrowth":      rev_growth,
-            "totalDebt":          total_debt,
-            "cashAndEquivalents": cash,
-            "peRatio":            _f(ov, "TrailingPE"),
-            "pbRatio":            _f(ov, "PriceToBookRatio"),
-            "evToEbitda":         ev_ebitda,
-            "roe":                _f(ov, "ReturnOnEquityTTM"),
-            "debtToEquity":       _f(ov, "BookValue", default=0.0),
-            "description":        ov.get("Description", ""),
+            "ticker":           ticker,
+            "name":             ov.get("Name", ticker),
+            "sector":           ov.get("Sector", "N/A"),
+            "description":      ov.get("Description", ""),
+            "price":            price,
+            "revenue":          revenue,
+            "ebitda":           ebitda,
+            "fcf":              fcf,
+            "net_income":       net_income,
+            "profit_margin":    profit_m,
+            "shares_outstanding": shares,
+            "market_cap":       mktcap,
+            "net_debt":         net_debt,
+            "ev_ebitda":        ev_ebitda,
+            "pe_ratio":         pe,
+            "pb_ratio":         pbv,
+            "roe":              roe,
+            "beta":             beta,
+            "revenue_growth":   rev_growth,
+            "currency":         ov.get("Currency", "USD"),
+            "exchange":         ov.get("Exchange", ""),
         }
+
     except Exception as e:
-        st.error(f"Erreur Alpha Vantage : {e}")
-        return {}
+        raise Exception(f"Erreur lors de la récupération des données : {e}")
 
 
 @st.cache_data(ttl=86400)
-def get_peers_data(ticker: str, sector: str) -> pd.DataFrame:
-    key = _get_key()
-    peers = SECTOR_PEERS.get(sector, [])
-    all_tickers = list(dict.fromkeys([ticker] + peers))[:5]
+def get_peers_data(tickers: list[str]) -> pd.DataFrame | None:
+    """Récupère les données de comparables (peers)."""
     rows = []
-
-    for t in all_tickers:
+    for t in tickers[:4]:  # max 4 peers pour limiter les appels API
         try:
-            ov = _fetch("OVERVIEW", t, key)
-            if not ov.get("Symbol"):
-                continue
-            mkt_cap = _f(ov, "MarketCapitalization")
-            shares  = _f(ov, "SharesOutstanding")
-            price   = (mkt_cap / shares) if shares > 0 else 0.0
-            rows.append({
-                "Ticker":       t,
-                "Entreprise":   ov.get("Name", t),
-                "Prix ($)":     round(price, 2),
-                "Mkt Cap ($B)": round(mkt_cap / 1e9, 1),
-                "P/E":          round(_f(ov, "TrailingPE"), 1),
-                "EV/EBITDA":    round(_f(ov, "EVToEBITDA"), 1),
-                "P/B":          round(_f(ov, "PriceToBookRatio"), 1),
-            })
+            d = get_company_data(t)
+            if d:
+                rows.append({
+                    "Ticker":    d["ticker"],
+                    "Nom":       d["name"],
+                    "Prix":      d["price"],
+                    "P/E":       d["pe_ratio"],
+                    "EV/EBITDA": d["ev_ebitda"],
+                    "Marge (%)": round(d["profit_margin"] * 100, 1) if d["profit_margin"] else 0,
+                    "Beta":      d["beta"],
+                })
         except Exception:
             continue
-
-    if not rows:
-        return pd.DataFrame()
-    return pd.DataFrame(rows).sort_values("Mkt Cap ($B)", ascending=False).reset_index(drop=True)
+    return pd.DataFrame(rows) if rows else None
