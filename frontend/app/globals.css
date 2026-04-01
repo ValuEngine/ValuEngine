@@ -6,7 +6,42 @@
 
 :root {
   --font-inter: 'Inter', system-ui, sans-serif;
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-card: #1c2128;
+  --border: #30363d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --accent-gold: #C9A84C;
+  --accent-blue: #58a6ff;
+  --success: #3fb950;
+  --danger: #f85149;
 }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(201,168,76,0); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-fade-in-up { animation: fadeInUp 0.4s ease forwards; }
+.animate-pulse-gold  { animation: pulse-gold 2s infinite; }
+.skeleton {
+  background: linear-gradient(90deg, #1c2128 25%, #2d3748 50%, #1c2128 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+.animate-slide-in-right { animation: slideInRight 0.3s ease forwards; }
 
 * {
   box-sizing: border-box;

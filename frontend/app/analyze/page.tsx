@@ -383,7 +383,7 @@ function AnalyzePage() {
               <button
                 onClick={() => runAnalysis(inputValue)}
                 disabled={loading || !inputValue}
-                className="bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold text-sm px-4 sm:px-5 py-2.5 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                className="bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold text-sm px-4 sm:px-5 py-2.5 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] hover:scale-[1.02] transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 {loading ? <Loader2 size={16} className="animate-spin" /> : "Analyser"}
               </button>
@@ -520,7 +520,7 @@ function AnalyzePage() {
 
               {/* ── TAB 1: VUE D'ENSEMBLE ─────────────────────────────── */}
               {activeTab === "overview" && (
-                <div>
+                <div className="animate-fade-in-up">
                   {/* Verdict hero card */}
                   <div
                     className="rounded-2xl p-6 sm:p-8 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border-l-[5px]"
@@ -607,7 +607,7 @@ function AnalyzePage() {
 
               {/* ── TAB 2: ANALYSE IA ─────────────────────────────────── */}
               {activeTab === "ai" && (
-                <div>
+                <div className="animate-fade-in-up">
                   {/* Bull & Bear */}
                   <Section title="Bull & Bear Case">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
@@ -637,7 +637,7 @@ function AnalyzePage() {
 
               {/* ── TAB 3: VALORISATION ───────────────────────────────── */}
               {activeTab === "valuation" && (
-                <div>
+                <div className="animate-fade-in-up">
                   <Section title="Résultats DCF & Projections FCF">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                       <div className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl p-6">
@@ -713,7 +713,7 @@ function AnalyzePage() {
 
               {/* ── TAB 4: COMPARABLES ────────────────────────────────── */}
               {activeTab === "comps" && (
-                <div>
+                <div className="animate-fade-in-up">
                   <Section title="Comparaison sectorielle — Trading Comps">
                     <TradingComps ticker={data.company.ticker} sector={data.company.sector} />
                   </Section>
