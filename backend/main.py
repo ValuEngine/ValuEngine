@@ -27,13 +27,15 @@ app = FastAPI(
 )
 
 # CORS — autorise le frontend Next.js (localhost:3000 en dev, domaine prod)
+_frontend_url = os.environ.get("FRONTEND_URL", "")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
         "https://valuengine.io",
-        os.environ.get("FRONTEND_URL", ""),
+        _frontend_url,
     ],
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
