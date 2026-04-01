@@ -21,11 +21,18 @@ interface WatchlistEntry {
   price: number;
 }
 
-const MARKET_DATA = [
-  { label: "S&P 500",  value: "5,243.18", change: "+1.2%",  up: true },
-  { label: "NASDAQ",   value: "16,432.73", change: "+0.8%", up: true },
-  { label: "CAC 40",   value: "8,021.45",  change: "-0.3%", up: false },
-  { label: "DAX",      value: "18,384.62", change: "+0.5%", up: true },
+interface MarketItem {
+  label: string;
+  value: string;
+  change: string;
+  up: boolean;
+}
+
+const MARKET_FALLBACK: MarketItem[] = [
+  { label: "S&P 500",  value: "5,243.18",  change: "+1.2%",  up: true },
+  { label: "NASDAQ",   value: "16,432.73", change: "+0.8%",  up: true },
+  { label: "CAC 40",   value: "8,021.45",  change: "-0.3%",  up: false },
+  { label: "DAX",      value: "18,384.62", change: "+0.5%",  up: true },
 ];
 
 const POPULAR_TICKERS = ["AAPL", "MSFT", "NVDA", "TSLA", "GOOGL", "AMZN"];
@@ -45,6 +52,8 @@ export default function DashboardPage() {
   const [recent, setRecent] = useState<RecentEntry[]>([]);
   const [watchlistData, setWatchlistData] = useState<WatchlistEntry[]>([]);
   const [watchlistLoading, setWatchlistLoading] = useState(false);
+  const [marketData, setMarketData] = useState<MarketItem[]>([]);
+  const [marketLoading, setMarketLoading] = useState(true);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -89,6 +98,18 @@ export default function DashboardPage() {
       setWatchlistLoading(false);
     }
     fetchWatchlist();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+    fetch(`${API_BASE}/api/market-overview`, { signal: controller.signal })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then((data: MarketItem[]) => setMarketData(data))
+      .catch(() => setMarketData(MARKET_FALLBACK))
+      .finally(() => { clearTimeout(timeout); setMarketLoading(false); });
+    return () => { clearTimeout(timeout); controller.abort(); };
   }, []);
 
   const handleSearch = () => {
@@ -185,12 +206,23 @@ export default function DashboardPage() {
         <div className="mb-8 anim-4">
           <div className="flex items-center gap-2 mb-4">
             <p className="text-xs font-bold uppercase tracking-[2px] text-zinc-500">Marchés aujourd&apos;hui</p>
-            <span className="text-[10px] border border-zinc-800 text-zinc-600 px-2 py-0.5 rounded-full">
-              Données indicatives
-            </span>
+            {marketLoading ? (
+              <span className="text-[10px] border border-zinc-800 text-zinc-600 px-2 py-0.5 rounded-full">
+                Chargement...
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[10px] border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live
+              </span>
+            )}
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {MARKET_DATA.map((m) => (
+            {marketLoading ? (
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="skeleton h-20 rounded-xl" />
+              ))
+            ) : (marketData.length > 0 ? marketData : MARKET_FALLBACK).map((m) => (
               <div
                 key={m.label}
                 className="rounded-xl p-4 border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm hover:border-[#3f3f46] transition-colors duration-200"

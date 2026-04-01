@@ -4,19 +4,29 @@ Endpoints pour l'analyse financière complète d'une action.
 """
 
 import os
+import time
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
+import httpx
 import stripe
 import yfinance as yf
 from models import AnalyzeRequest, AnalyzeResponse, CompanyData, DCFResult, SensitivityMatrix, BullBearAnalysis
-from services.market_data import get_company_data, get_peers_data
 from services.dcf import calculate_dcf, sensitivity_analysis
 from services.ai_analyst import get_bull_bear_analysis, get_swot_analysis, get_pestle_analysis
 
 load_dotenv(Path(__file__).parent / ".env", override=True)
+
+FMP_KEY = os.environ.get("FMP_API_KEY", "")
+USE_FMP = bool(FMP_KEY and FMP_KEY != "REMPLACE_PAR_TA_CLÉ")
+if USE_FMP:
+    from services.fmp_data import get_company_data as _get_data, get_peers_data
+    print("[DataSource] Financial Modeling Prep ✓")
+else:
+    from services.market_data import get_company_data as _get_data, get_peers_data
+    print("[DataSource] yfinance (fallback)")
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
 
@@ -47,6 +57,62 @@ def health():
     return {"status": "ok", "service": "ValuEngine API v2"}
 
 
+# ── Market overview cache ────────────────────────────────────────────────────
+_MARKET_CACHE: dict = {"data": None, "ts": 0.0}
+_MARKET_TTL = 300  # 5 minutes
+
+_INDICES = [
+    {"label": "S&P 500", "symbol": "%5EGSPC"},
+    {"label": "NASDAQ",  "symbol": "%5EIXIC"},
+    {"label": "CAC 40",  "symbol": "%5EFCHI"},
+    {"label": "DAX",     "symbol": "%5EGDAXI"},
+]
+
+_MARKET_FALLBACK = [
+    {"label": "S&P 500",  "value": "5,243.18",  "change": "+1.2%",  "up": True},
+    {"label": "NASDAQ",   "value": "16,432.73", "change": "+0.8%",  "up": True},
+    {"label": "CAC 40",   "value": "8,021.45",  "change": "-0.3%",  "up": False},
+    {"label": "DAX",      "value": "18,384.62", "change": "+0.5%",  "up": True},
+]
+
+
+@app.get("/api/market-overview")
+def market_overview():
+    global _MARKET_CACHE
+    now = time.time()
+
+    if _MARKET_CACHE["data"] and (now - _MARKET_CACHE["ts"]) < _MARKET_TTL:
+        return _MARKET_CACHE["data"]
+
+    if not USE_FMP:
+        return _MARKET_FALLBACK
+
+    try:
+        results = []
+        for idx in _INDICES:
+            url = f"https://financialmodelingprep.com/api/v3/quote/{idx['symbol']}?apikey={FMP_KEY}"
+            resp = httpx.get(url, timeout=5)
+            resp.raise_for_status()
+            data = resp.json()
+            if not data:
+                return _MARKET_FALLBACK
+            q = data[0]
+            price = float(q.get("price") or 0)
+            change_pct = float(q.get("changesPercentage") or 0)
+            value = f"{price:,.2f}"
+            sign = "+" if change_pct >= 0 else ""
+            results.append({
+                "label":  idx["label"],
+                "value":  value,
+                "change": f"{sign}{change_pct:.1f}%",
+                "up":     change_pct >= 0,
+            })
+        _MARKET_CACHE = {"data": results, "ts": now}
+        return results
+    except Exception:
+        return _MARKET_FALLBACK
+
+
 @app.post("/api/analyze", response_model=AnalyzeResponse)
 def analyze(req: AnalyzeRequest):
     """
@@ -60,7 +126,7 @@ def analyze(req: AnalyzeRequest):
 
     # ── 1. Données de marché ────────────────────────────────────────────
     try:
-        raw = get_company_data(ticker)
+        raw = _get_data(ticker)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
@@ -180,7 +246,7 @@ def search(ticker: str):
     Utile pour l'autocomplete de la searchbar.
     """
     try:
-        raw = get_company_data(ticker.upper())
+        raw = _get_data(ticker.upper())
         return {
             "ticker": raw["ticker"],
             "name":   raw["name"],
@@ -196,7 +262,7 @@ def search(ticker: str):
 @app.get("/api/ai/swot/{ticker}")
 def swot_endpoint(ticker: str):
     try:
-        raw = get_company_data(ticker.upper())
+        raw = _get_data(ticker.upper())
         result = get_swot_analysis(raw)
         return result
     except Exception as e:
@@ -206,7 +272,7 @@ def swot_endpoint(ticker: str):
 @app.get("/api/ai/pestle/{ticker}")
 def pestle_endpoint(ticker: str):
     try:
-        raw = get_company_data(ticker.upper())
+        raw = _get_data(ticker.upper())
         result = get_pestle_analysis(raw)
         return result
     except Exception as e:
