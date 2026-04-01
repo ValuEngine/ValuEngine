@@ -1,0 +1,18 @@
+name: Price Alerts Check
+
+on:
+  schedule:
+    # Every 20 minutes
+    - cron: "*/20 * * * *"
+  workflow_dispatch: # allow manual trigger from GitHub UI
+
+jobs:
+  check-alerts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger alert check
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "${{ secrets.BACKEND_URL }}/api/alerts/check" \
+            -H "Content-Type: application/json" \
+            --max-time 30
