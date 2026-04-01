@@ -64,14 +64,22 @@ create index if not exists portfolio_user_id_idx on public.portfolio(user_id);
 create table if not exists public.alerts (
   id              uuid primary key default gen_random_uuid(),
   user_id         text not null references public.users(id) on delete cascade,
+  email           text,
   ticker          text not null,
+  ticker_name     text,
   target_price    numeric not null,
   condition       text not null check (condition in ('above', 'below')),
   active          boolean default true,
+  is_triggered    boolean default false,
   created_at      timestamptz default now()
 );
 create index if not exists alerts_user_id_idx on public.alerts(user_id);
 create index if not exists alerts_active_idx on public.alerts(active);
+
+-- 5b. ALERTS — colonnes email système (migration si table existait déjà)
+-- ALTER TABLE public.alerts ADD COLUMN IF NOT EXISTS email TEXT;
+-- ALTER TABLE public.alerts ADD COLUMN IF NOT EXISTS ticker_name TEXT;
+-- ALTER TABLE public.alerts ADD COLUMN IF NOT EXISTS is_triggered BOOLEAN DEFAULT FALSE;
 
 -- ═══════════════════════════════════════════════════════════════
 -- RLS — Row Level Security
