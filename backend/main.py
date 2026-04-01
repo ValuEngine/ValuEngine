@@ -14,7 +14,7 @@ import yfinance as yf
 from models import AnalyzeRequest, AnalyzeResponse, CompanyData, DCFResult, SensitivityMatrix, BullBearAnalysis
 from services.market_data import get_company_data, get_peers_data
 from services.dcf import calculate_dcf, sensitivity_analysis
-from services.ai_analyst import get_bull_bear_analysis
+from services.ai_analyst import get_bull_bear_analysis, get_swot_analysis, get_pestle_analysis
 
 load_dotenv(Path(__file__).parent / ".env", override=True)
 
@@ -189,6 +189,26 @@ def search(ticker: str):
         }
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai/swot/{ticker}")
+def swot_endpoint(ticker: str):
+    try:
+        raw = get_company_data(ticker.upper())
+        result = get_swot_analysis(raw)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ai/pestle/{ticker}")
+def pestle_endpoint(ticker: str):
+    try:
+        raw = get_company_data(ticker.upper())
+        result = get_pestle_analysis(raw)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

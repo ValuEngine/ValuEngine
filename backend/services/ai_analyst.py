@@ -97,3 +97,66 @@ def get_bull_bear_analysis(company: dict, dcf: dict) -> dict:
             "bull_case": f"Erreur lors de la génération de l'analyse : {e}",
             "bear_case": "Vérifiez votre clé API Anthropic.",
         }
+
+
+def get_swot_analysis(company_data: dict) -> dict:
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    client = Anthropic(api_key=api_key)
+
+    prompt = f"""Tu es un analyste financier expert. Génère une analyse SWOT concise pour {company_data.get('name', '')} ({company_data.get('ticker', '')}).
+
+Données clés:
+- Secteur: {company_data.get('sector', 'N/A')}
+- CA: ${company_data.get('revenue', 0)/1e9:.1f}B
+- Marge nette: {company_data.get('profit_margin', 0)*100:.1f}%
+- Croissance CA: {company_data.get('revenue_growth', 0)*100:.1f}%
+- FCF: ${company_data.get('free_cash_flow', 0)/1e9:.1f}B
+- P/E: {company_data.get('pe_ratio', 'N/A')}
+- Beta: {company_data.get('beta', 'N/A')}
+
+Réponds UNIQUEMENT en JSON valide avec ce format exact:
+{{"strengths": ["point1", "point2", "point3"], "weaknesses": ["point1", "point2", "point3"], "opportunities": ["point1", "point2", "point3"], "threats": ["point1", "point2", "point3"]}}
+
+Chaque point: 1 phrase concise en français, ancrée dans les données financières."""
+
+    message = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=600,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    import json, re
+    text = message.content[0].text.strip()
+    # Strip markdown code fences if present
+    text = re.sub(r"^```(?:json)?\s*", "", text)
+    text = re.sub(r"\s*```$", "", text)
+    return json.loads(text)
+
+
+def get_pestle_analysis(company_data: dict) -> dict:
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    client = Anthropic(api_key=api_key)
+
+    prompt = f"""Tu es un analyste financier expert. Génère une analyse PESTLE concise pour {company_data.get('name', '')} ({company_data.get('ticker', '')}).
+
+Données clés:
+- Secteur: {company_data.get('sector', 'N/A')}, Industrie: {company_data.get('industry', 'N/A')}
+- Market Cap: ${company_data.get('market_cap', 0)/1e9:.0f}B
+- Pays: USA (coté NYSE/NASDAQ)
+- CA: ${company_data.get('revenue', 0)/1e9:.1f}B
+
+Réponds UNIQUEMENT en JSON valide avec ce format exact:
+{{"political": "2-3 phrases", "economic": "2-3 phrases", "social": "2-3 phrases", "technological": "2-3 phrases", "legal": "2-3 phrases", "environmental": "2-3 phrases"}}
+
+En français, factuel, ancré dans le secteur de l'entreprise."""
+
+    message = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=800,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    import json, re
+    text = message.content[0].text.strip()
+    # Strip markdown code fences if present
+    text = re.sub(r"^```(?:json)?\s*", "", text)
+    text = re.sub(r"\s*```$", "", text)
+    return json.loads(text)

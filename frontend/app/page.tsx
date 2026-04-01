@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Star, ArrowRight } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
 import { NavAuth } from "@/components/NavAuth";
 import { searchTicker, type SearchResult } from "@/lib/api";
 
@@ -124,6 +125,7 @@ function useTypewriter(words: string[], speed = 120, pause = 1600) {
 /* ── Main component ──────────────────────────────────────────────────── */
 export default function LandingPage() {
   const router = useRouter();
+  const { isSignedIn } = useUser();
   const [ticker, setTicker] = useState("");
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -195,10 +197,10 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.push("/analyze")}
+              onClick={() => router.push(isSignedIn ? "/dashboard" : "/analyze")}
               className="text-sm text-[#7a8fa3] hover:text-white transition-colors px-4 py-2"
             >
-              Dashboard
+              {isSignedIn ? "Dashboard" : "Analyser"}
             </button>
             <NavAuth />
           </div>
@@ -376,10 +378,10 @@ export default function LandingPage() {
                 ))}
               </ul>
               <button
-                onClick={() => router.push("/analyze")}
+                onClick={() => router.push(isSignedIn ? "/dashboard" : "/sign-up")}
                 className="w-full border border-[rgba(201,168,76,0.3)] text-[#C9A84C] font-bold py-3 rounded-xl hover:bg-[rgba(201,168,76,0.08)] transition-all"
               >
-                Commencer
+                {isSignedIn ? "Aller au Dashboard" : "Commencer gratuitement"}
               </button>
             </div>
             {/* Pro */}
