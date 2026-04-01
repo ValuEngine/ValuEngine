@@ -29,10 +29,10 @@ interface MarketItem {
 }
 
 const MARKET_FALLBACK: MarketItem[] = [
-  { label: "S&P 500",  value: "5,243.18",  change: "+1.2%",  up: true },
-  { label: "NASDAQ",   value: "16,432.73", change: "+0.8%",  up: true },
-  { label: "CAC 40",   value: "8,021.45",  change: "-0.3%",  up: false },
-  { label: "DAX",      value: "18,384.62", change: "+0.5%",  up: true },
+  { label: "S&P 500", value: "—", change: "—", up: true },
+  { label: "NASDAQ",  value: "—", change: "—", up: true },
+  { label: "CAC 40",  value: "—", change: "—", up: true },
+  { label: "DAX",     value: "—", change: "—", up: true },
 ];
 
 const POPULAR_TICKERS = ["AAPL", "MSFT", "NVDA", "TSLA", "GOOGL", "AMZN"];

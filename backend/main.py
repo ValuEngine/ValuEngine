@@ -93,17 +93,17 @@ _MARKET_CACHE: dict = {"data": None, "ts": 0.0}
 _MARKET_TTL = 300  # 5 minutes
 
 _INDICES = [
-    {"label": "S&P 500", "symbol": "%5EGSPC"},
-    {"label": "NASDAQ",  "symbol": "%5EIXIC"},
-    {"label": "CAC 40",  "symbol": "%5EFCHI"},
-    {"label": "DAX",     "symbol": "%5EGDAXI"},
+    {"label": "S&P 500", "yf": "^GSPC"},
+    {"label": "NASDAQ",  "yf": "^IXIC"},
+    {"label": "CAC 40",  "yf": "^FCHI"},
+    {"label": "DAX",     "yf": "^GDAXI"},
 ]
 
 _MARKET_FALLBACK = [
-    {"label": "S&P 500",  "value": "5,243.18",  "change": "+1.2%",  "up": True},
-    {"label": "NASDAQ",   "value": "16,432.73", "change": "+0.8%",  "up": True},
-    {"label": "CAC 40",   "value": "8,021.45",  "change": "-0.3%",  "up": False},
-    {"label": "DAX",      "value": "18,384.62", "change": "+0.5%",  "up": True},
+    {"label": "S&P 500",  "value": "—", "change": "—", "up": True},
+    {"label": "NASDAQ",   "value": "—", "change": "—", "up": True},
+    {"label": "CAC 40",   "value": "—", "change": "—", "up": True},
+    {"label": "DAX",      "value": "—", "change": "—", "up": True},
 ]
 
 
@@ -115,32 +115,25 @@ def market_overview():
     if _MARKET_CACHE["data"] and (now - _MARKET_CACHE["ts"]) < _MARKET_TTL:
         return _MARKET_CACHE["data"]
 
-    if not USE_FMP:
-        return _MARKET_FALLBACK
-
     try:
         results = []
         for idx in _INDICES:
-            url = f"https://financialmodelingprep.com/api/v3/quote/{idx['symbol']}?apikey={FMP_KEY}"
-            resp = httpx.get(url, timeout=5)
-            resp.raise_for_status()
-            data = resp.json()
-            if not data:
-                return _MARKET_FALLBACK
-            q = data[0]
-            price = float(q.get("price") or 0)
-            change_pct = float(q.get("changesPercentage") or 0)
-            value = f"{price:,.2f}"
+            fi = yf.Ticker(idx["yf"]).fast_info
+            price = float(getattr(fi, "last_price", 0) or 0)
+            prev  = float(getattr(fi, "previous_close", 0) or
+                          getattr(fi, "regular_market_previous_close", 0) or 0)
+            change_pct = ((price - prev) / prev * 100) if prev else 0.0
             sign = "+" if change_pct >= 0 else ""
             results.append({
                 "label":  idx["label"],
-                "value":  value,
-                "change": f"{sign}{change_pct:.1f}%",
+                "value":  f"{price:,.2f}",
+                "change": f"{sign}{change_pct:.2f}%",
                 "up":     change_pct >= 0,
             })
         _MARKET_CACHE = {"data": results, "ts": now}
         return results
-    except Exception:
+    except Exception as e:
+        print(f"[market-overview] yfinance error: {e}")
         return _MARKET_FALLBACK
 
 
