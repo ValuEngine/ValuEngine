@@ -30,6 +30,12 @@ create table if not exists public.analyses (
 create index if not exists analyses_user_id_idx on public.analyses(user_id);
 create index if not exists analyses_created_at_idx on public.analyses(created_at desc);
 
+-- 2b. ANALYSES — colonnes Track Record (migration)
+-- ALTER TABLE public.analyses ADD COLUMN IF NOT EXISTS price_at_analysis FLOAT;
+-- ALTER TABLE public.analyses ADD COLUMN IF NOT EXISTS price_now FLOAT;
+-- ALTER TABLE public.analyses ADD COLUMN IF NOT EXISTS performance_pct FLOAT;
+-- ALTER TABLE public.analyses ADD COLUMN IF NOT EXISTS ticker_name TEXT;
+
 -- 3. WATCHLIST
 create table if not exists public.watchlist (
   id              uuid primary key default gen_random_uuid(),

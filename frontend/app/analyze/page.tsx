@@ -348,8 +348,10 @@ function AnalyzePage() {
       body: JSON.stringify({
         ticker: result.company.ticker,
         company_name: result.company.name,
+        ticker_name: result.company.name,
         verdict: result.verdict,
         price: result.company.price,
+        price_at_analysis: result.company.price,
         intrinsic_value: result.dcf.intrinsic_value,
         upside_pct: result.dcf.upside_pct,
       }),

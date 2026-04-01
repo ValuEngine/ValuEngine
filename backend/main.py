@@ -259,6 +259,41 @@ def search(ticker: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/quotes")
+def batch_quotes(tickers: str):
+    """Prix live pour plusieurs tickers (séparés par virgule). Ex: ?tickers=AAPL,MSFT,NVDA"""
+    symbols = [t.strip().upper() for t in tickers.split(",") if t.strip()][:30]
+    if not symbols:
+        return []
+    if USE_FMP:
+        try:
+            joined = ",".join(symbols)
+            url = f"https://financialmodelingprep.com/api/v3/quote/{joined}?apikey={FMP_KEY}"
+            resp = httpx.get(url, timeout=8)
+            resp.raise_for_status()
+            return [
+                {
+                    "ticker":     q.get("symbol", ""),
+                    "name":       q.get("name", ""),
+                    "price":      round(float(q.get("price") or 0), 2),
+                    "change_pct": round(float(q.get("changesPercentage") or 0), 2),
+                }
+                for q in resp.json()
+            ]
+        except Exception:
+            return []
+    else:
+        results = []
+        for sym in symbols:
+            try:
+                fi = yf.Ticker(sym).fast_info
+                price = float(getattr(fi, "last_price", 0) or 0)
+                results.append({"ticker": sym, "name": sym, "price": round(price, 2), "change_pct": 0.0})
+            except Exception:
+                pass
+        return results
+
+
 @app.get("/api/quote/{ticker}")
 def quote(ticker: str):
     """Prix en temps réel + variation journalière d'un ticker (léger, sans analyse)."""
