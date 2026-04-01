@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, ArrowDown } from "lucide-react";
+import Link from "next/link";
+import { ChevronRight, ArrowDown, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { NavAuth } from "@/components/NavAuth";
 import AnimatedBackground from "@/components/AnimatedBackground";
@@ -87,6 +88,15 @@ const HOW_IT_WORKS = [
   { n: "03", title: "Décide", desc: "Reçois une estimation Sous-évalué / Juste valeur / Surévalué et des arguments Bull & Bear." },
 ];
 
+interface RecentEntry {
+  id: string;
+  ticker: string;
+  name: string;
+  verdict: string;
+  performance_pct: number | null;
+  created_at: string;
+}
+
 /* ── Typewriter hook ─────────────────────────────────────────────────── */
 function useTypewriter(words: string[], speed = 120, pause = 1600) {
   const [display, setDisplay] = useState("");
@@ -163,6 +173,14 @@ export default function LandingPage() {
 
   const isValid = !!searchResult;
   const hasError = !!searchError && ticker.length > 0;
+
+  const [recentAnalyses, setRecentAnalyses] = useState<RecentEntry[]>([]);
+  useEffect(() => {
+    fetch("/api/track-record")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.entries) setRecentAnalyses(d.entries.slice(0, 5)); })
+      .catch(() => {});
+  }, []);
 
   return (
     <main className="min-h-screen bg-[#09090b] text-white overflow-x-hidden relative">
@@ -433,6 +451,70 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── ANALYSES RÉCENTES ────────────────────────────────────────── */}
+      {recentAnalyses.length > 0 && (
+        <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Analyses récentes</p>
+              <h2 className="text-3xl font-bold tracking-tight">Ce que l&apos;IA a analysé</h2>
+              <p className="text-zinc-500 text-sm mt-2">Verdicts et performances en temps réel</p>
+            </div>
+            <div className="flex flex-col gap-3 mb-8">
+              {recentAnalyses.map((entry) => {
+                const isUp   = (entry.performance_pct ?? 0) >= 0;
+                const isBuy  = entry.verdict === "BUY";
+                const isSell = entry.verdict === "SELL";
+                return (
+                  <Link
+                    key={entry.id}
+                    href={`/analyse-action/${entry.ticker}`}
+                    className="flex items-center justify-between gap-4 bg-[#18181b] border border-[#27272a] hover:border-[#3f3f46] rounded-xl px-5 py-4 transition-colors group"
+                  >
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        isBuy  ? "bg-emerald-500/10 text-emerald-400" :
+                        isSell ? "bg-red-500/10 text-red-400" :
+                        "bg-yellow-500/10 text-yellow-400"
+                      }`}>
+                        {isBuy ? <TrendingUp size={14} /> : isSell ? <TrendingDown size={14} /> : <Minus size={14} />}
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-bold text-white text-sm">{entry.ticker}</span>
+                        <span className="text-zinc-500 text-sm ml-2 truncate hidden sm:inline">{entry.name}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 flex-shrink-0">
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                        isBuy  ? "bg-emerald-500/10 text-emerald-400" :
+                        isSell ? "bg-red-500/10 text-red-400" :
+                        "bg-yellow-500/10 text-yellow-400"
+                      }`}>
+                        {isBuy ? "Sous-évalué" : isSell ? "Surévalué" : "Juste valeur"}
+                      </span>
+                      {entry.performance_pct != null && (
+                        <span className={`text-sm font-bold w-16 text-right ${isUp ? "text-emerald-400" : "text-red-400"}`}>
+                          {isUp ? "+" : ""}{entry.performance_pct.toFixed(1)}%
+                        </span>
+                      )}
+                      <span className="text-[#C9A84C] text-xs group-hover:translate-x-0.5 transition-transform">→</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+            <div className="text-center">
+              <Link
+                href="/track-record"
+                className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 px-5 py-2.5 rounded-lg transition-all"
+              >
+                Voir tout le track record →
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── FOOTER ───────────────────────────────────────────────────── */}
       <footer className="relative z-10 py-8 px-6 border-t border-[#27272a]">

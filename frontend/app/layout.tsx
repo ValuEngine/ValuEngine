@@ -4,15 +4,20 @@ import AlertsProvider from "@/components/AlertsProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ValuEngine — Ton analyste IA",
-  description: "Analyse DCF et IA de n'importe quelle action en 10 secondes. Gratuit.",
-  keywords: ["valorisation", "DCF", "analyse financière", "investissement", "Bloomberg", "actions", "bourse"],
+  title: "ValuEngine — Analyse financière IA pour investisseurs français",
+  description: "Valorisez n'importe quelle action en secondes : DCF, SWOT, PESTLE et verdicts IA. L'outil d'analyse boursière simplifié pour les investisseurs particuliers français.",
+  keywords: ["analyse boursière", "valorisation action", "DCF", "investissement", "bourse france", "analyse financière", "valeur intrinsèque"],
   openGraph: {
-    title: "ValuEngine — Ton analyste IA",
-    description: "Analyse DCF et IA de n'importe quelle action en 10 secondes. Gratuit.",
+    title: "ValuEngine — Analyse financière IA pour investisseurs français",
+    description: "Valorisez n'importe quelle action en secondes : DCF, SWOT, PESTLE et verdicts IA. L'outil d'analyse boursière simplifié pour les investisseurs particuliers français.",
     type: "website",
     url: "https://valuengine.io",
     images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ValuEngine — Analyse financière IA pour investisseurs français",
+    description: "Valorisez n'importe quelle action en secondes : DCF, SWOT, PESTLE et verdicts IA.",
   },
   icons: {
     icon: "/favicon.svg",

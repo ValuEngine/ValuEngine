@@ -359,6 +359,64 @@ def quote(ticker: str):
             raise HTTPException(status_code=404, detail=str(e))
 
 
+@app.get("/api/profile/{ticker}")
+def profile(ticker: str):
+    """Profil fondamental d'un ticker : nom, secteur, industrie, description, prix, market cap, PE, etc."""
+    t = ticker.upper().strip()
+    if USE_FMP:
+        try:
+            url = f"https://financialmodelingprep.com/api/v3/profile/{t}?apikey={FMP_KEY}"
+            resp = httpx.get(url, timeout=5)
+            resp.raise_for_status()
+            data = resp.json()
+            if not data:
+                raise HTTPException(status_code=404, detail=f"'{t}' introuvable")
+            p = data[0]
+            desc = p.get("description") or ""
+            return {
+                "ticker":      p.get("symbol", t),
+                "name":        p.get("companyName", t),
+                "sector":      p.get("sector", ""),
+                "industry":    p.get("industry", ""),
+                "description": desc[:600],
+                "price":       round(float(p.get("price") or 0), 2),
+                "market_cap":  p.get("mktCap"),
+                "pe_ratio":    p.get("pe"),
+                "country":     p.get("country", ""),
+                "exchange":    p.get("exchangeShortName", ""),
+                "currency":    p.get("currency", ""),
+                "image":       p.get("image", ""),
+            }
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    else:
+        try:
+            info = yf.Ticker(t).info
+            if not info or info.get("regularMarketPrice") is None and info.get("currentPrice") is None:
+                raise HTTPException(status_code=404, detail=f"'{t}' introuvable")
+            desc = info.get("longBusinessSummary") or ""
+            return {
+                "ticker":      t,
+                "name":        info.get("longName") or info.get("shortName", t),
+                "sector":      info.get("sector", ""),
+                "industry":    info.get("industry", ""),
+                "description": desc[:600],
+                "price":       round(float(info.get("currentPrice") or 0), 2),
+                "market_cap":  info.get("marketCap"),
+                "pe_ratio":    info.get("trailingPE"),
+                "country":     info.get("country", ""),
+                "exchange":    "",
+                "currency":    info.get("currency", ""),
+                "image":       "",
+            }
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/ai/swot/{ticker}")
 def swot_endpoint(ticker: str):
     try:
