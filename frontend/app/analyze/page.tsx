@@ -2,9 +2,10 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import {
   TrendingUp, TrendingDown, Minus, Search, Settings2,
-  ChevronDown, ChevronUp, Loader2,
+  ChevronDown, ChevronUp, Loader2, Bell, Trash2,
 } from "lucide-react";
 import { FreemiumGate } from "@/components/FreemiumWrapper";
 import { analyzeStock, fmt, pct, type AnalyzeResponse } from "@/lib/api";
@@ -306,6 +307,153 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "swot",      label: "SWOT" },
   { id: "pestle",    label: "PESTLE" },
 ];
+
+/* ─────────────── PriceAlertSection ─────────────────────────────────────── */
+
+interface AlertItem {
+  id: string;
+  ticker: string;
+  ticker_name: string;
+  target_price: number;
+  condition: string;
+  active: boolean;
+}
+
+function PriceAlertSection({ ticker, tickerName }: { ticker: string; tickerName: string }) {
+  const { isSignedIn, user } = useUser();
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+
+  const [targetPrice, setTargetPrice] = useState("");
+  const [direction, setDirection] = useState<"above" | "below">("above");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [createSuccess, setCreateSuccess] = useState(false);
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [alertsLoading, setAlertsLoading] = useState(false);
+
+  const userId = user?.id;
+  const email = user?.primaryEmailAddress?.emailAddress ?? "";
+
+  useEffect(() => {
+    if (!userId) return;
+    setAlertsLoading(true);
+    fetch(`${API_BASE}/api/alerts/${userId}`)
+      .then(r => r.ok ? r.json() : [])
+      .then((data: AlertItem[]) => setAlerts(data.filter(a => a.ticker === ticker && a.active)))
+      .catch(() => {})
+      .finally(() => setAlertsLoading(false));
+  }, [userId, ticker, API_BASE]);
+
+  const handleCreate = async () => {
+    const price = parseFloat(targetPrice.replace(",", "."));
+    if (isNaN(price) || price <= 0) { setCreateError("Prix invalide"); return; }
+    if (!userId || !email) return;
+    setCreating(true);
+    setCreateError("");
+    try {
+      const r = await fetch(`${API_BASE}/api/alerts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clerk_user_id: userId, email, ticker, ticker_name: tickerName, target_price: price, direction }),
+      });
+      if (!r.ok) {
+        const e = await r.json();
+        setCreateError(e.detail || "Erreur lors de la création");
+      } else {
+        const newAlert = await r.json();
+        setAlerts(prev => [newAlert, ...prev]);
+        setTargetPrice("");
+        setCreateSuccess(true);
+        setTimeout(() => setCreateSuccess(false), 3000);
+      }
+    } catch { setCreateError("Erreur réseau"); }
+    setCreating(false);
+  };
+
+  const handleDelete = async (alertId: string) => {
+    setAlerts(prev => prev.filter(a => a.id !== alertId));
+    await fetch(`${API_BASE}/api/alerts/${alertId}`, { method: "DELETE" }).catch(() => {});
+  };
+
+  if (!isSignedIn) return null;
+
+  return (
+    <div className="mt-8 rounded-2xl border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm p-6">
+      <div className="flex items-center gap-2 mb-5">
+        <Bell size={16} className="text-[#C9A84C]" />
+        <h3 className="text-sm font-bold text-white">Créer une alerte prix</h3>
+      </div>
+
+      {/* Create form */}
+      <div className="flex flex-wrap gap-2 mb-5">
+        {/* Direction toggle */}
+        <div className="flex rounded-lg overflow-hidden border border-zinc-800">
+          {(["above", "below"] as const).map(d => (
+            <button
+              key={d}
+              onClick={() => setDirection(d)}
+              className={`px-3 py-2 text-xs font-semibold transition-colors ${
+                direction === d
+                  ? "bg-[#C9A84C] text-black"
+                  : "bg-zinc-900 text-zinc-400 hover:text-white"
+              }`}
+            >
+              {d === "above" ? "Au-dessus de" : "En-dessous de"}
+            </button>
+          ))}
+        </div>
+
+        {/* Price input */}
+        <input
+          type="number"
+          value={targetPrice}
+          onChange={e => { setTargetPrice(e.target.value); setCreateError(""); }}
+          onKeyDown={e => e.key === "Enter" && handleCreate()}
+          placeholder="Prix cible ($)"
+          className="flex-1 min-w-[140px] bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white text-sm placeholder-zinc-600 focus:outline-none focus:border-[rgba(201,168,76,0.5)] transition-all"
+        />
+
+        <button
+          onClick={handleCreate}
+          disabled={creating || !targetPrice}
+          className="flex items-center gap-1.5 bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold px-4 py-2 rounded-lg text-sm transition-all disabled:opacity-40 whitespace-nowrap"
+        >
+          {creating ? <Loader2 size={14} className="animate-spin" /> : <Bell size={14} />}
+          Créer l&apos;alerte
+        </button>
+      </div>
+
+      {createError && <p className="text-red-400 text-xs mb-3">{createError}</p>}
+      {createSuccess && (
+        <p className="text-emerald-400 text-xs mb-3">✓ Alerte créée — email envoyé quand le seuil est franchi</p>
+      )}
+
+      {/* Active alerts for this ticker */}
+      {alertsLoading ? (
+        <div className="skeleton h-8 rounded-lg w-full" />
+      ) : alerts.length > 0 && (
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[1.5px] text-zinc-600 mb-2">Alertes actives</p>
+          <div className="space-y-1.5">
+            {alerts.map(a => (
+              <div key={a.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800">
+                <span className="text-xs text-zinc-300">
+                  <span className="text-zinc-500">{a.condition === "above" ? "↑ Au-dessus de" : "↓ En-dessous de"}</span>
+                  {" "}<span className="text-white font-bold">${Number(a.target_price).toFixed(2)}</span>
+                </span>
+                <button onClick={() => handleDelete(a.id)} className="text-zinc-600 hover:text-red-400 transition-colors p-1">
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
 
 function AnalyzePage() {
   const searchParams  = useSearchParams();
@@ -776,6 +924,9 @@ function AnalyzePage() {
                   <PestleSection ticker={data.company.ticker} />
                 </div>
               )}
+
+              {/* ── Price Alert ─────────────────────────────────────── */}
+              <PriceAlertSection ticker={data.company.ticker} tickerName={data.company.name} />
 
               <p className="text-[#2a3a4a] text-xs text-center mt-8 pb-4">
                 ValuEngine est un outil d&apos;aide à la décision. Les analyses ne constituent pas des conseils en investissement.

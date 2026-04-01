@@ -30,6 +30,37 @@ else:
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
 
+# ── Supabase REST helpers (alerts) ───────────────────────────────────────────
+_SUPA_URL  = os.environ.get("SUPABASE_URL", "").rstrip("/")
+_SUPA_KEY  = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+
+def _sb_headers() -> dict:
+    return {
+        "apikey": _SUPA_KEY,
+        "Authorization": f"Bearer {_SUPA_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation",
+    }
+
+def _sb_get(table: str, params: str = "") -> list:
+    if not _SUPA_URL or not _SUPA_KEY:
+        return []
+    url = f"{_SUPA_URL}/rest/v1/{table}?{params}"
+    resp = httpx.get(url, headers=_sb_headers(), timeout=6)
+    resp.raise_for_status()
+    return resp.json()
+
+def _sb_post(table: str, body: dict) -> dict:
+    url = f"{_SUPA_URL}/rest/v1/{table}"
+    resp = httpx.post(url, headers=_sb_headers(), json=body, timeout=6)
+    resp.raise_for_status()
+    data = resp.json()
+    return data[0] if isinstance(data, list) else data
+
+def _sb_patch(table: str, params: str, body: dict) -> None:
+    url = f"{_SUPA_URL}/rest/v1/{table}?{params}"
+    httpx.patch(url, headers=_sb_headers(), json=body, timeout=6)
+
 app = FastAPI(
     title="ValuEngine API",
     description="Analyse financière et valorisation DCF augmentée par IA",
@@ -346,6 +377,131 @@ def pestle_endpoint(ticker: str):
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+from services.email_service import send_alert_email
+
+
+@app.post("/api/alerts")
+async def create_alert(req: Request):
+    body          = await req.json()
+    clerk_user_id = body.get("clerk_user_id", "")
+    email         = body.get("email", "")
+    ticker        = body.get("ticker", "").upper().strip()
+    ticker_name   = body.get("ticker_name", ticker)
+    target_price  = float(body.get("target_price", 0))
+    direction     = body.get("direction", "above")
+
+    if not clerk_user_id or not ticker or target_price <= 0:
+        raise HTTPException(status_code=400, detail="Paramètres invalides")
+    if direction not in ("above", "below"):
+        raise HTTPException(status_code=400, detail="direction doit être 'above' ou 'below'")
+
+    try:
+        record = _sb_post("alerts", {
+            "user_id":      clerk_user_id,
+            "email":        email,
+            "ticker":       ticker,
+            "ticker_name":  ticker_name,
+            "target_price": target_price,
+            "condition":    direction,
+            "active":       True,
+            "is_triggered": False,
+        })
+        return record
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/alerts/{clerk_user_id}")
+def get_alerts(clerk_user_id: str):
+    try:
+        alerts = _sb_get(
+            "alerts",
+            f"user_id=eq.{clerk_user_id}&active=eq.true&order=created_at.desc"
+        )
+        return alerts
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/alerts/{alert_id}")
+def delete_alert(alert_id: str):
+    try:
+        _sb_patch("alerts", f"id=eq.{alert_id}", {"active": False})
+        return {"ok": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/alerts/check")
+def check_alerts():
+    """Endpoint interne : vérifie toutes les alertes actives et envoie les emails."""
+    try:
+        alerts = _sb_get("alerts", "active=eq.true&is_triggered=eq.false")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Supabase error: {e}")
+
+    if not alerts:
+        return {"checked": 0, "triggered": 0}
+
+    unique_tickers = list({a["ticker"] for a in alerts})
+    price_map: dict = {}
+
+    if USE_FMP:
+        try:
+            joined = ",".join(unique_tickers)
+            url = f"https://financialmodelingprep.com/api/v3/quote/{joined}?apikey={FMP_KEY}"
+            resp = httpx.get(url, timeout=8)
+            resp.raise_for_status()
+            for q in resp.json():
+                price_map[q.get("symbol", "")] = float(q.get("price") or 0)
+        except Exception:
+            pass
+    else:
+        for sym in unique_tickers:
+            try:
+                fi = yf.Ticker(sym).fast_info
+                price_map[sym] = float(getattr(fi, "last_price", 0) or 0)
+            except Exception:
+                pass
+
+    triggered = 0
+    for alert in alerts:
+        ticker       = alert.get("ticker", "")
+        current      = price_map.get(ticker, 0)
+        target       = float(alert.get("target_price") or 0)
+        direction    = alert.get("condition", "above")
+        email        = alert.get("email", "")
+        ticker_name  = alert.get("ticker_name") or ticker
+        alert_id     = alert.get("id", "")
+
+        if current <= 0 or target <= 0:
+            continue
+
+        fired = (direction == "above" and current >= target) or \
+                (direction == "below" and current <= target)
+
+        if fired:
+            if email:
+                send_alert_email(
+                    to=email,
+                    ticker=ticker,
+                    ticker_name=ticker_name,
+                    target_price=target,
+                    current_price=current,
+                    direction=direction,
+                )
+            try:
+                _sb_patch("alerts", f"id=eq.{alert_id}", {
+                    "active": False,
+                    "is_triggered": True,
+                })
+            except Exception:
+                pass
+            triggered += 1
+
+    return {"checked": len(alerts), "triggered": triggered}
 
 
 @app.post("/api/stripe/create-checkout")
