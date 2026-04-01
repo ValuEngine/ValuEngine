@@ -156,7 +156,7 @@ export default function Sidebar() {
       </aside>
 
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-56 flex-shrink-0 min-h-screen sticky top-0 h-screen overflow-visible">
+      <aside className="hidden md:flex flex-col w-56 flex-shrink-0 min-h-screen sticky top-0 h-screen overflow-visible relative z-[2]">
         <SidebarContent />
       </aside>
     </>

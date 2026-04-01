@@ -114,7 +114,7 @@ export default function PortfolioPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-[#0a1628] text-white px-6 py-8 md:px-10">
+      <div className="min-h-screen text-white px-6 py-8 md:px-10">
 
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -132,7 +132,7 @@ export default function PortfolioPage() {
         {/* Table */}
         {positions.length > 0 ? (
           <>
-            <div className="bg-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl overflow-hidden mb-6">
+            <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.14)] rounded-2xl overflow-hidden mb-6">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -191,7 +191,7 @@ export default function PortfolioPage() {
             </div>
 
             {/* Footer totals */}
-            <div className="bg-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl p-6 flex flex-wrap gap-8">
+            <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.14)] rounded-2xl p-6 flex flex-wrap gap-8">
               <div>
                 <p className="text-xs text-[#4a6070] mb-1 uppercase tracking-wider">Valeur totale</p>
                 <p className="text-2xl font-black text-white">${totalValue.toFixed(2)}</p>

@@ -70,7 +70,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen" style={{ background: "transparent" }}>
       <AnimatedBackground />
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-y-auto relative z-10 min-w-0">
+      <div className="flex-1 flex flex-col overflow-y-auto relative z-[2] min-w-0">
         <TopHeader />
         <main className="flex-1">
           {children}
