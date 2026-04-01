@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Star, ArrowRight } from "lucide-react";
+import { ChevronRight, ArrowDown } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { NavAuth } from "@/components/NavAuth";
+import AnimatedBackground from "@/components/AnimatedBackground";
 import { searchTicker, type SearchResult } from "@/lib/api";
 
 /* ── Ticker tape data (visual only) ──────────────────────────────────── */
@@ -21,10 +22,8 @@ const TAPE = [
   { t: "V",     p: 289.30, c: +0.44 },
 ];
 
-/* ── Typewriter tickers ───────────────────────────────────────────────── */
 const TYPEWRITER_TICKERS = ["AAPL", "TSLA", "MSFT", "NVDA", "AMZN", "GOOGL"];
 
-/* ── Features with SVG icons ─────────────────────────────────────────── */
 const FEATURES = [
   {
     icon: (
@@ -60,7 +59,7 @@ const FEATURES = [
       </svg>
     ),
     title: "Trading Comps",
-    desc: "Comparez automatiquement votre cible avec ses 4 principaux pairs sectoriels.",
+    desc: "Comparez automatiquement votre cible avec ses principaux pairs sectoriels.",
   },
   {
     icon: (
@@ -69,7 +68,7 @@ const FEATURES = [
       </svg>
     ),
     title: "Verdict Actionnable",
-    desc: "BUY / HOLD / SELL basé sur l'écart entre prix de marché et valeur intrinsèque DCF.",
+    desc: "Sous-évalué / Juste valeur / Surévalué — basé sur l'écart entre prix de marché et valeur intrinsèque DCF.",
   },
   {
     icon: (
@@ -78,14 +77,14 @@ const FEATURES = [
       </svg>
     ),
     title: "Données Temps Réel",
-    desc: "Cours, bilans, flux de trésorerie, marges — tout mis à jour depuis Yahoo Finance.",
+    desc: "Cours, bilans, flux de trésorerie, marges — tout mis à jour depuis Financial Modeling Prep.",
   },
 ];
 
 const HOW_IT_WORKS = [
   { n: "01", title: "Cherche", desc: "Tape n'importe quel ticker boursier — AAPL, TSLA, LVMH..." },
   { n: "02", title: "Analyse", desc: "Notre moteur DCF + IA calcule la valeur intrinsèque en quelques secondes." },
-  { n: "03", title: "Décide", desc: "Reçois un verdict BUY / HOLD / SELL clair et des arguments Bull & Bear." },
+  { n: "03", title: "Décide", desc: "Reçois une estimation Sous-évalué / Juste valeur / Surévalué et des arguments Bull & Bear." },
 ];
 
 /* ── Typewriter hook ─────────────────────────────────────────────────── */
@@ -166,39 +165,40 @@ export default function LandingPage() {
   const hasError = !!searchError && ticker.length > 0;
 
   return (
-    <main className="min-h-screen bg-[#0a1628] text-white overflow-x-hidden">
+    <main className="min-h-screen bg-[#09090b] text-white overflow-x-hidden relative">
+
+      {/* Aurora background */}
+      <AnimatedBackground />
 
       {/* ── TICKER TAPE ─────────────────────────────────────────────── */}
-      <div className="overflow-hidden bg-[rgba(201,168,76,0.04)] border-b border-[rgba(201,168,76,0.08)] py-2">
+      <div className="relative z-10 overflow-hidden bg-[rgba(255,255,255,0.02)] border-b border-[#27272a] py-2">
         <div className="flex animate-[tickerScroll_30s_linear_infinite] whitespace-nowrap" style={{ width: "max-content" }}>
           {[...TAPE, ...TAPE].map((item, i) => (
             <span key={i} className="inline-flex items-center gap-2 px-6 text-xs font-semibold">
               <span className="text-[#C9A84C]">{item.t}</span>
-              <span className="text-white">${item.p.toFixed(2)}</span>
-              <span className={item.c > 0 ? "text-[#00d4aa]" : "text-[#ff4d6d]"}>
+              <span className="text-zinc-300">${item.p.toFixed(2)}</span>
+              <span className={item.c > 0 ? "text-emerald-400" : "text-red-400"}>
                 {item.c > 0 ? "+" : ""}{item.c.toFixed(2)}%
               </span>
-              <span className="text-[#2a3a4a] mx-2">·</span>
+              <span className="text-zinc-700 mx-2">·</span>
             </span>
           ))}
         </div>
       </div>
 
       {/* ── NAV ──────────────────────────────────────────────────────── */}
-      <nav className="fixed top-[33px] left-0 right-0 z-50 border-b border-[rgba(201,168,76,0.1)] bg-[rgba(10,22,40,0.92)] backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#C9A84C] to-[#e8c55a] flex items-center justify-center">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#0a1628" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" />
-              </svg>
+      <nav className="fixed top-[33px] left-0 right-0 z-50 border-b border-[#27272a] bg-[rgba(9,9,11,0.85)] backdrop-blur-xl">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-[#09090b] border border-[rgba(201,168,76,0.3)] flex items-center justify-center">
+              <span className="text-[#C9A84C] font-black text-sm leading-none">V</span>
             </div>
-            <span className="text-lg font-bold tracking-tight">ValuEngine</span>
+            <span className="text-base font-bold tracking-tight">ValuEngine</span>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push(isSignedIn ? "/dashboard" : "/analyze")}
-              className="text-sm text-[#7a8fa3] hover:text-white transition-colors px-4 py-2"
+              className="text-sm text-zinc-400 hover:text-white transition-colors px-4 py-2"
             >
               {isSignedIn ? "Dashboard" : "Analyser"}
             </button>
@@ -208,31 +208,53 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <section className="pt-52 pb-28 px-6 text-center">
-        <div className="max-w-4xl mx-auto">
+      <section className="relative z-10 min-h-screen flex items-center justify-center px-6 text-center">
+        <div className="max-w-3xl mx-auto">
 
-          <div className="inline-flex items-center gap-2 text-xs font-semibold text-[#C9A84C] tracking-widest uppercase bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.2)] px-4 py-2 rounded-full mb-8">
-            <Star size={12} fill="currentColor" />
-            Analyse financière augmentée par l'IA
+          {/* Pill badge */}
+          <div className="inline-block text-xs tracking-[0.25em] text-zinc-500 border border-zinc-800 rounded-full px-4 py-1.5 mb-8">
+            · ANALYSE DCF · IA CLAUDE · TEMPS RÉEL ·
           </div>
 
-          <h1 className="text-6xl sm:text-7xl font-black tracking-tight leading-none mb-6">
-            Stop guessing.
-            <br />
-            <span className="bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] bg-clip-text text-transparent">
-              Start valuing.
-            </span>
+          {/* Title */}
+          <h1 className="text-5xl md:text-7xl font-bold text-white text-center leading-tight tracking-tight mb-6">
+            Sais{" "}
+            <span
+              style={{
+                background: "linear-gradient(135deg, #C9A84C, #f5d78e)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              exactement
+            </span>{" "}
+            ce que vaut ton action
           </h1>
 
-          <p className="text-xl text-[#6b7d91] leading-relaxed max-w-2xl mx-auto mb-12">
-            Valorisez n'importe quelle action en quelques secondes.
-            DCF interactif, analyse IA Bull/Bear, Trading Comps.
-            <br />
-            L'outil que les analystes gardent pour eux — à 12€/mois.
+          {/* Subtitle */}
+          <p className="text-lg text-zinc-400 text-center max-w-lg mx-auto mb-10">
+            Valeur intrinsèque DCF, analyse IA Bull/Bear,
+            SWOT et PESTLE. Gratuit.
           </p>
 
+          {/* CTA buttons */}
+          <div className="flex gap-4 justify-center flex-wrap mb-12">
+            <button
+              onClick={() => router.push(isSignedIn ? "/dashboard" : "/sign-up")}
+              className="px-6 py-3 bg-[#C9A84C] hover:bg-[#b8943d] text-black font-semibold rounded-lg transition-all hover:scale-105 duration-200"
+            >
+              Commencer gratuitement →
+            </button>
+            <button
+              onClick={() => router.push("/analyze")}
+              className="px-6 py-3 border border-zinc-700 text-zinc-300 rounded-lg hover:border-zinc-500 hover:text-white transition-all duration-200"
+            >
+              Voir la démo
+            </button>
+          </div>
+
           {/* Smart Search bar */}
-          <div className="max-w-md mx-auto mb-6">
+          <div className="max-w-md mx-auto">
             <div className="flex items-center gap-3 relative">
               <div className="flex-1 relative">
                 <input
@@ -241,12 +263,12 @@ export default function LandingPage() {
                   onChange={(e) => handleTickerChange(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAnalyze("")}
                   placeholder={`${typewriterText}|`}
-                  className={`w-full bg-[rgba(27,45,69,0.9)] border rounded-xl px-5 py-4 text-white placeholder-[#3a5070] text-sm font-semibold focus:outline-none transition-all ${
+                  className={`w-full bg-[rgba(255,255,255,0.04)] border rounded-xl px-5 py-3.5 text-white placeholder-zinc-600 text-sm font-semibold focus:outline-none transition-all ${
                     hasError
-                      ? "border-[#ff4d6d] focus:border-[#ff4d6d] focus:shadow-[0_0_0_3px_rgba(255,77,109,0.12)]"
+                      ? "border-red-500/50 focus:border-red-500"
                       : isValid
-                      ? "border-[#00d4aa] focus:border-[#00d4aa] focus:shadow-[0_0_0_3px_rgba(0,212,170,0.12)]"
-                      : "border-[rgba(201,168,76,0.3)] focus:border-[#C9A84C] focus:shadow-[0_0_0_3px_rgba(201,168,76,0.12)]"
+                      ? "border-emerald-500/50 focus:border-emerald-500"
+                      : "border-zinc-800 focus:border-[rgba(201,168,76,0.5)]"
                   }`}
                 />
                 {searching && (
@@ -256,70 +278,69 @@ export default function LandingPage() {
               <button
                 onClick={() => handleAnalyze("")}
                 disabled={!ticker || hasError}
-                className={`font-bold px-6 py-4 rounded-xl transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap ${
-                  isValid
-                    ? "bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] hover:shadow-[0_4px_24px_rgba(201,168,76,0.45)]"
-                    : "bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] hover:shadow-[0_4px_24px_rgba(201,168,76,0.45)]"
-                }`}
+                className="font-bold px-5 py-3.5 rounded-xl bg-[#C9A84C] hover:bg-[#b8943d] text-black transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
               >
-                Analyser <ArrowRight size={16} />
+                Analyser
               </button>
             </div>
 
-            {/* Dropdown result */}
             {searchResult && (
               <button
                 onClick={() => handleAnalyze(searchResult.ticker)}
-                className="mt-2 w-full bg-[#132032] border border-[rgba(0,212,170,0.25)] rounded-xl px-4 py-3 flex items-center justify-between hover:bg-[#1a2d45] transition-all text-left"
+                className="mt-2 w-full bg-[#18181b] border border-[rgba(0,212,170,0.2)] rounded-xl px-4 py-3 flex items-center justify-between hover:border-[rgba(0,212,170,0.4)] transition-all text-left"
               >
                 <div>
                   <span className="text-[#C9A84C] font-bold text-sm mr-2">{searchResult.ticker}</span>
                   <span className="text-white text-sm">{searchResult.name}</span>
-                  <span className="text-[#5d7289] text-xs ml-2">· {searchResult.sector}</span>
+                  <span className="text-zinc-500 text-xs ml-2">· {searchResult.sector}</span>
                 </div>
                 <span className="text-white font-bold text-sm">${searchResult.price.toFixed(2)}</span>
               </button>
             )}
 
-            {/* Error */}
             {hasError && (
-              <p className="mt-2 text-[#ff4d6d] text-xs text-center font-medium">
+              <p className="mt-2 text-red-400 text-xs text-center font-medium">
                 Ticker introuvable. Vérifiez le symbole (ex: AAPL, TSLA).
               </p>
             )}
           </div>
 
           {/* Quick tickers */}
-          <div className="flex items-center justify-center gap-2 flex-wrap">
-            <span className="text-[#3a5070] text-xs mr-1">Essayez :</span>
+          <div className="flex items-center justify-center gap-2 flex-wrap mt-5">
+            <span className="text-zinc-600 text-xs mr-1">Essayez :</span>
             {["AAPL", "TSLA", "NVDA", "MSFT", "AMZN", "GOOGL"].map((t) => (
               <button
                 key={t}
                 onClick={() => handleAnalyze(t)}
-                className="text-xs font-semibold text-[#C9A84C] bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.18)] px-3 py-1.5 rounded-lg hover:bg-[rgba(201,168,76,0.14)] transition-all"
+                className="text-xs font-semibold text-zinc-400 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-lg hover:border-zinc-600 hover:text-white transition-all"
               >
                 {t}
               </button>
             ))}
           </div>
         </div>
+
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-zinc-600 animate-bounce">
+          <ArrowDown size={20} />
+        </div>
       </section>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
-      <section className="py-20 px-6 border-t border-[rgba(255,255,255,0.04)]">
+      <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Comment ça marche</p>
-            <h2 className="text-4xl font-black tracking-tight">En 3 étapes simples.</h2>
+            <h2 className="text-4xl font-bold tracking-tight">En 3 étapes simples.</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {HOW_IT_WORKS.map(({ n, title, desc }) => (
               <div key={n} className="flex flex-col items-center text-center">
-                <div className="w-14 h-14 rounded-2xl bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.2)] flex items-center justify-center mb-5">
+                <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-5">
                   <span className="text-2xl font-black text-[#C9A84C]">{n}</span>
                 </div>
-                <h3 className="text-xl font-black mb-2">{title}</h3>
-                <p className="text-sm text-[#5d7289] leading-relaxed">{desc}</p>
+                <h3 className="text-lg font-bold mb-2">{title}</h3>
+                <p className="text-sm text-zinc-500 leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>
@@ -327,27 +348,27 @@ export default function LandingPage() {
       </section>
 
       {/* ── FEATURES ─────────────────────────────────────────────────── */}
-      <section className="py-20 px-6 border-t border-[rgba(255,255,255,0.04)]">
+      <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Ce que vous obtenez</p>
-            <h2 className="text-4xl font-black tracking-tight">
+            <h2 className="text-4xl font-bold tracking-tight">
               Tout ce dont un investisseur sérieux
               <br />
-              <span className="text-[#6b7d91]">a besoin en un seul endroit.</span>
+              <span className="text-zinc-500">a besoin en un seul endroit.</span>
             </h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map((f) => (
               <div
                 key={f.title}
-                className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(201,168,76,0.12)] rounded-2xl p-7 hover:border-[rgba(201,168,76,0.28)] hover:translate-y-[-2px] transition-all duration-200"
+                className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 hover:border-[#3f3f46] transition-colors duration-200"
               >
-                <div className="w-10 h-10 rounded-xl bg-[rgba(201,168,76,0.1)] flex items-center justify-center text-[#C9A84C] mb-5">
+                <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[#C9A84C] mb-4">
                   {f.icon}
                 </div>
-                <h3 className="text-base font-bold mb-2">{f.title}</h3>
-                <p className="text-sm text-[#5d7289] leading-relaxed">{f.desc}</p>
+                <h3 className="text-sm font-bold mb-1.5 text-white">{f.title}</h3>
+                <p className="text-xs text-zinc-500 leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -355,43 +376,41 @@ export default function LandingPage() {
       </section>
 
       {/* ── PRICING ──────────────────────────────────────────────────── */}
-      <section className="py-20 px-6 border-t border-[rgba(255,255,255,0.04)]">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
+      <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-14">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Tarifs</p>
-            <h2 className="text-4xl font-black tracking-tight">Simple et transparent.</h2>
+            <h2 className="text-4xl font-bold tracking-tight">Simple et transparent.</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Free */}
-            <div className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(255,255,255,0.07)] rounded-2xl p-8">
-              <p className="text-xs font-bold tracking-widest uppercase text-[#5d7289] mb-3">Gratuit</p>
+            <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-8 hover:border-[#3f3f46] transition-colors">
+              <p className="text-xs font-bold tracking-widest uppercase text-zinc-500 mb-3">Gratuit</p>
               <p className="text-5xl font-black mb-1">0€</p>
-              <p className="text-[#5d7289] text-sm mb-8">Pour toujours</p>
+              <p className="text-zinc-500 text-sm mb-8">Pour toujours</p>
               <ul className="space-y-3 text-sm mb-8">
-                {["3 analyses par jour", "DCF basique", "Verdict BUY/HOLD/SELL"].map((item) => (
-                  <li key={item} className="flex items-center gap-3 text-[#7a8fa3]">
-                    <div className="w-4 h-4 rounded-full bg-[rgba(201,168,76,0.15)] flex items-center justify-center flex-shrink-0">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#C9A84C]" />
-                    </div>
+                {["3 analyses par jour", "DCF basique", "Estimation Sous-évalué/Juste valeur/Surévalué"].map((item) => (
+                  <li key={item} className="flex items-center gap-3 text-zinc-400">
+                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-600 flex-shrink-0" />
                     {item}
                   </li>
                 ))}
               </ul>
               <button
                 onClick={() => router.push(isSignedIn ? "/dashboard" : "/sign-up")}
-                className="w-full border border-[rgba(201,168,76,0.3)] text-[#C9A84C] font-bold py-3 rounded-xl hover:bg-[rgba(201,168,76,0.08)] transition-all"
+                className="w-full border border-zinc-700 text-zinc-300 font-semibold py-3 rounded-lg hover:border-zinc-500 hover:text-white transition-all"
               >
                 {isSignedIn ? "Aller au Dashboard" : "Commencer gratuitement"}
               </button>
             </div>
             {/* Pro */}
-            <div className="bg-gradient-to-b from-[#1e3050] to-[#162540] border-2 border-[#C9A84C] rounded-2xl p-8 relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-gradient-to-l from-[#C9A84C] to-[#e8c55a] text-[#0a1628] text-xs font-black px-4 py-1.5 rounded-bl-xl tracking-wider">
+            <div className="bg-[#18181b] border-2 border-[#C9A84C] rounded-xl p-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-[#C9A84C] text-black text-xs font-black px-4 py-1.5 rounded-bl-xl tracking-wider">
                 POPULAIRE
               </div>
               <p className="text-xs font-bold tracking-widest uppercase text-[#C9A84C] mb-3">Pro</p>
               <p className="text-5xl font-black mb-1">12€</p>
-              <p className="text-[#5d7289] text-sm mb-8">par mois · ou 99€/an</p>
+              <p className="text-zinc-500 text-sm mb-8">par mois · ou 99€/an</p>
               <ul className="space-y-3 text-sm mb-8">
                 {[
                   "Analyses illimitées", "DCF interactif complet", "Analyse IA Bull & Bear",
@@ -399,18 +418,16 @@ export default function LandingPage() {
                   "Export PDF professionnel", "Watchlist (50 tickers)",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-white">
-                    <div className="w-4 h-4 rounded-full bg-[rgba(201,168,76,0.2)] flex items-center justify-center flex-shrink-0">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#C9A84C]" />
-                    </div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#C9A84C] flex-shrink-0" />
                     {item}
                   </li>
                 ))}
               </ul>
               <button
                 onClick={() => router.push("/analyze")}
-                className="w-full bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-black py-3 rounded-xl hover:shadow-[0_6px_24px_rgba(201,168,76,0.4)] transition-all flex items-center justify-center gap-2"
+                className="w-full bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
               >
-                Démarrer l'essai gratuit <ChevronRight size={16} />
+                Démarrer l&apos;essai gratuit <ChevronRight size={16} />
               </button>
             </div>
           </div>
@@ -418,20 +435,18 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────────────── */}
-      <footer className="py-10 px-6 border-t border-[rgba(255,255,255,0.04)]">
+      <footer className="relative z-10 py-8 px-6 border-t border-[#27272a]">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-[#C9A84C] to-[#e8c55a] flex items-center justify-center">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#0a1628" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
-                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-              </svg>
+            <div className="w-6 h-6 rounded-md bg-[#09090b] border border-[rgba(201,168,76,0.3)] flex items-center justify-center">
+              <span className="text-[#C9A84C] font-black text-xs leading-none">V</span>
             </div>
             <span className="text-sm font-bold">ValuEngine</span>
-            <span className="text-[#3a5070] text-sm">© 2025</span>
+            <span className="text-zinc-600 text-sm">© 2025</span>
           </div>
-          <p className="text-[#3a5070] text-xs text-center max-w-md">
-            Outil d'aide à la décision uniquement. Ne constitue pas un conseil en investissement.
-            Tout investissement comporte des risques.
+          <p className="text-zinc-600 text-xs text-center max-w-md">
+            Outil d&apos;aide à la décision uniquement. Ne constitue pas un conseil en investissement.{" "}
+            <a href="/legal" className="underline hover:text-zinc-400 transition-colors">Mentions légales</a>
           </p>
         </div>
       </footer>
