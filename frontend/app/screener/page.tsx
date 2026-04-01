@@ -33,9 +33,21 @@ interface ScreenerResult {
 }
 
 function verdictBadge(verdict: string) {
-  if (verdict === "BUY")  return <span className="px-2 py-0.5 rounded text-xs font-bold bg-[rgba(0,212,170,0.12)] text-[#00d4aa] border border-[rgba(0,212,170,0.25)]">BUY</span>;
-  if (verdict === "SELL") return <span className="px-2 py-0.5 rounded text-xs font-bold bg-[rgba(255,77,109,0.12)] text-[#ff4d6d] border border-[rgba(255,77,109,0.25)]">SELL</span>;
-  return <span className="px-2 py-0.5 rounded text-xs font-bold bg-[rgba(201,168,76,0.12)] text-[#C9A84C] border border-[rgba(201,168,76,0.25)]">HOLD</span>;
+  if (verdict === "BUY") return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+      <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />Sous-évalué
+    </span>
+  );
+  if (verdict === "SELL") return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
+      <span className="w-1 h-1 rounded-full bg-red-400 animate-pulse" />Surévalué
+    </span>
+  );
+  return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+      <span className="w-1 h-1 rounded-full bg-yellow-400 animate-pulse" />Juste valeur
+    </span>
+  );
 }
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
@@ -87,7 +99,7 @@ export default function ScreenerPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-[#0a1628] text-white px-6 py-8 md:px-10">
+      <div className="min-h-screen text-white px-6 py-8 md:px-10">
 
         <div className="mb-8">
           <h1 className="text-3xl font-black tracking-tight">Screener</h1>
@@ -116,9 +128,9 @@ export default function ScreenerPage() {
                 className="bg-[#132032] border border-[rgba(201,168,76,0.2)] text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-all"
               >
                 <option value="all">Tous les verdicts</option>
-                <option value="BUY">BUY</option>
-                <option value="HOLD">HOLD</option>
-                <option value="SELL">SELL</option>
+                <option value="BUY">Sous-évalué</option>
+                <option value="HOLD">Juste valeur</option>
+                <option value="SELL">Surévalué</option>
               </select>
 
               <select
@@ -149,7 +161,7 @@ export default function ScreenerPage() {
 
         {/* Table */}
         {filtered.length > 0 && (
-          <div className="bg-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl overflow-hidden">
+          <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.14)] rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>

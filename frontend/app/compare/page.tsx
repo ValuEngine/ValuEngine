@@ -14,9 +14,21 @@ const DEFAULT_PARAMS = {
 };
 
 function verdictBadge(verdict: string) {
-  if (verdict === "BUY")  return <span className="px-2 py-1 rounded-lg text-xs font-bold bg-[rgba(0,212,170,0.12)] text-[#00d4aa] border border-[rgba(0,212,170,0.25)]">BUY</span>;
-  if (verdict === "SELL") return <span className="px-2 py-1 rounded-lg text-xs font-bold bg-[rgba(255,77,109,0.12)] text-[#ff4d6d] border border-[rgba(255,77,109,0.25)]">SELL</span>;
-  return <span className="px-2 py-1 rounded-lg text-xs font-bold bg-[rgba(201,168,76,0.12)] text-[#C9A84C] border border-[rgba(201,168,76,0.25)]">HOLD</span>;
+  if (verdict === "BUY") return (
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />Sous-évalué
+    </span>
+  );
+  if (verdict === "SELL") return (
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
+      <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />Surévalué
+    </span>
+  );
+  return (
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+      <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />Juste valeur
+    </span>
+  );
 }
 
 interface RowDef {
@@ -81,7 +93,7 @@ export default function ComparePage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-[#0a1628] text-white px-6 py-8 md:px-10">
+      <div className="min-h-screen text-white px-6 py-8 md:px-10">
 
         <div className="mb-8">
           <h1 className="text-3xl font-black tracking-tight">Comparer deux titres</h1>
@@ -89,7 +101,7 @@ export default function ComparePage() {
         </div>
 
         {/* Inputs */}
-        <div className="bg-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl p-6 mb-8">
+        <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.14)] rounded-2xl p-6 mb-8">
           <div className="flex flex-col sm:flex-row gap-4 items-end">
             <div className="flex-1">
               <label className="block text-xs font-bold uppercase tracking-[2px] text-[#C9A84C] mb-2">Ticker 1</label>
@@ -126,7 +138,7 @@ export default function ComparePage() {
 
         {/* Comparison Table */}
         {data1 && data2 && (
-          <div className="bg-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl overflow-hidden">
+          <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.14)] rounded-2xl overflow-hidden">
             {/* Header */}
             <div className="grid grid-cols-3 bg-[rgba(201,168,76,0.05)] border-b border-[rgba(201,168,76,0.12)]">
               <div className="px-6 py-4 text-xs font-bold uppercase tracking-[2px] text-[#4a6070]">Métrique</div>

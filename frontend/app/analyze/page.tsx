@@ -16,19 +16,39 @@ import AppLayout from "@/components/AppLayout";
 
 /* ─────────────── helpers ────────────────────────────────────────────── */
 
+function VerdictBadgePremium({ verdict }: { verdict: string }) {
+  if (verdict === "BUY") return (
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+      Sous-évalué
+    </span>
+  );
+  if (verdict === "SELL") return (
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
+      <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+      Surévalué
+    </span>
+  );
+  return (
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+      <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+      Juste valeur
+    </span>
+  );
+}
+
 function VerdictConfig(verdict: string) {
-  if (verdict === "BUY")  return { color: "#00d4aa", bg: "rgba(0,212,170,0.08)",  border: "rgba(0,212,170,0.3)",  icon: <TrendingUp  size={20} />, action: "ACHETER / ACCUMULER" };
-  if (verdict === "SELL") return { color: "#ff4d6d", bg: "rgba(255,77,109,0.08)", border: "rgba(255,77,109,0.3)", icon: <TrendingDown size={20} />, action: "VENDRE / ALLÉGER"    };
-  return                         { color: "#C9A84C", bg: "rgba(201,168,76,0.08)", border: "rgba(201,168,76,0.3)", icon: <Minus        size={20} />, action: "CONSERVER / SURVEILLER" };
+  if (verdict === "BUY")  return { color: "#10b981", bg: "rgba(16,185,129,0.06)",  border: "rgba(16,185,129,0.2)",  icon: <TrendingUp  size={20} />, action: "Potentiel haussier identifié" };
+  if (verdict === "SELL") return { color: "#ef4444", bg: "rgba(239,68,68,0.06)",   border: "rgba(239,68,68,0.2)",   icon: <TrendingDown size={20} />, action: "Valorisation tendue"            };
+  return                         { color: "#C9A84C", bg: "rgba(201,168,76,0.06)",  border: "rgba(201,168,76,0.2)",  icon: <Minus        size={20} />, action: "Zone de juste valeur"           };
 }
 
 function KPI({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
   return (
-    <div className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl p-5 relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#C9A84C] to-transparent" />
-      <p className="text-[10px] font-bold uppercase tracking-[1.6px] text-[#4a6070] mb-2">{label}</p>
-      <p className="text-2xl font-black text-white tracking-tight">{value}</p>
-      {sub && <p className="text-xs mt-1.5" style={{ color: color || "#5d7289" }}>{sub}</p>}
+    <div className="bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-xl p-4 hover:border-[#3f3f46] transition-colors duration-200">
+      <p className="text-[10px] font-bold uppercase tracking-[1.6px] text-zinc-500 mb-2">{label}</p>
+      <p className="text-xl font-bold text-white tracking-tight">{value}</p>
+      {sub && <p className="text-xs mt-1.5" style={{ color: color || "#71717a" }}>{sub}</p>}
     </div>
   );
 }
@@ -50,7 +70,7 @@ function Section({ title, children, defaultOpen = true }: { title: string; child
 
 /* ── Skeleton Loading ─────────────────────────────────────────────────── */
 function SkeletonCard({ className = "" }: { className?: string }) {
-  return <div className={`bg-[#132032] rounded-2xl animate-pulse ${className}`} />;
+  return <div className={`bg-[#132032]/80 backdrop-blur-sm rounded-2xl animate-pulse ${className}`} />;
 }
 
 function SkeletonDashboard({ ticker }: { ticker: string }) {
@@ -159,7 +179,7 @@ function SwotSection({ ticker }: { ticker: string }) {
 
   if (!data) {
     return (
-      <div className="bg-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl p-6 mb-6">
+      <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.14)] rounded-2xl p-6 mb-6">
         <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C] mb-4">Analyse SWOT</p>
         {error && <p className="text-[#ff4d6d] text-sm mb-4">{error}</p>}
         <button
@@ -230,7 +250,7 @@ function PestleSection({ ticker }: { ticker: string }) {
 
   if (!data) {
     return (
-      <div className="bg-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl p-6">
+      <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.14)] rounded-2xl p-6">
         <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C] mb-4">Analyse PESTLE</p>
         {error && <p className="text-[#ff4d6d] text-sm mb-4">{error}</p>}
         <button
@@ -276,13 +296,15 @@ function PestleSection({ ticker }: { ticker: string }) {
 
 /* ─────────────── main component ─────────────────────────────────────── */
 
-type TabId = "overview" | "ai" | "valuation" | "comps";
+type TabId = "overview" | "ai" | "valuation" | "comps" | "swot" | "pestle";
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: "overview",   label: "Vue d'ensemble" },
-  { id: "ai",         label: "Analyse IA" },
-  { id: "valuation",  label: "Valorisation" },
-  { id: "comps",      label: "Comparables" },
+  { id: "overview",  label: "Vue d'ensemble" },
+  { id: "ai",        label: "Analyse IA" },
+  { id: "valuation", label: "Valorisation DCF" },
+  { id: "comps",     label: "Comparables" },
+  { id: "swot",      label: "SWOT" },
+  { id: "pestle",    label: "PESTLE" },
 ];
 
 function AnalyzePage() {
@@ -368,7 +390,7 @@ function AnalyzePage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-[#0a1628] text-white">
+      <div className="min-h-screen text-white">
 
         <FreemiumGate
           pendingTicker={pendingTicker}
@@ -379,7 +401,7 @@ function AnalyzePage() {
         />
 
         {/* ── TOP BAR ─────────────────────────────────────────────────── */}
-        <header className="sticky top-0 z-40 bg-[rgba(10,22,40,0.92)] backdrop-blur-xl border-b border-[rgba(201,168,76,0.1)]">
+        <header className="sticky top-0 z-40 bg-[#09090b]/80 backdrop-blur-xl border-b border-[rgba(201,168,76,0.1)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3 sm:gap-4">
             <div className="flex-1 flex items-center gap-2 sm:gap-3 max-w-md">
               <div className="relative flex-1">
@@ -424,7 +446,7 @@ function AnalyzePage() {
 
           {/* ── DCF PARAMS PANEL ──────────────────────────────────────── */}
           {data && showAdvanced && (
-            <div className="bg-[#132032] border border-[rgba(201,168,76,0.18)] rounded-2xl p-6 mb-8 animate-[slideUp_0.3s_ease-out]">
+            <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.18)] rounded-2xl p-6 mb-8 animate-[slideUp_0.3s_ease-out]">
               <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C] mb-5">Hypothèses DCF — modifiez et relancez l&apos;analyse</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {[
@@ -454,6 +476,16 @@ function AnalyzePage() {
               </button>
             </div>
           )}
+
+          {/* ── DISCLAIMER ────────────────────────────────────────────── */}
+          <div className="flex items-center gap-2 px-4 py-2 mb-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-xs text-yellow-400">
+            <span>⚠️</span>
+            <span>
+              Outil éducatif uniquement — pas un conseil en investissement.
+              Les analyses DCF sont des estimations mathématiques.
+              Consultez un professionnel avant toute décision financière.
+            </span>
+          </div>
 
           {/* ── SKELETON LOADING ──────────────────────────────────────── */}
           {loading && <SkeletonDashboard ticker={ticker} />}
@@ -512,21 +544,18 @@ function AnalyzePage() {
               </div>
 
               {/* ── TAB BAR ─────────────────────────────────────────────── */}
-              <div className="flex gap-1 border-b border-[rgba(255,255,255,0.06)] mb-8">
+              <div className="flex border-b border-zinc-800 mb-8 overflow-x-auto">
                 {TABS.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`px-4 py-3 text-sm font-semibold transition-all relative whitespace-nowrap ${
+                    className={`px-4 py-3 text-sm font-medium transition-all relative whitespace-nowrap flex-shrink-0 ${
                       activeTab === tab.id
-                        ? "text-[#C9A84C]"
-                        : "text-[#4a6070] hover:text-white"
+                        ? "text-white border-b-2 border-[#C9A84C]"
+                        : "text-zinc-500 hover:text-zinc-300 border-b-2 border-transparent"
                     }`}
                   >
                     {tab.label}
-                    {activeTab === tab.id && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#C9A84C] rounded-t-full" />
-                    )}
                   </button>
                 ))}
               </div>
@@ -536,22 +565,21 @@ function AnalyzePage() {
                 <div className="animate-fade-in-up">
                   {/* Verdict hero card */}
                   <div
-                    className="rounded-2xl p-6 sm:p-8 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border-l-[5px]"
-                    style={{ background: vc.bg, borderColor: vc.color, borderWidth: "1px", borderLeftWidth: "5px" }}
+                    className="rounded-xl p-6 sm:p-8 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] hover:border-[#3f3f46] transition-colors anim-1"
                   >
                     <div className="flex items-start gap-5">
                       <div
-                        className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: `${vc.color}18`, color: vc.color }}
+                        className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: `${vc.color}15`, color: vc.color }}
                       >
                         {vc.icon}
                       </div>
                       <div>
-                        <p className="text-xs font-bold uppercase tracking-[2.5px] mb-1" style={{ color: vc.color }}>
+                        <p className="text-xs font-bold uppercase tracking-[2px] text-zinc-500 mb-2">
                           Verdict ValuEngine
                         </p>
-                        <p className="text-3xl font-black" style={{ color: vc.color }}>{data.verdict_label}</p>
-                        <p className="text-white font-semibold text-sm mt-1">{vc.action}</p>
+                        <VerdictBadgePremium verdict={data.verdict} />
+                        <p className="text-zinc-300 text-sm mt-2">{vc.action}</p>
                         <p className="text-[#6b7d91] text-sm mt-2 max-w-lg leading-relaxed">
                           {data.company.name} se négocie{" "}
                           {data.dcf.upside_pct > 0
@@ -583,14 +611,14 @@ function AnalyzePage() {
 
                   {/* Historical chart */}
                   <Section title="Cours historique">
-                    <div className="mb-6">
+                    <div className="mb-6 anim-2">
                       <PriceChart ticker={data.company.ticker} currentPrice={data.company.price} />
                     </div>
                   </Section>
 
                   {/* KPI Grid */}
                   <Section title="Fondamentaux clés">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-4 anim-3">
                       <KPI label="Market Cap"         value={fmt(data.company.market_cap)} />
                       <KPI label="Chiffre d'affaires" value={fmt(data.company.revenue)} />
                       <KPI label="EBITDA"             value={fmt(data.company.ebitda)} />
@@ -692,7 +720,7 @@ function AnalyzePage() {
 
                   {/* DCF params panel inline */}
                   <Section title="Paramètres DCF" defaultOpen={false}>
-                    <div className="bg-[#132032] border border-[rgba(201,168,76,0.18)] rounded-2xl p-6">
+                    <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.18)] rounded-2xl p-6">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         {[
                           { label: "Croissance FCF",    value: growth,   set: setGrowth,   min: 1, max: 30, suffix: "%" },
@@ -733,6 +761,20 @@ function AnalyzePage() {
                 </div>
               )}
 
+              {/* ── TAB 5: SWOT ───────────────────────────────────────── */}
+              {activeTab === "swot" && (
+                <div className="animate-fade-in-up">
+                  <SwotSection ticker={data.company.ticker} />
+                </div>
+              )}
+
+              {/* ── TAB 6: PESTLE ─────────────────────────────────────── */}
+              {activeTab === "pestle" && (
+                <div className="animate-fade-in-up">
+                  <PestleSection ticker={data.company.ticker} />
+                </div>
+              )}
+
               <p className="text-[#2a3a4a] text-xs text-center mt-8 pb-4">
                 ValuEngine est un outil d&apos;aide à la décision. Les analyses ne constituent pas des conseils en investissement.
                 FCF issu des données Yahoo Finance. Tout investissement comporte des risques. · ValuEngine 2025
@@ -747,7 +789,7 @@ function AnalyzePage() {
 
 export default function AnalyzePageWrapper() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0a1628]" />}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <AnalyzePage />
     </Suspense>
   );
