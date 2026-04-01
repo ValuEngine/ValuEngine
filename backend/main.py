@@ -259,6 +259,40 @@ def search(ticker: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/quote/{ticker}")
+def quote(ticker: str):
+    """Prix en temps réel + variation journalière d'un ticker (léger, sans analyse)."""
+    t = ticker.upper().strip()
+    if USE_FMP:
+        try:
+            url = f"https://financialmodelingprep.com/api/v3/quote/{t}?apikey={FMP_KEY}"
+            resp = httpx.get(url, timeout=5)
+            resp.raise_for_status()
+            data = resp.json()
+            if not data:
+                raise HTTPException(status_code=404, detail=f"'{t}' introuvable")
+            q = data[0]
+            return {
+                "ticker":     q.get("symbol", t),
+                "name":       q.get("name", t),
+                "price":      round(float(q.get("price") or 0), 2),
+                "change_pct": round(float(q.get("changesPercentage") or 0), 2),
+            }
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    else:
+        try:
+            fi = yf.Ticker(t).fast_info
+            price = float(getattr(fi, "last_price", 0) or 0)
+            prev  = float(getattr(fi, "previous_close", price) or price)
+            change_pct = round(((price - prev) / prev * 100), 2) if prev else 0
+            return {"ticker": t, "name": t, "price": round(price, 2), "change_pct": change_pct}
+        except Exception as e:
+            raise HTTPException(status_code=404, detail=str(e))
+
+
 @app.get("/api/ai/swot/{ticker}")
 def swot_endpoint(ticker: str):
     try:

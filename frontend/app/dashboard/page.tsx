@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Plus, X, Loader2 } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 
 interface RecentEntry {
@@ -13,12 +13,12 @@ interface RecentEntry {
   date: string;
 }
 
-interface WatchlistEntry {
+interface WatchlistItem {
   ticker: string;
   name: string;
-  verdict: string;
-  upside: number;
-  price: number;
+  price: number | null;
+  change_pct: number | null;
+  verdict: string | null;
 }
 
 interface MarketItem {
@@ -37,8 +37,6 @@ const MARKET_FALLBACK: MarketItem[] = [
 
 const POPULAR_TICKERS = ["AAPL", "MSFT", "NVDA", "TSLA", "GOOGL", "AMZN"];
 
-const WATCHLIST = ["AAPL","MSFT","NVDA","GOOGL","AMZN","TSLA","META","JPM","V","JNJ"];
-
 function verdictColor(verdict: string) {
   if (verdict === "BUY")  return "bg-[rgba(63,185,80,0.12)] text-[#3fb950] border border-[rgba(63,185,80,0.25)]";
   if (verdict === "SELL") return "bg-[rgba(248,81,73,0.12)] text-[#f85149] border border-[rgba(248,81,73,0.25)]";
@@ -50,8 +48,12 @@ export default function DashboardPage() {
   const { isSignedIn, user, isLoaded } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [recent, setRecent] = useState<RecentEntry[]>([]);
-  const [watchlistData, setWatchlistData] = useState<WatchlistEntry[]>([]);
-  const [watchlistLoading, setWatchlistLoading] = useState(false);
+  const [watchlistItems, setWatchlistItems] = useState<WatchlistItem[]>([]);
+  const [watchlistLoading, setWatchlistLoading] = useState(true);
+  const [showAddInput, setShowAddInput] = useState(false);
+  const [addInput, setAddInput] = useState("");
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState("");
   const [marketData, setMarketData] = useState<MarketItem[]>([]);
   const [marketLoading, setMarketLoading] = useState(true);
 
@@ -70,35 +72,53 @@ export default function DashboardPage() {
     }
   }, []);
 
-  useEffect(() => {
-    async function fetchWatchlist() {
-      setWatchlistLoading(true);
-      const results: WatchlistEntry[] = [];
-      for (const ticker of WATCHLIST) {
-        try {
-          const res = await fetch("/api/analyze", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ticker, growth_rate: 0.08, wacc: 0.09, terminal_growth: 0.03, horizon: 5 }),
-          });
-          if (!res.ok) continue;
-          const d = await res.json();
-          results.push({
-            ticker: d.company.ticker,
-            name: d.company.name,
-            verdict: d.verdict,
-            upside: d.dcf.upside_pct,
-            price: d.company.price,
-          });
-          await new Promise(r => setTimeout(r, 300));
-        } catch { /* skip */ }
-      }
-      results.sort((a, b) => b.upside - a.upside);
-      setWatchlistData(results);
-      setWatchlistLoading(false);
-    }
-    fetchWatchlist();
+  const fetchWatchlist = useCallback(async () => {
+    setWatchlistLoading(true);
+    try {
+      const r = await fetch("/api/db/watchlist");
+      if (r.ok) setWatchlistItems(await r.json());
+    } catch { /* ignore */ }
+    setWatchlistLoading(false);
   }, []);
+
+  useEffect(() => { fetchWatchlist(); }, [fetchWatchlist]);
+
+  const handleAddTicker = async () => {
+    const sym = addInput.trim().toUpperCase();
+    if (!sym) return;
+    setAddLoading(true);
+    setAddError("");
+    try {
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+      const searchRes = await fetch(`${API_BASE}/api/search/${sym}`);
+      if (!searchRes.ok) { setAddError("Ticker introuvable"); setAddLoading(false); return; }
+      const info = await searchRes.json();
+      const addRes = await fetch("/api/db/watchlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticker: sym, company_name: info.name }),
+      });
+      if (!addRes.ok) {
+        const err = await addRes.json();
+        setAddError(err.error || "Erreur lors de l'ajout");
+        setAddLoading(false);
+        return;
+      }
+      setAddInput("");
+      setShowAddInput(false);
+      fetchWatchlist();
+    } catch { setAddError("Erreur réseau"); }
+    setAddLoading(false);
+  };
+
+  const handleRemoveTicker = async (ticker: string) => {
+    setWatchlistItems(prev => prev.filter(i => i.ticker !== ticker));
+    await fetch("/api/db/watchlist", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ticker }),
+    });
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -253,79 +273,106 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Opportunities section */}
+        {/* Watchlist section */}
         <section>
-          <h2 className="text-base font-bold mb-4 text-white">Opportunités détectées</h2>
-          {watchlistLoading ? (
-            <div className="grid grid-cols-2 gap-4">
-              {[...Array(2)].map((_, i) => <div key={i} className="skeleton h-48 rounded-xl" />)}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-bold text-white">Ma Watchlist</h2>
+            <button
+              onClick={() => { setShowAddInput(v => !v); setAddError(""); setAddInput(""); }}
+              className="flex items-center gap-1.5 text-xs font-semibold text-[#C9A84C] border border-[rgba(201,168,76,0.3)] px-3 py-1.5 rounded-lg hover:bg-[rgba(201,168,76,0.08)] transition-all"
+            >
+              <Plus size={13} /> Ajouter
+            </button>
+          </div>
+
+          {/* Add input */}
+          {showAddInput && (
+            <div className="mb-4 flex gap-2 items-start">
+              <div className="flex-1">
+                <input
+                  autoFocus
+                  type="text"
+                  value={addInput}
+                  onChange={e => { setAddInput(e.target.value.toUpperCase()); setAddError(""); }}
+                  onKeyDown={e => e.key === "Enter" && handleAddTicker()}
+                  placeholder="Ex: AAPL, TSLA..."
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-white placeholder-zinc-600 text-sm focus:outline-none focus:border-[rgba(201,168,76,0.5)] transition-all"
+                />
+                {addError && <p className="text-xs text-red-400 mt-1">{addError}</p>}
+              </div>
+              <button
+                onClick={handleAddTicker}
+                disabled={addLoading || !addInput}
+                className="flex items-center gap-1.5 bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold px-4 py-2.5 rounded-lg transition-all disabled:opacity-40 whitespace-nowrap text-sm"
+              >
+                {addLoading ? <Loader2 size={14} className="animate-spin" /> : "Valider"}
+              </button>
+              <button
+                onClick={() => { setShowAddInput(false); setAddInput(""); setAddError(""); }}
+                className="p-2.5 text-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                <X size={16} />
+              </button>
             </div>
-          ) : watchlistData.length === 0 ? (
-            <div className="rounded-xl p-6 border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm text-center">
-              <p className="text-sm text-zinc-500">Chargement des données de marché...</p>
+          )}
+
+          {/* Watchlist content */}
+          {watchlistLoading ? (
+            <div className="space-y-2">
+              {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-12 rounded-xl" />)}
+            </div>
+          ) : watchlistItems.length === 0 ? (
+            <div className="rounded-xl p-8 border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm text-center">
+              <p className="text-sm text-zinc-400 mb-1">Ajoutez vos premiers tickers à suivre</p>
+              <p className="text-xs text-zinc-600">Cliquez sur &quot;Ajouter&quot; pour commencer</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* TOP 5 BUY */}
-              <div className="rounded-xl p-4 border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm hover:border-[#3f3f46] transition-colors">
-                <h3 className="text-emerald-400 font-bold mb-3 flex items-center gap-2 text-sm">
-                  <span>↑</span> Top 5 — Meilleures opportunités
-                </h3>
-                <div className="space-y-2">
-                  {watchlistData.slice(0, 5).map(d => (
-                    <div
-                      key={d.ticker}
-                      onClick={() => router.push(`/analyze?ticker=${d.ticker}`)}
-                      className="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-all"
-                    >
-                      <div>
-                        <span className="font-bold text-sm text-white">{d.ticker}</span>
-                        <span className="text-xs ml-2 text-zinc-500">${d.price.toFixed(2)}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs font-bold ${d.upside >= 0 ? "text-[#3fb950]" : "text-[#f85149]"}`}>
-                          {d.upside >= 0 ? "+" : ""}{d.upside.toFixed(1)}%
+            <div className="rounded-xl border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm overflow-hidden">
+              {watchlistItems.map((item, i) => (
+                <div
+                  key={item.ticker}
+                  className={`flex items-center justify-between px-4 py-3 hover:bg-white/[0.03] transition-colors ${i < watchlistItems.length - 1 ? "border-b border-[#27272a]" : ""}`}
+                >
+                  {/* Left: ticker + name */}
+                  <button
+                    className="flex items-center gap-3 text-left flex-1 min-w-0"
+                    onClick={() => router.push(`/analyze?ticker=${item.ticker}`)}
+                  >
+                    <span className="text-[#C9A84C] font-bold text-sm w-14 flex-shrink-0">{item.ticker}</span>
+                    <span className="text-zinc-400 text-xs truncate">{item.name}</span>
+                  </button>
+
+                  {/* Right: price + change + verdict + remove */}
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    {item.price != null ? (
+                      <>
+                        <span className="text-sm font-semibold text-white">${item.price.toFixed(2)}</span>
+                        <span className={`text-xs font-bold ${(item.change_pct ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          {(item.change_pct ?? 0) >= 0 ? "+" : ""}{(item.change_pct ?? 0).toFixed(2)}%
                         </span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
-                          d.verdict === "BUY" ? "bg-[#3fb950]/20 text-[#3fb950]" :
-                          d.verdict === "SELL" ? "bg-[#f85149]/20 text-[#f85149]" :
-                          "bg-[#C9A84C]/20 text-[#C9A84C]"
-                        }`}>{d.verdict === "BUY" ? "Sous-évalué" : d.verdict === "SELL" ? "Surévalué" : "Juste valeur"}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* TOP 5 SELL */}
-              <div className="rounded-xl p-4 border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm hover:border-[#3f3f46] transition-colors">
-                <h3 className="text-red-400 font-bold mb-3 flex items-center gap-2 text-sm">
-                  <span>↓</span> Top 5 — À surveiller
-                </h3>
-                <div className="space-y-2">
-                  {[...watchlistData].reverse().slice(0, 5).map(d => (
-                    <div
-                      key={d.ticker}
-                      onClick={() => router.push(`/analyze?ticker=${d.ticker}`)}
-                      className="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-all"
+                      </>
+                    ) : (
+                      <span className="text-xs text-zinc-600">—</span>
+                    )}
+                    {item.verdict && (
+                      <span className={`hidden sm:inline text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        item.verdict === "BUY"  ? "bg-emerald-500/15 text-emerald-400" :
+                        item.verdict === "SELL" ? "bg-red-500/15 text-red-400" :
+                        "bg-[#C9A84C]/15 text-[#C9A84C]"
+                      }`}>
+                        {item.verdict === "BUY" ? "Sous-évalué" : item.verdict === "SELL" ? "Surévalué" : "Juste valeur"}
+                      </span>
+                    )}
+                    <button
+                      onClick={() => handleRemoveTicker(item.ticker)}
+                      className="text-zinc-600 hover:text-red-400 transition-colors p-1"
+                      aria-label={`Supprimer ${item.ticker}`}
                     >
-                      <div>
-                        <span className="font-bold text-sm text-white">{d.ticker}</span>
-                        <span className="text-xs ml-2 text-zinc-500">${d.price.toFixed(2)}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs font-bold ${d.upside >= 0 ? "text-[#3fb950]" : "text-[#f85149]"}`}>
-                          {d.upside >= 0 ? "+" : ""}{d.upside.toFixed(1)}%
-                        </span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
-                          d.verdict === "BUY" ? "bg-[#3fb950]/20 text-[#3fb950]" :
-                          d.verdict === "SELL" ? "bg-[#f85149]/20 text-[#f85149]" :
-                          "bg-[#C9A84C]/20 text-[#C9A84C]"
-                        }`}>{d.verdict === "BUY" ? "Sous-évalué" : d.verdict === "SELL" ? "Surévalué" : "Juste valeur"}</span>
-                      </div>
-                    </div>
-                  ))}
+                      <X size={13} />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
           )}
         </section>
