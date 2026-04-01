@@ -6,24 +6,10 @@ import { searchTicker } from "@/lib/api";
 import AppLayout from "@/components/AppLayout";
 
 interface Position {
+  id?: string;
   ticker: string;
   shares: number;
   avgPrice: number;
-}
-
-const STORAGE_KEY = "ve_portfolio";
-
-function loadPositions(): Position[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function savePositions(positions: Position[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(positions));
 }
 
 export default function PortfolioPage() {
@@ -38,9 +24,16 @@ export default function PortfolioPage() {
   const [newAvgPrice, setNewAvgPrice] = useState("");
   const [modalError, setModalError] = useState<string | null>(null);
 
+  // Load from Supabase
   useEffect(() => {
-    const loaded = loadPositions();
-    setPositions(loaded);
+    fetch("/api/db/portfolio")
+      .then(r => r.json())
+      .then((rows: Array<{ id: string; ticker: string; shares: number; avg_price: number }>) => {
+        if (Array.isArray(rows)) {
+          setPositions(rows.map(r => ({ id: r.id, ticker: r.ticker, shares: r.shares, avgPrice: r.avg_price })));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const fetchPrices = useCallback(async (pos: Position[]) => {
@@ -75,12 +68,24 @@ export default function PortfolioPage() {
       return;
     }
 
-    const updated = [
-      ...positions.filter((p) => p.ticker !== ticker),
-      { ticker, shares, avgPrice },
-    ];
-    setPositions(updated);
-    savePositions(updated);
+    // Save to Supabase
+    fetch("/api/db/portfolio", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ticker, shares, avg_price: avgPrice }),
+    })
+      .then(r => r.json())
+      .then(row => {
+        const updated = [
+          ...positions.filter(p => p.ticker !== ticker),
+          { id: row.id, ticker, shares, avgPrice },
+        ];
+        setPositions(updated);
+      })
+      .catch(() => {
+        // fallback: add locally
+        setPositions(prev => [...prev.filter(p => p.ticker !== ticker), { ticker, shares, avgPrice }]);
+      });
     setShowModal(false);
     setNewTicker("");
     setNewShares("");
@@ -89,9 +94,12 @@ export default function PortfolioPage() {
   };
 
   const handleDelete = (ticker: string) => {
-    const updated = positions.filter((p) => p.ticker !== ticker);
-    setPositions(updated);
-    savePositions(updated);
+    fetch("/api/db/portfolio", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ticker }),
+    }).catch(() => {});
+    setPositions(prev => prev.filter(p => p.ticker !== ticker));
   };
 
   // Totals

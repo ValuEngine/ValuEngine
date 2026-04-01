@@ -306,6 +306,7 @@ function AnalyzePage() {
   const [horizon,  setHorizon]  = useState(5);
 
   const saveRecent = (result: AnalyzeResponse) => {
+    // localStorage fallback pour le dashboard
     try {
       const recent = JSON.parse(localStorage.getItem("ve_recent") || "[]");
       const entry = {
@@ -316,9 +317,21 @@ function AnalyzePage() {
       };
       const updated = [entry, ...recent.filter((r: { ticker: string }) => r.ticker !== entry.ticker)].slice(0, 5);
       localStorage.setItem("ve_recent", JSON.stringify(updated));
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
+
+    // Persistance Supabase
+    fetch("/api/db/analyses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ticker: result.company.ticker,
+        company_name: result.company.name,
+        verdict: result.verdict,
+        price: result.company.price,
+        intrinsic_value: result.dcf.intrinsic_value,
+        upside_pct: result.dcf.upside_pct,
+      }),
+    }).catch(() => {});
   };
 
   const doAnalyze = async (symbol: string) => {

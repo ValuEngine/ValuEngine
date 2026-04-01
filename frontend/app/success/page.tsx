@@ -6,14 +6,26 @@ import { useUser } from "@clerk/nextjs";
 
 export default function SuccessPage() {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
 
   useEffect(() => {
-    if (user) {
-      localStorage.setItem(`pro_${user.id}`, "true");
-      setTimeout(() => router.push("/"), 3000);
-    }
-  }, [user, router]);
+    if (!isLoaded) return;
+
+    // localStorage fallback
+    if (user?.id) localStorage.setItem(`pro_${user.id}`, "true");
+    localStorage.setItem("valuengine_pro", "true");
+    localStorage.setItem("valuengine_pro_ts", Date.now().toString());
+
+    // Persistance Supabase — marque is_pro: true côté serveur
+    fetch("/api/db/user", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_pro: true }),
+    }).catch(() => {});
+
+    const timer = setTimeout(() => router.push("/dashboard"), 3000);
+    return () => clearTimeout(timer);
+  }, [isLoaded, user, router]);
 
   return (
     <main className="min-h-screen bg-[#0a1628] flex items-center justify-center">

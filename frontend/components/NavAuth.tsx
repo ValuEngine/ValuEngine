@@ -44,13 +44,23 @@ export function NavAuth() {
   );
 }
 
+function checkIsPro(userId?: string): boolean {
+  if (typeof window === "undefined") return false;
+  if (userId && localStorage.getItem(`pro_${userId}`) === "true") return true;
+  const globalPro = localStorage.getItem("valuengine_pro");
+  const globalTs = localStorage.getItem("valuengine_pro_ts");
+  if (globalPro === "true" && globalTs) {
+    const age = Date.now() - parseInt(globalTs);
+    if (age < 30 * 24 * 60 * 60 * 1000) return true;
+  }
+  return false;
+}
+
 export function NavAuthCompact() {
   const { isSignedIn, user } = useUser();
 
   if (isSignedIn) {
-    const isPro = typeof window !== "undefined" && user
-      ? localStorage.getItem(`pro_${user.id}`) === "true"
-      : false;
+    const isPro = checkIsPro(user?.id);
 
     return (
       <div className="flex items-center gap-2">

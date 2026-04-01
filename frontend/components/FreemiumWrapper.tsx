@@ -7,6 +7,18 @@ import { Lock } from "lucide-react";
 const DAILY_FREE_LIMIT = 3;
 const STORAGE_KEY = "ve_usage";
 
+function checkIsPro(userId?: string): boolean {
+  if (typeof window === "undefined") return false;
+  if (userId && localStorage.getItem(`pro_${userId}`) === "true") return true;
+  const globalPro = localStorage.getItem("valuengine_pro");
+  const globalTs = localStorage.getItem("valuengine_pro_ts");
+  if (globalPro === "true" && globalTs) {
+    const age = Date.now() - parseInt(globalTs);
+    if (age < 30 * 24 * 60 * 60 * 1000) return true;
+  }
+  return false;
+}
+
 interface UsageRecord { userId: string; date: string; count: number }
 
 function getTodayStr() {
@@ -113,7 +125,10 @@ export function FreemiumGate({
 
   useEffect(() => {
     if (!pendingTicker) return;
-    if (isSignedIn && user?.id && hasReachedLimit(user.id)) {
+    const isPro = checkIsPro(user?.id);
+    if (isPro) {
+      onApproved(pendingTicker);
+    } else if (isSignedIn && user?.id && hasReachedLimit(user.id)) {
       onBlocked();
     } else {
       if (isSignedIn && user?.id) incrementUsage(user.id);
