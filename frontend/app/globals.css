@@ -1,0 +1,137 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-inter: 'Inter', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-inter);
+  background-color: #0a1628;
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar custom */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0a1628; }
+::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.5); }
+
+/* Sélection de texte */
+::selection { background: rgba(201,168,76,0.25); color: #fff; }
+
+/* ── Clerk custom theme ───────────────────────────────── */
+.cl-rootBox,
+.cl-card,
+.cl-userButtonPopoverCard {
+  background-color: #0f1f3d !important;
+  border: 1px solid rgba(201, 168, 76, 0.3) !important;
+}
+
+.cl-headerTitle,
+.cl-userPreviewMainIdentifier,
+.cl-userButtonPopoverActionButtonText,
+.cl-menuItem__manageAccount,
+.cl-menuItem__signOut,
+.cl-profileSectionTitleText,
+.cl-formFieldLabel,
+.cl-identityPreviewText,
+.cl-accordionTriggerButton {
+  color: #ffffff !important;
+}
+
+.cl-headerSubtitle,
+.cl-userPreviewSecondaryIdentifier,
+.cl-footerActionText,
+.cl-formFieldHintText,
+.cl-identityPreviewSecondary {
+  color: #cbd5e0 !important;
+}
+
+.cl-formFieldInput,
+.cl-phoneInputBox {
+  background-color: #1a2d4d !important;
+  color: #ffffff !important;
+  border-color: rgba(201, 168, 76, 0.3) !important;
+}
+
+.cl-formFieldInput:focus {
+  border-color: #C9A84C !important;
+  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.2) !important;
+}
+
+.cl-formButtonPrimary {
+  background-color: #C9A84C !important;
+  color: #0a1628 !important;
+  font-weight: 700 !important;
+}
+
+.cl-formButtonPrimary:hover {
+  background-color: #b8943d !important;
+}
+
+.cl-footerActionLink,
+.cl-identityPreviewEditButton {
+  color: #C9A84C !important;
+  font-weight: 600 !important;
+}
+
+.cl-socialButtonsBlockButton {
+  background-color: #1a2d4d !important;
+  border-color: rgba(201, 168, 76, 0.4) !important;
+  color: #ffffff !important;
+}
+
+.cl-socialButtonsBlockButtonText {
+  color: #ffffff !important;
+}
+
+.cl-userButtonPopoverActionButton:hover {
+  background-color: rgba(201, 168, 76, 0.1) !important;
+}
+
+.cl-userButtonPopoverActionButtonIcon {
+  color: #C9A84C !important;
+}
+
+.cl-avatarBox {
+  outline: 2px solid #C9A84C !important;
+  outline-offset: 2px !important;
+}
+
+.cl-badge,
+.cl-userButtonPopoverFooter {
+  display: none !important;
+}
+
+.cl-userButtonPopoverActionButtonText,
+.cl-userButtonPopoverActionButtonText span,
+.cl-menuItem span,
+.cl-userPreviewMainIdentifier,
+.cl-userPreviewSecondaryIdentifier,
+.cl-userButtonPopoverUserPreviewMainIdentifier,
+.cl-userButtonPopoverUserPreviewSecondaryIdentifier {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.cl-internal-b3fm6y,
+.cl-internal-1hp5nqm,
+.cl-internal-wkkub3 {
+  color: #ffffff !important;
+}
