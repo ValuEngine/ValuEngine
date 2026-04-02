@@ -8,7 +8,7 @@ import {
   ChevronDown, ChevronUp, Loader2, Bell, Trash2, Share2,
 } from "lucide-react";
 import { FreemiumGate } from "@/components/FreemiumWrapper";
-import { analyzeStock, fmt, pct, type AnalyzeResponse } from "@/lib/api";
+import { analyzeStock, warmupBackend, fmt, pct, type AnalyzeResponse } from "@/lib/api";
 import { SensitivityHeatmap } from "@/components/SensitivityHeatmap";
 import { FCFChart } from "@/components/FCFChart";
 import { TradingComps } from "@/components/TradingComps";
@@ -463,6 +463,7 @@ function AnalyzePage() {
   const [ticker,        setTicker]        = useState(initialTicker);
   const [inputValue,    setInputValue]    = useState(initialTicker);
   const [loading,       setLoading]       = useState(false);
+  const [retryInfo,     setRetryInfo]     = useState<string | null>(null);
   const [error,         setError]         = useState<string | null>(null);
   const [data,          setData]          = useState<AnalyzeResponse | null>(null);
   const [showAdvanced,  setShowAdvanced]  = useState(false);
@@ -520,21 +521,31 @@ function AnalyzePage() {
     setTicker(symbol);
     setLoading(true);
     setError(null);
+    setRetryInfo(null);
     setData(null);
     try {
-      const result = await analyzeStock({
-        ticker: symbol,
-        growth_rate:    growth   / 100,
-        wacc:           wacc     / 100,
-        terminal_growth:terminal / 100,
-        horizon,
-      });
+      const result = await analyzeStock(
+        {
+          ticker: symbol,
+          growth_rate:    growth   / 100,
+          wacc:           wacc     / 100,
+          terminal_growth:terminal / 100,
+          horizon,
+        },
+        (attempt, max) => setRetryInfo(`Tentative ${attempt}/${max}…`),
+      );
       setData(result);
       saveRecent(result);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Erreur inconnue");
+      const msg = e instanceof Error ? e.message : "Erreur inconnue";
+      setError(
+        msg === "Failed to fetch" || msg.includes("abort")
+          ? "Connexion au serveur impossible. Le serveur est peut-être en veille — réessaie dans quelques secondes."
+          : msg,
+      );
     } finally {
       setLoading(false);
+      setRetryInfo(null);
     }
   };
 
@@ -544,6 +555,8 @@ function AnalyzePage() {
     setPendingTicker(symbol);
   };
 
+  // Warmup le backend Railway dès le montage (évite cold start)
+  useEffect(() => { warmupBackend(); }, []);
   useEffect(() => { if (initialTicker) runAnalysis(initialTicker); }, []);
 
   const vc = data ? VerdictConfig(data.verdict) : null;
@@ -648,15 +661,29 @@ function AnalyzePage() {
           </div>
 
           {/* ── SKELETON LOADING ──────────────────────────────────────── */}
-          {loading && <SkeletonDashboard ticker={ticker} />}
+          {loading && (
+            <>
+              {retryInfo && (
+                <div className="text-center mb-4">
+                  <p className="text-[#C9A84C] text-sm font-medium animate-pulse">{retryInfo}</p>
+                  <p className="text-zinc-500 text-xs mt-1">Première requête parfois lente (réveil du serveur)</p>
+                </div>
+              )}
+              <SkeletonDashboard ticker={ticker} />
+            </>
+          )}
 
           {/* ── ERROR ─────────────────────────────────────────────────── */}
           {error && (
-            <div className="bg-[rgba(255,77,109,0.07)] border border-[rgba(255,77,109,0.2)] rounded-2xl p-6 text-center max-w-lg mx-auto mt-16">
-              <p className="text-[#ff4d6d] font-bold mb-2">Erreur</p>
-              <p className="text-[#7a8fa3] text-sm">{error}</p>
-              <button onClick={() => runAnalysis(inputValue)} className="mt-4 text-sm text-[#C9A84C] hover:underline">
-                Réessayer
+            <div className="bg-[rgba(255,77,109,0.07)] border border-[rgba(255,77,109,0.2)] rounded-2xl p-8 text-center max-w-lg mx-auto mt-16">
+              <p className="text-[#ff4d6d] font-bold text-lg mb-3">Connexion impossible</p>
+              <p className="text-[#7a8fa3] text-sm leading-relaxed mb-1">{error}</p>
+              <p className="text-zinc-600 text-xs mb-5">Le serveur peut mettre quelques secondes à se réveiller lors de la première requête.</p>
+              <button
+                onClick={() => runAnalysis(ticker || inputValue)}
+                className="inline-flex items-center gap-2 bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold px-6 py-2.5 rounded-xl transition-colors text-sm"
+              >
+                Réessayer l&apos;analyse
               </button>
             </div>
           )}

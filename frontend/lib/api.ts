@@ -1,6 +1,53 @@
 // Proxy via Next.js en dev (évite CORS) — URL directe en prod
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
+// ── Retry + timeout helper ──────────────────────────────────────────────────
+const RETRY_COUNT = 3;
+const RETRY_DELAY_MS = 1500;
+const FETCH_TIMEOUT_MS = 60_000; // 60s — analyse IA peut être longue
+
+type RetryProgressCallback = (attempt: number, maxAttempts: number) => void;
+
+async function fetchWithRetry(
+  input: RequestInfo,
+  init?: RequestInit & { onRetry?: RetryProgressCallback },
+): Promise<Response> {
+  const { onRetry, ...fetchInit } = init || {};
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= RETRY_COUNT; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+      const res = await fetch(input, { ...fetchInit, signal: controller.signal });
+      clearTimeout(timeout);
+
+      // 502/503/504 = serveur en cold start → retry
+      if (res.status >= 502 && res.status <= 504 && attempt < RETRY_COUNT) {
+        onRetry?.(attempt + 1, RETRY_COUNT);
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * attempt));
+        continue;
+      }
+      return res;
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      if (attempt < RETRY_COUNT) {
+        onRetry?.(attempt + 1, RETRY_COUNT);
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * attempt));
+      }
+    }
+  }
+  throw lastError || new Error("Le serveur ne répond pas après plusieurs tentatives. Réessaie dans quelques secondes.");
+}
+
+// ── Warmup ping (réveille le backend Railway) ───────────────────────────────
+let _warmupDone = false;
+export function warmupBackend(): void {
+  if (_warmupDone) return;
+  _warmupDone = true;
+  fetch(`${API_BASE}/health`, { method: "GET" }).catch(() => {});
+}
+
 export interface AnalyzeRequest {
   ticker: string;
   growth_rate: number;
@@ -31,6 +78,7 @@ export interface AnalyzeResponse {
   analysis: { bull_case: string; bear_case: string };
   verdict: "BUY" | "HOLD" | "SELL";
   verdict_label: string;
+  share_id?: string;
 }
 
 export interface SearchResult {
@@ -47,7 +95,7 @@ export interface HistoryPoint {
 }
 
 export async function searchTicker(ticker: string): Promise<SearchResult> {
-  const res = await fetch(`${API_BASE}/api/search/${encodeURIComponent(ticker)}`);
+  const res = await fetchWithRetry(`${API_BASE}/api/search/${encodeURIComponent(ticker)}`);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Ticker introuvable" }));
     throw new Error(err.detail || `Erreur ${res.status}`);
@@ -56,17 +104,21 @@ export async function searchTicker(ticker: string): Promise<SearchResult> {
 }
 
 export async function fetchHistory(ticker: string, period = "1y"): Promise<HistoryPoint[]> {
-  const res = await fetch(`${API_BASE}/api/history/${encodeURIComponent(ticker)}?period=${period}`);
+  const res = await fetchWithRetry(`${API_BASE}/api/history/${encodeURIComponent(ticker)}?period=${period}`);
   if (!res.ok) throw new Error(`Erreur historique ${res.status}`);
   const json = await res.json();
   return json.data;
 }
 
-export async function analyzeStock(req: AnalyzeRequest): Promise<AnalyzeResponse> {
-  const res = await fetch(`${API_BASE}/api/analyze`, {
+export async function analyzeStock(
+  req: AnalyzeRequest,
+  onRetry?: RetryProgressCallback,
+): Promise<AnalyzeResponse> {
+  const res = await fetchWithRetry(`${API_BASE}/api/analyze`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),
+    onRetry,
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Erreur inconnue" }));

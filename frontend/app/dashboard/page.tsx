@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { ArrowRight, Plus, X, Loader2, ChevronRight } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
+import { warmupBackend } from "@/lib/api";
 
 interface RecentEntry {
   ticker: string;
@@ -58,6 +59,9 @@ export default function DashboardPage() {
   const [marketLoading, setMarketLoading] = useState(true);
   const [onboardingStep, setOnboardingStep] = useState(0); // 0 = hidden
   const [onboardingTicker, setOnboardingTicker] = useState("");
+
+  // Warmup backend Railway dès l'arrivée sur le dashboard
+  useEffect(() => { warmupBackend(); }, []);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {

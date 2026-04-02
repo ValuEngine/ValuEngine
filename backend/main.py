@@ -75,6 +75,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "https://valuengine.io",
+        "https://valuengine.fr",
         _frontend_url,
     ],
     allow_origin_regex=r"https://.*\.vercel\.app",
@@ -87,6 +88,12 @@ app.add_middleware(
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "ValuEngine API v2"}
+
+
+@app.get("/warmup")
+def warmup():
+    """Lightweight endpoint to wake up Railway from cold start."""
+    return {"status": "warm"}
 
 
 # ── Market overview cache ────────────────────────────────────────────────────
