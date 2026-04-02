@@ -75,8 +75,50 @@ function SkeletonCard({ className = "" }: { className?: string }) {
 }
 
 function SkeletonDashboard({ ticker }: { ticker: string }) {
+  const [step, setStep] = useState(0);
+  const steps = [
+    "Récupération des données financières",
+    "Calcul du DCF et de la valeur intrinsèque",
+    "Génération de l'analyse IA Bull & Bear",
+    "Finalisation du rapport",
+  ];
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setStep(1), 3000),
+      setTimeout(() => setStep(2), 8000),
+      setTimeout(() => setStep(3), 15000),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
   return (
     <div className="animate-[fadeIn_0.3s_ease-out]">
+      {/* Progress steps */}
+      <div className="max-w-md mx-auto mb-10 mt-4">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-sm font-semibold text-white">Analyse de <span className="text-[#C9A84C]">{ticker}</span></span>
+          <span className="text-xs text-zinc-500">{Math.min(step + 1, steps.length)}/{steps.length}</span>
+        </div>
+        <div className="w-full bg-zinc-800 rounded-full h-1.5 mb-4">
+          <div className="bg-[#C9A84C] h-1.5 rounded-full transition-all duration-1000 ease-out" style={{ width: `${((step + 1) / steps.length) * 100}%` }} />
+        </div>
+        <div className="space-y-2">
+          {steps.map((s, i) => (
+            <div key={s} className={`flex items-center gap-3 text-xs transition-colors ${i < step ? "text-emerald-400" : i === step ? "text-[#C9A84C]" : "text-zinc-600"}`}>
+              {i < step ? (
+                <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5 flex-shrink-0"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.78 5.22a.75.75 0 00-1.06 0L7 8.94 5.28 7.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25a.75.75 0 000-1.06z" /></svg>
+              ) : i === step ? (
+                <div className="w-3.5 h-3.5 flex-shrink-0 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <div className="w-3.5 h-3.5 flex-shrink-0 rounded-full border border-zinc-700" />
+              )}
+              <span className={i <= step ? "font-medium" : ""}>{s}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Skeleton cards */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
         <div className="space-y-2">
           <SkeletonCard className="h-8 w-56" />
@@ -85,29 +127,13 @@ function SkeletonDashboard({ ticker }: { ticker: string }) {
         <SkeletonCard className="h-10 w-28" />
       </div>
       <SkeletonCard className="h-36 w-full mb-8" />
-      <div className="mb-4">
-        <SkeletonCard className="h-4 w-48 mb-4" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-          <SkeletonCard className="h-40" />
-          <SkeletonCard className="h-40" />
-        </div>
-      </div>
-      <div className="mb-4">
-        <SkeletonCard className="h-4 w-36 mb-4" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
-          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-24" />)}
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-24" />)}
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-24" />)}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <SkeletonCard className="h-64" />
         <SkeletonCard className="h-64" />
       </div>
-      <p className="text-[#3a5070] text-sm text-center mt-4 animate-pulse">
-        Analyse de <span className="text-[#C9A84C] font-bold">{ticker}</span> en cours — récupération des données · DCF · IA…
-      </p>
     </div>
   );
 }
@@ -697,10 +723,10 @@ function AnalyzePage() {
               <h2 className="text-xl font-bold mb-2">Entrez un ticker pour commencer</h2>
               <p className="text-[#4a6070] text-sm max-w-xs">
                 Exemples :{" "}
-                {["AAPL", "TSLA", "NVDA"].map((t, i) => (
+                {["AAPL", "MC.PA", "TSLA", "TTE.PA", "NVDA"].map((t, i) => (
                   <span key={t}>
                     <button onClick={() => runAnalysis(t)} className="text-[#C9A84C] hover:underline">{t}</button>
-                    {i < 2 ? ", " : ""}
+                    {i < 4 ? ", " : ""}
                   </span>
                 ))}
               </p>

@@ -3,13 +3,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, ArrowDown, TrendingUp, TrendingDown, Minus, Search } from "lucide-react";
+import { ChevronRight, ChevronDown, ArrowDown, TrendingUp, TrendingDown, Minus, Search, Shield, Zap, BarChart3 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { NavAuth } from "@/components/NavAuth";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import { searchTicker, type SearchResult } from "@/lib/api";
 
-/* ── Features (reordered per spec: DCF, Bull/Bear, SWOT, PESTLE, Comps, Track Record) ── */
+/* ── Features ────────────────────────────────────────────────────────── */
 const FEATURES: { title: string; desc: string; pro?: boolean; icon: React.ReactNode }[] = [
   {
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></svg>,
@@ -20,48 +20,50 @@ const FEATURES: { title: string; desc: string; pro?: boolean; icon: React.ReactN
   {
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" /></svg>,
     title: "IA Bull & Bear",
-    desc: "L'IA génère des arguments haussiers et baissiers étayés sur les fondamentaux.",
+    desc: "Arguments haussiers et baissiers étayés sur les fondamentaux, générés par IA.",
     pro: true,
   },
   {
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>,
-    title: "Analyse SWOT",
-    desc: "Forces, faiblesses, opportunités et menaces synthétisées par l'IA.",
-    pro: true,
-  },
-  {
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>,
-    title: "Analyse PESTLE",
-    desc: "Contexte macro : politique, économie, social, techno, légal, environnemental.",
+    title: "SWOT & PESTLE",
+    desc: "Analyse stratégique et macro-économique complète, synthétisée par l&apos;IA.",
     pro: true,
   },
   {
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>,
     title: "Trading Comps",
-    desc: "Compare automatiquement ta cible avec ses principaux pairs sectoriels.",
+    desc: "Comparaison automatique avec les principaux pairs sectoriels.",
     pro: true,
   },
   {
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>,
-    title: "Track Record",
-    desc: "Consulte la performance historique de nos verdicts en temps réel.",
+    title: "Track Record vérifié",
+    desc: "Performance historique de nos verdicts, actualisée en temps réel.",
+  },
+  {
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>,
+    title: "Matrice de sensibilité",
+    desc: "Teste différents scénarios WACC / croissance et visualise l&apos;impact.",
+    pro: true,
   },
 ];
 
 const HOW_IT_WORKS = [
-  { n: "01", title: "Cherche", desc: "Tape n'importe quel ticker boursier — AAPL, TSLA, LVMH..." },
-  { n: "02", title: "Analyse", desc: "Notre moteur DCF + IA calcule la valeur intrinsèque en quelques secondes." },
-  { n: "03", title: "Comprends", desc: "Reçois une estimation Sous-évalué / Juste valeur / Surévalué et des arguments Bull & Bear." },
+  { n: "01", title: "Cherche", desc: "Tape un ticker — Apple, LVMH, Tesla, Total..." },
+  { n: "02", title: "Analyse", desc: "Notre moteur DCF + IA calcule la valeur intrinsèque en 60 secondes." },
+  { n: "03", title: "Décide", desc: "Sous-évalué, juste valeur ou surévalué — avec les arguments pour et contre." },
 ];
 
-// TODO: remplacer par vrais témoignages
-const TESTIMONIALS = [
-  { name: "Sarah M.", role: "Investisseuse depuis 6 ans", quote: "Le seul outil en français qui fait vraiment du DCF sérieux." },
-  { name: "Thomas L.", role: "Analyste junior", quote: "J'utilise ValuEngine pour mes analyses CAC 40 avant chaque décision." },
-  { name: "Marie C.", role: "Investisseuse particulière", quote: "La section Bull/Bear IA m'a évité plusieurs erreurs." },
+const FAQ: { q: string; a: string }[] = [
+  { q: "C'est quoi un DCF ?", a: "Le DCF (Discounted Cash Flow) est la méthode de valorisation utilisée par les analystes professionnels. Elle estime la valeur d'une entreprise en actualisant ses flux de trésorerie futurs. ValuEngine automatise ce calcul en quelques secondes." },
+  { q: "Est-ce que les analyses sont fiables ?", a: "Nos analyses sont basées sur des données financières réelles (Financial Modeling Prep) et un modèle DCF standard. L'IA ajoute une couche qualitative. Consulte notre Track Record pour juger par toi-même — nous publions toutes nos performances passées." },
+  { q: "Quelles actions sont couvertes ?", a: "Toutes les actions cotées sur les bourses américaines (NYSE, NASDAQ) et européennes (Euronext Paris, Xetra, etc.). Plus de 50 000 tickers disponibles." },
+  { q: "Pourquoi c'est en français ?", a: "Parce qu'aucun outil de valorisation sérieux n'existait en français. Les investisseurs francophones méritent des outils de qualité professionnelle dans leur langue." },
+  { q: "Est-ce un conseil en investissement ?", a: "Non. ValuEngine est un outil d'aide à la décision éducatif. Nos verdicts sont des estimations mathématiques, pas des recommandations au sens de la directive MIF II. Consulte un conseiller agréé avant d'investir." },
+  { q: "Je peux annuler mon abonnement Pro ?", a: "Oui, à tout moment. Pas d'engagement, pas de frais cachés. Tu gardes l'accès jusqu'à la fin de ta période en cours." },
 ];
 
-const TYPEWRITER_TICKERS = ["AAPL", "TSLA", "MSFT", "NVDA", "AMZN", "GOOGL"];
+const TYPEWRITER_TICKERS = ["AAPL", "MC.PA", "TSLA", "TTE.PA", "NVDA", "BNP.PA"];
 
 interface MarketItem { label: string; value: string; change: string; up: boolean }
 interface RecentEntry { id: string; ticker: string; name: string; verdict: string; performance_pct: number | null; created_at: string }
@@ -99,6 +101,20 @@ function useTypewriter(words: string[], speed = 120, pause = 1600) {
   }, [charIdx, deleting, wordIdx, words, speed, pause]);
 
   return display;
+}
+
+/* ── FAQ Accordion ───────────────────────────────────────────────────── */
+function FAQItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-b border-[#27272a]">
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between py-5 text-left group">
+        <span className="text-sm font-semibold text-white group-hover:text-[#C9A84C] transition-colors">{q}</span>
+        <ChevronDown size={16} className={`text-zinc-500 transition-transform duration-200 flex-shrink-0 ml-4 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && <p className="text-sm text-zinc-400 leading-relaxed pb-5">{a}</p>}
+    </div>
+  );
 }
 
 /* ── Main component ──────────────────────────────────────────────────── */
@@ -139,7 +155,7 @@ export default function LandingPage() {
   /* ── Sticky CTA visibility ── */
   const [showSticky, setShowSticky] = useState(false);
   useEffect(() => {
-    const onScroll = () => setShowSticky(window.scrollY > 300);
+    const onScroll = () => setShowSticky(window.scrollY > 600);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -187,24 +203,26 @@ export default function LandingPage() {
 
       {/* ── LIVE TICKER TAPE ─────────────────────────────────────────── */}
       <div className="relative z-10 overflow-hidden bg-[rgba(255,255,255,0.02)] border-b border-[#27272a] py-2">
-        <div className="flex animate-[tickerScroll_30s_linear_infinite] whitespace-nowrap" style={{ width: "max-content" }}>
-          {tapeData.length > 0 ? (
-            [...tapeData, ...tapeData, ...tapeData].map((m, i) => (
-              <span key={i} className="inline-flex items-center gap-2 px-6 text-xs font-semibold">
-                <span className="text-[#C9A84C]">{m.label}</span>
-                <span className="text-zinc-300">{m.value}</span>
-                <span className={m.up ? "text-emerald-400" : "text-red-400"}>{m.change}</span>
-                {i === 0 && <span className="ml-2 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
-                <span className="text-zinc-700 mx-2">·</span>
-              </span>
-            ))
-          ) : (
-            ["Analyse DCF", "Intelligence Artificielle", "Données en temps réel", "Marché français"].map((t, i) => (
-              <span key={i} className="inline-flex items-center gap-2 px-6 text-xs font-semibold text-zinc-500">
-                {t}<span className="text-zinc-700 mx-2">·</span>
-              </span>
-            ))
-          )}
+        <div className="flex items-center">
+          <span className="flex-shrink-0 text-[10px] font-bold text-zinc-600 uppercase tracking-widest px-4">Marchés</span>
+          <div className="flex animate-[tickerScroll_30s_linear_infinite] whitespace-nowrap" style={{ width: "max-content" }}>
+            {tapeData.length > 0 ? (
+              [...tapeData, ...tapeData, ...tapeData].map((m, i) => (
+                <span key={i} className="inline-flex items-center gap-2 px-6 text-xs font-semibold">
+                  <span className="text-[#C9A84C]">{m.label}</span>
+                  <span className="text-zinc-300">{m.value}</span>
+                  <span className={m.up ? "text-emerald-400" : "text-red-400"}>{m.change}</span>
+                  <span className="text-zinc-700 mx-2">·</span>
+                </span>
+              ))
+            ) : (
+              ["S&P 500", "NASDAQ", "CAC 40", "DAX"].map((t, i) => (
+                <span key={i} className="inline-flex items-center gap-2 px-6 text-xs font-semibold text-zinc-500">
+                  {t}<span className="text-zinc-700 mx-2">·</span>
+                </span>
+              ))
+            )}
+          </div>
         </div>
       </div>
 
@@ -217,8 +235,10 @@ export default function LandingPage() {
             </div>
             <span className="text-base font-bold tracking-tight">ValuEngine</span>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={() => router.push(isSignedIn ? "/dashboard" : "/analyze")} className="text-sm text-zinc-400 hover:text-white transition-colors px-4 py-2">
+          <div className="flex items-center gap-2">
+            <Link href="/track-record" className="text-sm text-zinc-400 hover:text-white transition-colors px-3 py-2 hidden sm:block">Track Record</Link>
+            <Link href="/methodology" className="text-sm text-zinc-400 hover:text-white transition-colors px-3 py-2 hidden sm:block">Méthodologie</Link>
+            <button onClick={() => router.push(isSignedIn ? "/dashboard" : "/analyze")} className="text-sm text-zinc-400 hover:text-white transition-colors px-3 py-2">
               {isSignedIn ? "Dashboard" : "Analyser"}
             </button>
             <NavAuth />
@@ -230,39 +250,32 @@ export default function LandingPage() {
       <section className="relative z-10 min-h-screen flex items-center justify-center px-6 text-center">
         <div className="max-w-3xl mx-auto">
 
-          <div className="inline-block text-xs tracking-[0.25em] text-zinc-500 border border-zinc-800 rounded-full px-4 py-1.5 mb-8">
-            · ANALYSE DCF · IA CLAUDE · DONNÉES TEMPS RÉEL ·
+          <div className="inline-flex items-center gap-2 text-xs tracking-[0.2em] text-zinc-500 border border-zinc-800 rounded-full px-4 py-1.5 mb-8">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            1ER OUTIL DE VALORISATION DCF EN FRAN&Ccedil;AIS
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white text-center leading-tight tracking-tight mb-6">
-            Analyse tes actions comme un{" "}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white text-center leading-[1.1] tracking-tight mb-6">
+            Prends de meilleures<br />d&eacute;cisions d&apos;investissement,{" "}
             <span style={{ background: "linear-gradient(135deg, #C9A84C, #f5d78e)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              analyste professionnel
+              plus vite
             </span>
           </h1>
 
           <p className="text-base sm:text-lg text-zinc-400 text-center max-w-xl mx-auto mb-10">
-            En 60 secondes, obtiens une valorisation DCF, des arguments haussiers et baissiers générés par IA, et une estimation claire : sous-évalué ou surévalué — en français.
+            Valorisation DCF, arguments Bull &amp; Bear par IA, matrice de sensibilit&eacute; — en 60 secondes, en fran&ccedil;ais, avec un{" "}
+            <Link href="/track-record" className="text-[#C9A84C] hover:underline">Track Record v&eacute;rifi&eacute;</Link>.
           </p>
 
-          <div className="flex gap-4 justify-center flex-wrap mb-12">
-            <button onClick={() => router.push(isSignedIn ? "/dashboard" : "/sign-up")} className="px-6 py-3 bg-[#C9A84C] hover:bg-[#b8943d] text-black font-semibold rounded-lg transition-all hover:scale-105 duration-200">
-              Commencer gratuitement →
-            </button>
-            <button onClick={() => router.push("/analyze")} className="px-6 py-3 border border-zinc-700 text-zinc-300 rounded-lg hover:border-zinc-500 hover:text-white transition-all duration-200">
-              Voir la démo
-            </button>
-          </div>
-
           {/* Smart Search bar */}
-          <div className="max-w-md mx-auto">
+          <div className="max-w-md mx-auto mb-4">
             <div className="flex items-center gap-3 relative">
               <div className="flex-1 relative">
                 <input
                   type="text" value={ticker}
                   onChange={(e) => handleTickerChange(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAnalyze("")}
-                  placeholder={`${typewriterText}|`}
+                  placeholder={`Essaie ${typewriterText}|`}
                   className={`w-full bg-[rgba(255,255,255,0.04)] border rounded-xl px-5 py-3.5 text-white placeholder-zinc-600 text-sm font-semibold focus:outline-none transition-all ${hasError ? "border-red-500/50 focus:border-red-500" : isValid ? "border-emerald-500/50 focus:border-emerald-500" : "border-zinc-800 focus:border-[rgba(201,168,76,0.5)]"}`}
                 />
                 {searching && <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-t-2 border-[#C9A84C] rounded-full animate-spin" />}
@@ -281,50 +294,28 @@ export default function LandingPage() {
                 <span className="text-white font-bold text-sm">${searchResult.price.toFixed(2)}</span>
               </button>
             )}
-            {hasError && <p className="mt-2 text-red-400 text-xs text-center font-medium">Ticker introuvable. Vérifie le symbole (ex: AAPL, TSLA).</p>}
+            {hasError && <p className="mt-2 text-red-400 text-xs text-center font-medium">Ticker introuvable. V&eacute;rifie le symbole (ex: AAPL, MC.PA).</p>}
           </div>
 
-          <div className="flex items-center justify-center gap-2 flex-wrap mt-5">
-            <span className="text-zinc-600 text-xs mr-1">Essaie :</span>
-            {["AAPL", "TSLA", "NVDA", "MSFT", "AMZN", "GOOGL"].map((t) => (
+          <div className="flex items-center justify-center gap-2 flex-wrap mb-6">
+            <span className="text-zinc-600 text-xs mr-1">Populaires :</span>
+            {["MC.PA", "AAPL", "TTE.PA", "TSLA", "BNP.PA", "NVDA"].map((t) => (
               <button key={t} onClick={() => handleAnalyze(t)} className="text-xs font-semibold text-zinc-400 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-lg hover:border-zinc-600 hover:text-white transition-all">{t}</button>
             ))}
           </div>
+
+          <p className="text-zinc-600 text-xs">Gratuit · Sans carte bancaire · 3 analyses/jour</p>
         </div>
 
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-zinc-600 animate-bounce"><ArrowDown size={20} /></div>
-      </section>
-
-      {/* ── DEMO INTERACTIVE ─────────────────────────────────────────── */}
-      <section className="relative z-10 py-20 px-6 border-t border-[#27272a]">
-        <div className="max-w-xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">
-            <span className="w-2 h-2 rounded-full bg-[#C9A84C] animate-pulse" />
-            Démo live
-          </div>
-          <h2 className="text-3xl font-bold tracking-tight mb-3">Essaie sur LVMH maintenant</h2>
-          <p className="text-zinc-400 text-sm mb-8">Sans inscription — vois le résultat en 60 secondes.</p>
-          <div className="bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-2xl p-6">
-            <div className="flex gap-3">
-              <div className="flex-1 relative">
-                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" />
-                <input readOnly value="MC.PA" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-white text-sm font-semibold cursor-pointer" onClick={() => handleAnalyze("MC.PA")} />
-              </div>
-              <button onClick={() => handleAnalyze("MC.PA")} className="bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold px-6 py-3 rounded-xl transition-all whitespace-nowrap">
-                Lancer l&apos;analyse →
-              </button>
-            </div>
-            <p className="text-zinc-600 text-xs mt-3">LVMH Moët Hennessy · Euronext Paris · Luxe</p>
-          </div>
-        </div>
       </section>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
       <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Comment ça marche</p>
-            <h2 className="text-4xl font-bold tracking-tight">En 3 étapes simples.</h2>
+            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Comment &ccedil;a marche</p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Une analyse compl&egrave;te en 3 &eacute;tapes.</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {HOW_IT_WORKS.map(({ n, title, desc }) => (
@@ -340,67 +331,20 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── FEATURES ─────────────────────────────────────────────────── */}
-      <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Ce que tu obtiens</p>
-            <h2 className="text-4xl font-bold tracking-tight">
-              Tout ce dont un investisseur sérieux<br /><span className="text-zinc-500">a besoin en un seul endroit.</span>
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 hover:border-[#3f3f46] transition-colors duration-200 relative">
-                {f.pro && (
-                  <span className="absolute top-3 right-3 text-[9px] font-black tracking-wider text-[#C9A84C] bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.25)] px-2 py-0.5 rounded-full">PRO</span>
-                )}
-                <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[#C9A84C] mb-4">{f.icon}</div>
-                <h3 className="text-sm font-bold mb-1.5 text-white">{f.title}</h3>
-                <p className="text-xs text-zinc-500 leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── SCREENSHOTS ──────────────────────────────────────────────── */}
-      <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Aperçu</p>
-            <h2 className="text-3xl font-bold tracking-tight">Vois ce que tu obtiens avant de t&apos;inscrire</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {[
-              { label: "Valorisation DCF interactive", tag: "Screenshot DCF" },
-              { label: "Analyse IA Bull / Bear", tag: "Screenshot Bull/Bear" },
-              { label: "Track Record en temps réel", tag: "Screenshot Track Record" },
-            ].map((s) => (
-              <div key={s.tag} className="bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-2xl h-64 flex flex-col items-center justify-center gap-3 hover:border-[#3f3f46] transition-colors">
-                <span className="text-zinc-600 text-sm">[{s.tag}]</span>
-                <span className="text-zinc-500 text-xs">{s.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── TRACK RECORD ─────────────────────────────────────────────── */}
+      {/* ── TRACK RECORD (moved up — strongest social proof) ──────────── */}
       <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 mb-4">
-              <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase">Track Record IA</p>
+              <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase">Track Record</p>
               <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> LIVE
               </span>
             </div>
-            <h2 className="text-3xl font-bold tracking-tight">Nos verdicts, vérifiés en temps réel</h2>
-            <p className="text-zinc-500 text-sm mt-2">Actualisé toutes les 10 minutes</p>
+            <h2 className="text-3xl font-bold tracking-tight">Nos verdicts, v&eacute;rifi&eacute;s en temps r&eacute;el</h2>
+            <p className="text-zinc-500 text-sm mt-2">Aucun autre outil ne publie ses performances pass&eacute;es. Nous si.</p>
           </div>
 
-          {/* Stats bar */}
           {summary && (
             <div className="grid grid-cols-3 gap-4 mb-8">
               {[
@@ -416,7 +360,6 @@ export default function LandingPage() {
             </div>
           )}
 
-          {/* Recent analyses */}
           {recentAnalyses.length > 0 && (
             <div className="flex flex-col gap-3 mb-8">
               {recentAnalyses.map((entry) => {
@@ -436,14 +379,14 @@ export default function LandingPage() {
                     </div>
                     <div className="flex items-center gap-4 flex-shrink-0">
                       <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isBuy ? "bg-emerald-500/10 text-emerald-400" : isSell ? "bg-red-500/10 text-red-400" : "bg-yellow-500/10 text-yellow-400"}`}>
-                        {isBuy ? "Sous-évalué" : isSell ? "Surévalué" : "Juste valeur"}
+                        {isBuy ? "Sous-&eacute;valu&eacute;" : isSell ? "Sur&eacute;valu&eacute;" : "Juste valeur"}
                       </span>
                       {entry.performance_pct != null && (
                         <span className={`text-sm font-bold w-16 text-right ${isUp ? "text-emerald-400" : "text-red-400"}`}>
                           {isUp ? "+" : ""}{entry.performance_pct.toFixed(1)}%
                         </span>
                       )}
-                      <span className="text-[#C9A84C] text-xs group-hover:translate-x-0.5 transition-transform">→</span>
+                      <span className="text-[#C9A84C] text-xs group-hover:translate-x-0.5 transition-transform">&rarr;</span>
                     </div>
                   </Link>
                 );
@@ -452,34 +395,65 @@ export default function LandingPage() {
           )}
           <div className="text-center">
             <Link href="/track-record" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 px-5 py-2.5 rounded-lg transition-all">
-              Voir le Track Record complet →
+              Voir le Track Record complet &rarr;
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ── SOCIAL PROOF ─────────────────────────────────────────────── */}
+      {/* ── FEATURES ─────────────────────────────────────────────────── */}
+      <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Ce que tu obtiens</p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+              6 outils d&apos;analyse professionnels,<br /><span className="text-zinc-500">accessibles en un clic.</span>
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {FEATURES.map((f) => (
+              <div key={f.title} className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 hover:border-[#3f3f46] transition-colors duration-200 relative">
+                {f.pro && (
+                  <span className="absolute top-3 right-3 text-[9px] font-black tracking-wider text-[#C9A84C] bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.25)] px-2 py-0.5 rounded-full">PRO</span>
+                )}
+                <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[#C9A84C] mb-4">{f.icon}</div>
+                <h3 className="text-sm font-bold mb-1.5 text-white">{f.title}</h3>
+                <p className="text-xs text-zinc-500 leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── WHY VALUENGINE (replaces fake testimonials + screenshots) ── */}
       <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Témoignages</p>
-            <h2 className="text-3xl font-bold tracking-tight">Ils utilisent ValuEngine</h2>
+            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Pourquoi ValuEngine</p>
+            <h2 className="text-3xl font-bold tracking-tight">Ce qui nous diff&eacute;rencie</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {TESTIMONIALS.map((t) => (
-              <div key={t.name} className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 hover:border-[#3f3f46] transition-colors">
-                <p className="text-sm text-zinc-300 leading-relaxed mb-5">&ldquo;{t.quote}&rdquo;</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-[rgba(201,168,76,0.15)] border border-[rgba(201,168,76,0.25)] flex items-center justify-center">
-                    <span className="text-[#C9A84C] font-bold text-sm">{t.name.charAt(0)}</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-white">{t.name}</p>
-                    <p className="text-xs text-zinc-500">{t.role}</p>
-                  </div>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 text-center">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
+                <Shield size={22} className="text-emerald-400" />
               </div>
-            ))}
+              <h3 className="text-sm font-bold mb-2">Transparence totale</h3>
+              <p className="text-xs text-zinc-500 leading-relaxed">Nous publions notre Track Record en temps r&eacute;el. Chaque verdict est v&eacute;rifiable. Aucun autre outil ne fait &ccedil;a.</p>
+            </div>
+            <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 text-center">
+              <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mx-auto mb-4">
+                <Zap size={22} className="text-blue-400" />
+              </div>
+              <h3 className="text-sm font-bold mb-2">60 secondes</h3>
+              <p className="text-xs text-zinc-500 leading-relaxed">Une analyse DCF compl&egrave;te prend 2-3 heures sur Excel. ValuEngine la g&eacute;n&egrave;re en moins d&apos;une minute.</p>
+            </div>
+            <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 text-center">
+              <div className="w-12 h-12 rounded-xl bg-[rgba(201,168,76,0.1)] flex items-center justify-center mx-auto mb-4">
+                <BarChart3 size={22} className="text-[#C9A84C]" />
+              </div>
+              <h3 className="text-sm font-bold mb-2">100% en fran&ccedil;ais</h3>
+              <p className="text-xs text-zinc-500 leading-relaxed">Le seul outil de valorisation DCF + IA con&ccedil;u pour les investisseurs francophones. Actions US et europ&eacute;ennes.</p>
+            </div>
           </div>
         </div>
       </section>
@@ -489,8 +463,7 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Tarifs</p>
-            <h2 className="text-4xl font-bold tracking-tight mb-6">Simple et transparent.</h2>
-            {/* Toggle */}
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6">Simple. Transparent. Sans engagement.</h2>
             <div className="inline-flex items-center bg-zinc-900 border border-zinc-800 rounded-full p-1">
               <button onClick={() => setAnnual(false)} className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${!annual ? "bg-[#C9A84C] text-black" : "text-zinc-400 hover:text-white"}`}>Mensuel</button>
               <button onClick={() => setAnnual(true)} className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${annual ? "bg-[#C9A84C] text-black" : "text-zinc-400 hover:text-white"}`}>
@@ -502,10 +475,10 @@ export default function LandingPage() {
             {/* Free */}
             <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-8 hover:border-[#3f3f46] transition-colors">
               <p className="text-xs font-bold tracking-widest uppercase text-zinc-500 mb-3">Gratuit</p>
-              <p className="text-5xl font-black mb-1">0€</p>
+              <p className="text-5xl font-black mb-1">0&euro;</p>
               <p className="text-zinc-500 text-sm mb-8">Pour toujours</p>
               <ul className="space-y-3 text-sm mb-8">
-                {["3 analyses par jour", "DCF basique", "Estimation de valorisation"].map((item) => (
+                {["3 analyses par jour", "Verdict DCF (sous-évalué / surévalué)", "Estimation de valeur intrinsèque"].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-zinc-400"><div className="w-1.5 h-1.5 rounded-full bg-zinc-600 flex-shrink-0" />{item}</li>
                 ))}
               </ul>
@@ -521,12 +494,12 @@ export default function LandingPage() {
               <p className="text-xs font-bold tracking-widest uppercase text-[#C9A84C] mb-3">Pro</p>
               {annual ? (
                 <>
-                  <p className="text-5xl font-black mb-1">99€</p>
-                  <p className="text-zinc-500 text-sm mb-8">par an · soit 8,25€/mois</p>
+                  <p className="text-5xl font-black mb-1">99&euro;</p>
+                  <p className="text-zinc-500 text-sm mb-8">par an &middot; soit 8,25&euro;/mois</p>
                 </>
               ) : (
                 <>
-                  <p className="text-5xl font-black mb-1">12€</p>
+                  <p className="text-5xl font-black mb-1">12&euro;</p>
                   <p className="text-zinc-500 text-sm mb-8">par mois</p>
                 </>
               )}
@@ -535,29 +508,41 @@ export default function LandingPage() {
                   <li key={item} className="flex items-center gap-3 text-white"><div className="w-1.5 h-1.5 rounded-full bg-[#C9A84C] flex-shrink-0" />{item}</li>
                 ))}
               </ul>
-              <button onClick={() => router.push("/analyze")} className="w-full bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2">
-                Démarrer l&apos;essai gratuit <ChevronRight size={16} />
+              <button onClick={() => router.push(isSignedIn ? "/dashboard" : "/sign-up")} className="w-full bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2">
+                Passer Pro <ChevronRight size={16} />
               </button>
+              <p className="text-center text-zinc-600 text-xs mt-3">Sans engagement &middot; Annulable &agrave; tout moment</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── TECH CREDIBILITY ─────────────────────────────────────────── */}
-      <section className="relative z-10 py-16 px-6 border-t border-[#27272a]">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-xs font-bold text-zinc-600 tracking-widest uppercase mb-6">Propulsé par</p>
-          <div className="flex items-center justify-center gap-6 flex-wrap text-zinc-500 text-sm font-medium mb-6">
-            <span>Financial Modeling Prep</span>
-            <span className="text-zinc-700">·</span>
-            <span>Anthropic Claude</span>
-            <span className="text-zinc-700">·</span>
-            <span>Supabase</span>
-            <span className="text-zinc-700">·</span>
-            <span>Clerk</span>
+      {/* ── FAQ ───────────────────────────────────────────────────────── */}
+      <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Questions fr&eacute;quentes</p>
+            <h2 className="text-3xl font-bold tracking-tight">Tout ce que tu veux savoir</h2>
           </div>
-          <div className="flex items-center justify-center gap-4 flex-wrap">
-            <span className="text-xs text-zinc-500 border border-zinc-800 px-3 py-1.5 rounded-full">RGPD Conforme</span>
+          <div>
+            {FAQ.map((item) => (
+              <FAQItem key={item.q} q={item.q} a={item.a} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── TRUST BAR ────────────────────────────────────────────────── */}
+      <section className="relative z-10 py-12 px-6 border-t border-[#27272a]">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-6 flex-wrap text-zinc-500 text-xs font-medium">
+            <span className="flex items-center gap-1.5"><Shield size={12} className="text-emerald-400" /> Donn&eacute;es Financial Modeling Prep</span>
+            <span className="text-zinc-700">&middot;</span>
+            <span className="flex items-center gap-1.5"><Shield size={12} className="text-blue-400" /> IA Anthropic Claude</span>
+            <span className="text-zinc-700">&middot;</span>
+            <span className="flex items-center gap-1.5"><Shield size={12} className="text-[#C9A84C]" /> H&eacute;berg&eacute; en UE</span>
+            <span className="text-zinc-700">&middot;</span>
+            <span className="border border-zinc-800 px-3 py-1 rounded-full">RGPD Conforme</span>
           </div>
         </div>
       </section>
@@ -570,19 +555,19 @@ export default function LandingPage() {
               <span className="text-[#C9A84C] font-black text-xs leading-none">V</span>
             </div>
             <span className="text-sm font-bold">ValuEngine</span>
-            <span className="text-zinc-600 text-sm">© 2026</span>
+            <span className="text-zinc-600 text-sm">&copy; 2026</span>
           </div>
           <div className="flex items-center gap-4 text-zinc-600 text-xs">
-            <Link href="/legal" className="hover:text-zinc-400 transition-colors">Mentions légales</Link>
-            <span>·</span>
-            <Link href="/about" className="hover:text-zinc-400 transition-colors">À propos</Link>
-            <span>·</span>
-            <Link href="/methodology" className="hover:text-zinc-400 transition-colors">Méthodologie</Link>
-            <span>·</span>
+            <Link href="/legal" className="hover:text-zinc-400 transition-colors">Mentions l&eacute;gales</Link>
+            <span>&middot;</span>
+            <Link href="/about" className="hover:text-zinc-400 transition-colors">&Agrave; propos</Link>
+            <span>&middot;</span>
+            <Link href="/methodology" className="hover:text-zinc-400 transition-colors">M&eacute;thodologie</Link>
+            <span>&middot;</span>
             <a href="mailto:contact@valuengine.fr" className="hover:text-zinc-400 transition-colors">Contact</a>
           </div>
           <p className="text-zinc-600 text-xs text-center max-w-sm">
-            Outil d&apos;aide à la décision uniquement. Ne constitue pas un conseil en investissement.
+            Outil d&apos;aide &agrave; la d&eacute;cision uniquement. Ne constitue pas un conseil en investissement.
           </p>
         </div>
       </footer>
@@ -593,7 +578,7 @@ export default function LandingPage() {
           onClick={() => router.push("/analyze")}
           className="fixed bottom-6 right-6 z-50 bg-[#C9A84C] hover:bg-[#b8943d] text-[#09090b] font-bold px-5 py-3 rounded-xl shadow-lg shadow-[rgba(201,168,76,0.25)] transition-all hover:scale-105 text-sm"
         >
-          Analyser une action gratuitement →
+          Analyser une action &rarr;
         </button>
       )}
 

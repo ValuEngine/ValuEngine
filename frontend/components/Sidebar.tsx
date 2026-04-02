@@ -13,7 +13,6 @@ import {
   TrendingUp,
   BookOpen,
   UserPlus,
-  ChevronsLeft,
   Menu,
   X,
   Star,
@@ -195,10 +194,6 @@ export default function Sidebar() {
             Passer Pro ✦
           </button>
         )}
-        <button className="flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-300 transition-colors p-2 w-full">
-          <ChevronsLeft className="w-4 h-4" />
-          <span>Réduire</span>
-        </button>
       </div>
     </div>
   );

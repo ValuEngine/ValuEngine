@@ -8,6 +8,7 @@ class AnalyzeRequest(BaseModel):
     wacc: float = 0.10           # Discount rate (default 10%)
     terminal_growth: float = 0.03 # Terminal growth (default 3%)
     horizon: int = 5             # Projection years (default 5)
+    user_id: Optional[str] = None  # Clerk user ID (for freemium enforcement)
 
 
 class CompanyData(BaseModel):

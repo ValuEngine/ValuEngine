@@ -8,6 +8,20 @@ export default function LegalPage() {
         <p className="text-[#6b7d91] text-sm mb-10">Dernière mise à jour : avril 2026</p>
 
         <section className="mb-8">
+          <h2 className="text-lg font-bold text-[#C9A84C] mb-3">&Eacute;diteur du site</h2>
+          <div className="text-[#a0aec0] leading-relaxed text-sm space-y-1">
+            <p><strong className="text-white">ValuEngine</strong> — Micro-entreprise en cours d&apos;immatriculation</p>
+            <p>Responsable de la publication : <strong className="text-white">Ilias Moulouade</strong></p>
+            <p>Email :{" "}
+              <a href="mailto:contact@valuengine.fr" className="text-[#C9A84C] underline hover:opacity-80">
+                contact@valuengine.fr
+              </a>
+            </p>
+            <p>H&eacute;bergement : <strong className="text-white">Vercel Inc.</strong> (frontend), <strong className="text-white">Railway Corp.</strong> (backend)</p>
+          </div>
+        </section>
+
+        <section className="mb-8">
           <h2 className="text-lg font-bold text-[#C9A84C] mb-3">1. Nature du service</h2>
           <p className="text-[#a0aec0] leading-relaxed text-sm">
             ValuEngine est un outil d&apos;analyse financière à vocation <strong className="text-white">exclusivement éducative</strong>.

@@ -6,9 +6,11 @@ Endpoints pour l'analyse financière complète d'une action.
 import os
 import time
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 
 import httpx
@@ -61,6 +63,47 @@ def _sb_post(table: str, body: dict) -> dict:
 def _sb_patch(table: str, params: str, body: dict) -> None:
     url = f"{_SUPA_URL}/rest/v1/{table}?{params}"
     httpx.patch(url, headers=_sb_headers(), json=body, timeout=6)
+
+
+# ── Freemium enforcement helpers ────────────────────────────────────────────
+FREE_DAILY_LIMIT = 3
+
+
+def _get_today_analysis_count(user_id: str) -> int:
+    """Count how many analyses a user has run today (UTC)."""
+    if not _SUPA_URL or not _SUPA_KEY or not user_id:
+        return 0
+    today_start = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00+00:00")
+    try:
+        rows = _sb_get(
+            "analyses",
+            f"user_id=eq.{user_id}&created_at=gte.{today_start}&select=id",
+        )
+        return len(rows)
+    except Exception as e:
+        print(f"[Freemium] Error counting analyses for {user_id}: {e}")
+        return 0
+
+
+def _is_user_pro(user_id: str) -> bool:
+    """Check whether a user has an active Pro subscription."""
+    if not _SUPA_URL or not _SUPA_KEY or not user_id:
+        return False
+    try:
+        rows = _sb_get("users", f"clerk_user_id=eq.{user_id}&select=is_pro,pro_until")
+        if not rows:
+            return False
+        user = rows[0]
+        if user.get("is_pro"):
+            return True
+        pro_until = user.get("pro_until")
+        if pro_until:
+            return datetime.fromisoformat(pro_until.replace("Z", "+00:00")) > datetime.now(timezone.utc)
+        return False
+    except Exception as e:
+        print(f"[Freemium] Error checking pro status for {user_id}: {e}")
+        return False
+
 
 app = FastAPI(
     title="ValuEngine API",
@@ -156,6 +199,21 @@ def analyze(req: AnalyzeRequest):
     """
     ticker = req.ticker.upper().strip()
 
+    # ── 0. Freemium enforcement ─────────────────────────────────────────
+    if req.user_id:
+        if not _is_user_pro(req.user_id):
+            used = _get_today_analysis_count(req.user_id)
+            if used >= FREE_DAILY_LIMIT:
+                return JSONResponse(
+                    status_code=429,
+                    content={
+                        "error": "daily_limit",
+                        "message": "Limite de 3 analyses gratuites atteinte. Passe Pro pour des analyses illimitées.",
+                        "limit": FREE_DAILY_LIMIT,
+                        "used": used,
+                    },
+                )
+
     # ── 1. Données de marché ────────────────────────────────────────────
     try:
         raw = _get_data(ticker)
@@ -222,16 +280,19 @@ def analyze(req: AnalyzeRequest):
     # ── 6. Share ID for public sharing ──────────────────────────────────
     # Migration needed: ALTER TABLE analyses ADD COLUMN IF NOT EXISTS share_id TEXT;
     share_id = uuid.uuid4().hex
+    analysis_record = {
+        "ticker": ticker,
+        "company_name": company.name,
+        "verdict": verdict,
+        "price": price,
+        "intrinsic_value": dcf.intrinsic_value,
+        "upside_pct": dcf.upside_pct,
+        "share_id": share_id,
+    }
+    if req.user_id:
+        analysis_record["user_id"] = req.user_id
     try:
-        _sb_post("analyses", {
-            "ticker": ticker,
-            "company_name": company.name,
-            "verdict": verdict,
-            "price": price,
-            "intrinsic_value": dcf.intrinsic_value,
-            "upside_pct": dcf.upside_pct,
-            "share_id": share_id,
-        })
+        _sb_post("analyses", analysis_record)
     except Exception as e:
         print(f"[Analyze] Erreur sauvegarde analyse: {e}")
 
@@ -659,6 +720,18 @@ def get_shared_analysis(share_id: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/usage/{user_id}")
+def get_usage(user_id: str):
+    """Retourne l'usage quotidien et le statut Pro d'un utilisateur."""
+    is_pro = _is_user_pro(user_id)
+    used = _get_today_analysis_count(user_id)
+    return {
+        "used": used,
+        "limit": FREE_DAILY_LIMIT,
+        "is_pro": is_pro,
+    }
 
 
 @app.post("/api/stripe/webhook")

@@ -36,7 +36,7 @@ const MARKET_FALLBACK: MarketItem[] = [
   { label: "DAX",     value: "—", change: "—", up: true },
 ];
 
-const POPULAR_TICKERS = ["AAPL", "MSFT", "NVDA", "TSLA", "GOOGL", "AMZN"];
+const POPULAR_TICKERS = ["MC.PA", "AAPL", "TTE.PA", "TSLA", "BNP.PA", "NVDA"];
 
 function verdictColor(verdict: string) {
   if (verdict === "BUY")  return "bg-[rgba(63,185,80,0.12)] text-[#3fb950] border border-[rgba(63,185,80,0.25)]";
