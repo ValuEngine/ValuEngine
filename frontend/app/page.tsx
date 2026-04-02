@@ -304,7 +304,7 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <p className="text-zinc-600 text-xs">Gratuit · Sans carte bancaire · 3 analyses/jour</p>
+          <p className="text-zinc-400 text-xs font-medium">✓ Gratuit · ✓ Sans carte bancaire · ✓ 3 analyses/jour</p>
         </div>
 
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-zinc-600 animate-bounce"><ArrowDown size={20} /></div>
@@ -414,7 +414,7 @@ export default function LandingPage() {
             {FEATURES.map((f) => (
               <div key={f.title} className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 hover:border-[#3f3f46] transition-colors duration-200 relative">
                 {f.pro && (
-                  <span className="absolute top-3 right-3 text-[9px] font-black tracking-wider text-[#C9A84C] bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.25)] px-2 py-0.5 rounded-full">PRO</span>
+                  <span className="absolute top-3 right-3 text-[10px] font-black tracking-wider text-[#09090b] bg-[#C9A84C] px-2.5 py-0.5 rounded-full">PRO</span>
                 )}
                 <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[#C9A84C] mb-4">{f.icon}</div>
                 <h3 className="text-sm font-bold mb-1.5 text-white">{f.title}</h3>
@@ -467,7 +467,7 @@ export default function LandingPage() {
             <div className="inline-flex items-center bg-zinc-900 border border-zinc-800 rounded-full p-1">
               <button onClick={() => setAnnual(false)} className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${!annual ? "bg-[#C9A84C] text-black" : "text-zinc-400 hover:text-white"}`}>Mensuel</button>
               <button onClick={() => setAnnual(true)} className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${annual ? "bg-[#C9A84C] text-black" : "text-zinc-400 hover:text-white"}`}>
-                Annuel <span className="text-xs ml-1 opacity-80">-17%</span>
+                Annuel <span className="text-xs font-bold text-emerald-400 ml-1">-17%</span>
               </button>
             </div>
           </div>
@@ -531,7 +531,7 @@ export default function LandingPage() {
               >
                 Passer Pro <ChevronRight size={16} />
               </button>
-              <p className="text-center text-zinc-600 text-xs mt-3">Sans engagement · Annulable à tout moment</p>
+              <p className="text-center text-zinc-400 text-sm mt-3">✓ Sans engagement · Annulable à tout moment</p>
             </div>
           </div>
         </div>

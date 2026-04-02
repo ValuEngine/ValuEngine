@@ -251,6 +251,19 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
             {article.body}
           </ReactMarkdown>
         </div>
+        {/* Article CTA */}
+        <div className="mt-12 rounded-xl border border-[rgba(201,168,76,0.2)] bg-[rgba(201,168,76,0.04)] p-6 text-center">
+          <p className="text-sm font-semibold text-zinc-200 mb-1">
+            Envie de passer à la pratique ?
+          </p>
+          <p className="text-xs text-zinc-500 mb-4">Analyse n&apos;importe quelle action en 60 secondes avec notre modèle DCF</p>
+          <Link
+            href="/analyze"
+            className="inline-flex items-center gap-2 bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold px-6 py-2.5 rounded-lg text-sm transition-all"
+          >
+            Lancer une analyse →
+          </Link>
+        </div>
       </div>
     </AppLayout>
   );

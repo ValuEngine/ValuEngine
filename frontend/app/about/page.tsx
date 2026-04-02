@@ -56,7 +56,7 @@ export default function AboutPage() {
                 </div>
               </div>
               <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-                Passionné de finance quantitative et d&apos;IA, j&apos;ai créé ValuEngine pour
+                Ingénieur passionné de finance quantitative et d&apos;IA. Après des années à investir avec des outils inadaptés, j&apos;ai créé ValuEngine pour
                 démocratiser les outils d&apos;analyse réservés aux professionnels.
               </p>
               <a

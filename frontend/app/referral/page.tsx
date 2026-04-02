@@ -52,7 +52,9 @@ export default function ReferralPage() {
           <p className="max-w-md mx-auto" style={{ color: "var(--text-secondary)" }}>
             Invitez 3 amis et recevez{" "}
             <span className="text-[#C9A84C] font-bold">1 mois Pro offert</span>.
-            Chaque inscription via votre lien compte.
+            Vos amis profitent eux aussi de{" "}
+            <span className="text-[#C9A84C] font-bold">3 analyses gratuites</span>{" "}
+            en bonus. Chaque inscription via votre lien compte.
           </p>
         </div>
 

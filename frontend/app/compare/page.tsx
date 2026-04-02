@@ -40,12 +40,12 @@ interface RowDef {
 
 const ROWS: RowDef[] = [
   { label: "Prix actuel",         getValue: d => d.company.price,                    format: v => `$${v.toFixed(2)}`,             higherIsBetter: false },
-  { label: "Market Cap",          getValue: d => d.company.market_cap,               format: v => fmt(v),                          higherIsBetter: true  },
+  { label: "Capitalisation",          getValue: d => d.company.market_cap,               format: v => fmt(v),                          higherIsBetter: true  },
   { label: "P/E",                 getValue: d => d.company.pe_ratio,                 format: v => `${v.toFixed(1)}x`,              higherIsBetter: false },
   { label: "EV/EBITDA",           getValue: d => d.company.ev_ebitda,                format: v => `${v.toFixed(1)}x`,              higherIsBetter: false },
   { label: "Marge nette",         getValue: d => d.company.profit_margin,            format: v => pct(v),                          higherIsBetter: true  },
   { label: "Croissance CA",       getValue: d => d.company.revenue_growth,           format: v => pct(v),                          higherIsBetter: true  },
-  { label: "FCF",                 getValue: d => d.company.free_cash_flow,           format: v => fmt(v),                          higherIsBetter: true  },
+  { label: "Cash Flow Libre",                 getValue: d => d.company.free_cash_flow,           format: v => fmt(v),                          higherIsBetter: true  },
   { label: "Valeur intrinsèque DCF", getValue: d => d.dcf.intrinsic_value,           format: v => `$${v.toFixed(2)}`,             higherIsBetter: true  },
   { label: "Upside %",            getValue: d => d.dcf.upside_pct,                   format: v => `${v > 0 ? "+" : ""}${v.toFixed(1)}%`, higherIsBetter: true },
 ];

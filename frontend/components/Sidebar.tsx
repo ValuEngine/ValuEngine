@@ -92,7 +92,7 @@ export default function Sidebar() {
                 onClick={() => setMobileOpen(false)}
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative ${
                   isActive
-                    ? "bg-[#18181b] text-[#C9A84C] border-l-2 border-[#C9A84C] pl-[10px]"
+                    ? "bg-[#18181b] text-[#C9A84C] font-semibold border-l-2 border-[#C9A84C] pl-[10px]"
                     : "text-[#71717a] hover:bg-[#18181b] hover:text-[#e4e4e7]"
                 }`}
               >
@@ -122,7 +122,7 @@ export default function Sidebar() {
                 onClick={() => setMobileOpen(false)}
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative ${
                   isActive
-                    ? "bg-[#18181b] text-[#C9A84C] border-l-2 border-[#C9A84C] pl-[10px]"
+                    ? "bg-[#18181b] text-[#C9A84C] font-semibold border-l-2 border-[#C9A84C] pl-[10px]"
                     : "text-[#71717a] hover:bg-[#18181b] hover:text-[#e4e4e7]"
                 }`}
               >
@@ -152,7 +152,7 @@ export default function Sidebar() {
                 onClick={() => setMobileOpen(false)}
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative ${
                   isActive
-                    ? "bg-[#18181b] text-[#C9A84C] border-l-2 border-[#C9A84C] pl-[10px]"
+                    ? "bg-[#18181b] text-[#C9A84C] font-semibold border-l-2 border-[#C9A84C] pl-[10px]"
                     : "text-[#71717a] hover:bg-[#18181b] hover:text-[#e4e4e7]"
                 }`}
               >
@@ -209,7 +209,7 @@ export default function Sidebar() {
                 alert("Impossible de contacter le serveur de paiement. Réessaie dans quelques secondes.");
               }
             }}
-            className="w-full text-xs font-bold text-[#09090b] bg-[#C9A84C] hover:bg-[#b8943d] py-2 rounded-lg transition-colors mb-1"
+            className="w-full text-sm font-bold text-[#09090b] bg-[#C9A84C] hover:bg-[#b8943d] py-2.5 rounded-lg transition-all shadow-md shadow-[#C9A84C]/20 hover:shadow-lg hover:shadow-[#C9A84C]/30 mb-1"
           >
             Passer Pro ✦
           </button>

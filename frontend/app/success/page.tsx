@@ -27,10 +27,10 @@ export default function SuccessPage() {
       <div className="text-center space-y-6">
         <div className="text-6xl">🎉</div>
         <h1 className="text-3xl font-bold text-white">
-          Bienvenue dans ValuEngine Pro !
+          Bienvenue dans ValuEngine Pro
         </h1>
         <p className="text-[#a0aec0]">
-          Ton abonnement est actif. Analyses illimitées débloquées.
+          Ton abonnement est activé. Tu as maintenant accès aux analyses illimitées.
         </p>
         <div className="w-8 h-8 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin mx-auto" />
         <p className="text-[#C9A84C] text-sm">

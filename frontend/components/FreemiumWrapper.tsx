@@ -74,11 +74,11 @@ function PaywallModal({
 
           <button
             onClick={onUpgrade}
-            className="w-full py-3 px-6 bg-[#C9A84C] hover:bg-[#b8943d] text-[#0a1628] font-bold rounded-xl text-lg transition-all duration-200 shadow-lg shadow-[#C9A84C]/20 mb-3 flex items-center justify-center gap-2"
+            className="w-full py-3 px-6 bg-[#C9A84C] hover:bg-[#b8943d] text-[#0a1628] font-bold rounded-xl text-lg transition-all duration-200 shadow-lg shadow-[#C9A84C]/20 hover:scale-[1.02] mb-3 flex items-center justify-center gap-2"
           >
             Passer Pro — 12€/mois <ChevronRight size={18} />
           </button>
-          <p className="text-[#5d7289] text-xs mb-4">Sans engagement · Annulable à tout moment</p>
+          <p className="text-zinc-400 text-sm mb-4">✓ Sans engagement · Annulable à tout moment</p>
           <button
             onClick={onClose}
             className="text-[#5d7289] text-sm hover:text-zinc-300 transition-colors"
