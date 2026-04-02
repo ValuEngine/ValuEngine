@@ -516,6 +516,7 @@ function AnalyzePage() {
   const [pendingTicker, setPendingTicker] = useState<string | null>(null);
   const [activeTab,     setActiveTab]     = useState<TabId>("overview");
   const [visitedTabs,  setVisitedTabs]  = useState<Set<TabId>>(() => new Set<TabId>(["overview"]));
+  const [shareCopied,  setShareCopied]  = useState(false);
 
   useEffect(() => {
     setVisitedTabs((prev) => {
@@ -786,11 +787,17 @@ function AnalyzePage() {
                   </div>
                   <p className="text-zinc-400 text-sm mt-1">
                     {data.company.industry} · {data.company.exchange}
-                    {(data as any).share_id && (
-                      <button onClick={() => router.push(`/analyse/${(data as any).share_id}`)} className="ml-3 text-xs text-zinc-400 hover:text-[#C9A84C] transition-colors inline-flex items-center gap-1">
-                        <Share2 size={12} /> Partager
-                      </button>
-                    )}
+                    <button
+                      onClick={() => {
+                        const url = `${window.location.origin}/analyze?ticker=${data.company.ticker}`;
+                        navigator.clipboard.writeText(url);
+                        setShareCopied(true);
+                        setTimeout(() => setShareCopied(false), 2000);
+                      }}
+                      className="ml-3 text-xs text-zinc-400 hover:text-[#C9A84C] transition-colors inline-flex items-center gap-1"
+                    >
+                      <Share2 size={12} /> {shareCopied ? "Lien copié !" : "Partager"}
+                    </button>
                   </p>
                 </div>
                 <div className="text-right">
