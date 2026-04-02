@@ -23,13 +23,10 @@ from services.ai_analyst import get_bull_bear_analysis, get_swot_analysis, get_p
 load_dotenv(Path(__file__).parent / ".env", override=True)
 
 FMP_KEY = os.environ.get("FMP_API_KEY", "")
-USE_FMP = bool(FMP_KEY and FMP_KEY != "REMPLACE_PAR_TA_CLÉ")
-if USE_FMP:
-    from services.fmp_data import get_company_data as _get_data, get_peers_data
-    print("[DataSource] Financial Modeling Prep ✓")
-else:
-    from services.market_data import get_company_data as _get_data, get_peers_data
-    print("[DataSource] yfinance (fallback)")
+# yfinance is the primary data source (free, unlimited, full financial statements)
+# FMP free plan only supports /quote and /profile — not financial statements
+from services.market_data import get_company_data as _get_data, get_peers_data
+print("[DataSource] yfinance ✓")
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
 
