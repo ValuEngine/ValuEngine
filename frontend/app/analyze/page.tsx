@@ -8,7 +8,7 @@ import {
   ChevronDown, ChevronUp, Loader2, Bell, Trash2, Share2,
 } from "lucide-react";
 import { FreemiumGate } from "@/components/FreemiumWrapper";
-import { analyzeStock, warmupBackend, fmt, pct, type AnalyzeResponse } from "@/lib/api";
+import { analyzeStock, warmupBackend, fmt, pct, currencySymbol, type AnalyzeResponse } from "@/lib/api";
 import { SensitivityHeatmap } from "@/components/SensitivityHeatmap";
 import { FCFChart } from "@/components/FCFChart";
 import { TradingComps } from "@/components/TradingComps";
@@ -67,6 +67,24 @@ function Section({ title, children, defaultOpen = true }: { title: string; child
       {open && <div className="animate-[fadeIn_0.3s_ease-out]">{children}</div>}
     </div>
   );
+}
+
+/* ── Counter animation hook ──────────────────────────────────────────── */
+function useCountUp(target: number, duration = 1500): number {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (target === 0) return;
+    const start = performance.now();
+    const step = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+      setValue(target * eased);
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+    return () => setValue(target);
+  }, [target, duration]);
+  return value;
 }
 
 /* ── Skeleton Loading ─────────────────────────────────────────────────── */
@@ -140,6 +158,7 @@ function SkeletonDashboard({ ticker }: { ticker: string }) {
 
 /* ── Verdict confidence badge ──────────────────────────────────────────── */
 function VerdictBadge({ upsidePct }: { upsidePct: number }) {
+  const animatedPct = useCountUp(upsidePct, 1500);
   const abs = Math.abs(upsidePct);
   const clamped = Math.min(abs, 60);
   const barWidth = Math.round((clamped / 60) * 100);
@@ -151,7 +170,7 @@ function VerdictBadge({ upsidePct }: { upsidePct: number }) {
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color }}>{label}</span>
         <span className="text-xl font-black" style={{ color }}>
-          {upsidePct > 0 ? "+" : ""}{upsidePct.toFixed(1)}%
+          {animatedPct > 0 ? "+" : ""}{animatedPct.toFixed(1)}%
         </span>
       </div>
       <div className="h-2 bg-[rgba(255,255,255,0.06)] rounded-full overflow-hidden">
@@ -775,7 +794,7 @@ function AnalyzePage() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-black">${data.company.price.toFixed(2)}</p>
+                  <p className="text-3xl font-black">{currencySymbol(data.company.ticker)}{data.company.price.toFixed(2)}</p>
                   <p className="text-xs text-[#4a6070] mt-0.5">{data.company.currency} · Cours actuel</p>
                 </div>
               </div>
@@ -832,12 +851,12 @@ function AnalyzePage() {
                     <div className="flex gap-6 flex-shrink-0">
                       <div className="text-center">
                         <p className="text-xs text-[#5d7289] uppercase tracking-wider mb-1">Prix actuel</p>
-                        <p className="text-3xl font-black text-white">${data.company.price.toFixed(2)}</p>
+                        <p className="text-3xl font-black text-white">{currencySymbol(data.company.ticker)}{data.company.price.toFixed(2)}</p>
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-[#5d7289] uppercase tracking-wider mb-1">Valeur DCF</p>
                         <p className="text-3xl font-black" style={{ color: vc.color }}>
-                          ${data.dcf.intrinsic_value.toFixed(2)}
+                          {currencySymbol(data.company.ticker)}{data.dcf.intrinsic_value.toFixed(2)}
                         </p>
                         <p className="text-sm font-bold mt-1" style={{ color: vc.color }}>
                           {data.dcf.upside_pct > 0 ? "+" : ""}{data.dcf.upside_pct.toFixed(1)}%
@@ -864,16 +883,16 @@ function AnalyzePage() {
                   {/* KPI Grid */}
                   <Section title="Fondamentaux clés">
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-4 anim-3">
-                      <KPI label="Market Cap"         value={fmt(data.company.market_cap)} />
-                      <KPI label="Chiffre d'affaires" value={fmt(data.company.revenue)} />
-                      <KPI label="EBITDA"             value={fmt(data.company.ebitda)} />
-                      <KPI label="Résultat net"       value={fmt(data.company.net_income)}
+                      <KPI label="Market Cap"         value={fmt(data.company.market_cap, currencySymbol(data.company.ticker))} />
+                      <KPI label="Chiffre d'affaires" value={fmt(data.company.revenue, currencySymbol(data.company.ticker))} />
+                      <KPI label="EBITDA"             value={fmt(data.company.ebitda, currencySymbol(data.company.ticker))} />
+                      <KPI label="Résultat net"       value={fmt(data.company.net_income, currencySymbol(data.company.ticker))}
                         color={data.company.net_income > 0 ? "#00d4aa" : "#ff4d6d"}
                         sub={data.company.net_income > 0 ? "▲ Positif" : "▼ Négatif"} />
-                      <KPI label="Free Cash Flow"     value={fmt(data.company.free_cash_flow)}
+                      <KPI label="Free Cash Flow"     value={fmt(data.company.free_cash_flow, currencySymbol(data.company.ticker))}
                         color={data.company.free_cash_flow > 0 ? "#00d4aa" : "#ff4d6d"}
                         sub={data.company.free_cash_flow > 0 ? "▲ Génère du cash" : "▼ Consomme du cash"} />
-                      <KPI label="Dette nette"        value={fmt(data.company.net_debt)} />
+                      <KPI label="Dette nette"        value={fmt(data.company.net_debt, currencySymbol(data.company.ticker))} />
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6">
                       <KPI label="P/E Ratio"   value={data.company.pe_ratio != null ? `${data.company.pe_ratio.toFixed(1)}x` : "N/A"}
@@ -929,11 +948,11 @@ function AnalyzePage() {
                       <div className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl p-6">
                         <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C] mb-5">Modèle DCF</p>
                         {[
-                          ["Valeur d'entreprise (EV)",   fmt(data.dcf.enterprise_value_dcf), ""],
-                          ["Valeur des fonds propres",    fmt(data.dcf.equity_value),         ""],
-                          ["Valeur terminale actualisée", fmt(data.dcf.terminal_value_pv),    ""],
-                          ["Valeur intrinsèque / action", `$${data.dcf.intrinsic_value.toFixed(2)}`, "highlight"],
-                          ["Prix de marché actuel",       `$${data.company.price.toFixed(2)}`, ""],
+                          ["Valeur d'entreprise (EV)",   fmt(data.dcf.enterprise_value_dcf, currencySymbol(data.company.ticker)), ""],
+                          ["Valeur des fonds propres",    fmt(data.dcf.equity_value, currencySymbol(data.company.ticker)),         ""],
+                          ["Valeur terminale actualisée", fmt(data.dcf.terminal_value_pv, currencySymbol(data.company.ticker)),    ""],
+                          ["Valeur intrinsèque / action", `${currencySymbol(data.company.ticker)}${data.dcf.intrinsic_value.toFixed(2)}`, "highlight"],
+                          ["Prix de marché actuel",       `${currencySymbol(data.company.ticker)}${data.company.price.toFixed(2)}`, ""],
                           ["Potentiel",                   `${data.dcf.upside_pct > 0 ? "+" : ""}${data.dcf.upside_pct.toFixed(1)}%`,
                             data.dcf.upside_pct > 0 ? "pos" : data.dcf.upside_pct < 0 ? "neg" : ""],
                         ].map(([label, value, cls]) => (
@@ -952,10 +971,10 @@ function AnalyzePage() {
                     </div>
                   </Section>
 
-                  <Section title="Matrice de sensibilité — Valeur intrinsèque ($)" defaultOpen={false}>
+                  <Section title={`Matrice de sensibilité — Valeur intrinsèque (${currencySymbol(data.company.ticker)})`} defaultOpen={false}>
                     <div className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl p-6 mb-6">
                       <p className="text-xs text-[#5d7289] mb-5">
-                        Lignes = Croissance FCF · Colonnes = WACC · Vert = sous-évalué · Rouge = surévalué (vs ${data.company.price.toFixed(2)})
+                        Lignes = Croissance FCF · Colonnes = WACC · Vert = sous-évalué · Rouge = surévalué (vs {currencySymbol(data.company.ticker)}{data.company.price.toFixed(2)})
                       </p>
                       <div className="overflow-x-auto">
                         <SensitivityHeatmap data={data.sensitivity} currentPrice={data.company.price} />

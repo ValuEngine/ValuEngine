@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
-import { analyzeStock, pct, type AnalyzeResponse } from "@/lib/api";
+import { Loader2, RefreshCw } from "lucide-react";
+import { analyzeStock, type AnalyzeResponse } from "@/lib/api";
 import AppLayout from "@/components/AppLayout";
 
 const ALL_TICKERS = [
-  "AAPL", "MSFT", "GOOGL", "AMZN", "META",
-  "NVDA", "TSLA", "JPM",  "V",    "JNJ",
-  "KO",   "WMT",  "DIS",  "NFLX", "PYPL",
-  "ADBE", "CRM",  "INTC", "AMD",  "UBER",
+  "MC.PA", "TTE.PA", "BNP.PA", "AIR.PA", "SAN.PA", "OR.PA",
+  "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "TSLA",
+  "META", "JPM", "JNJ", "KO", "V", "NFLX", "AMD", "UBER",
 ];
+
+const BATCH_SIZE = 4;
 
 const DEFAULT_PARAMS = {
   growth_rate:     0.08,
@@ -27,6 +28,7 @@ interface ScreenerResult {
   name: string;
   sector: string;
   price: number;
+  currency: string;
   pe: number | null;
   upside: number;
   verdict: string;
@@ -35,7 +37,7 @@ interface ScreenerResult {
 function verdictBadge(verdict: string) {
   if (verdict === "BUY") return (
     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-      <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />Sous-évalué
+      <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />Sous-evalué
     </span>
   );
   if (verdict === "SELL") return (
@@ -50,48 +52,72 @@ function verdictBadge(verdict: string) {
   );
 }
 
-function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
+function formatPrice(price: number, currency: string): string {
+  if (currency === "EUR") return `${price.toFixed(2)} EUR`;
+  return `$${price.toFixed(2)}`;
+}
+
+/** Process an array in batches of `size`, running each batch concurrently. */
+async function processBatches<T>(
+  items: T[],
+  size: number,
+  handler: (item: T, index: number) => Promise<void>,
+): Promise<void> {
+  for (let start = 0; start < items.length; start += size) {
+    const batch = items.slice(start, start + size);
+    await Promise.allSettled(
+      batch.map((item, i) => handler(item, start + i)),
+    );
+  }
+}
 
 export default function ScreenerPage() {
   const router = useRouter();
   const [results, setResults] = useState<ScreenerResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [completed, setCompleted] = useState(0);
+  const [failed, setFailed] = useState(0);
   const [verdictFilter, setVerdictFilter] = useState<VerdictFilter>("all");
   const [sectorFilter, setSectorFilter] = useState("all");
+  const abortRef = useRef(false);
 
-  const handleScreen = async () => {
+  const handleScreen = useCallback(async () => {
     setIsLoading(true);
     setResults([]);
-    setProgress(0);
-    const collected: ScreenerResult[] = [];
+    setCompleted(0);
+    setFailed(0);
+    abortRef.current = false;
 
-    for (let i = 0; i < ALL_TICKERS.length; i++) {
-      const t = ALL_TICKERS[i];
+    await processBatches(ALL_TICKERS, BATCH_SIZE, async (ticker) => {
+      if (abortRef.current) return;
       try {
-        const data: AnalyzeResponse = await analyzeStock({ ticker: t, ...DEFAULT_PARAMS });
-        collected.push({
+        const data: AnalyzeResponse = await analyzeStock({ ticker, ...DEFAULT_PARAMS });
+        const result: ScreenerResult = {
           ticker: data.company.ticker,
-          name:   data.company.name,
+          name: data.company.name,
           sector: data.company.sector,
-          price:  data.company.price,
-          pe:     data.company.pe_ratio,
+          price: data.company.price,
+          currency: data.company.currency,
+          pe: data.company.pe_ratio,
           upside: data.dcf.upside_pct,
           verdict: data.verdict,
-        });
-        setResults([...collected]);
+        };
+        setResults((prev) => [...prev, result]);
       } catch {
-        // skip failed ticker
+        setFailed((prev) => prev + 1);
       }
-      setProgress(i + 1);
-      if (i < ALL_TICKERS.length - 1) await sleep(300);
-    }
+      setCompleted((prev) => prev + 1);
+    });
+
     setIsLoading(false);
-  };
+  }, []);
 
-  const sectors = ["all", ...Array.from(new Set(results.map(r => r.sector)))];
+  const total = ALL_TICKERS.length;
+  const sectors = ["all", ...Array.from(new Set(results.map((r) => r.sector)))];
 
-  const filtered = results.filter(r => {
+  // Sort by upside descending, then apply filters
+  const sorted = [...results].sort((a, b) => b.upside - a.upside);
+  const filtered = sorted.filter((r) => {
     if (verdictFilter !== "all" && r.verdict !== verdictFilter) return false;
     if (sectorFilter !== "all" && r.sector !== sectorFilter) return false;
     return true;
@@ -103,10 +129,12 @@ export default function ScreenerPage() {
 
         <div className="mb-8">
           <h1 className="text-3xl font-black tracking-tight">Screener</h1>
-          <p className="text-[#6b7d91] text-sm mt-1">Analyse automatique de 20 actions majeures</p>
+          <p className="text-[#6b7d91] text-sm mt-1">
+            Analyse automatique de {total} actions majeures (FR + US)
+          </p>
         </div>
 
-        {/* Launch button */}
+        {/* Launch / Relaunch buttons + filters */}
         <div className="flex flex-wrap items-center gap-4 mb-8">
           <button
             onClick={handleScreen}
@@ -114,13 +142,15 @@ export default function ScreenerPage() {
             className="flex items-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold px-8 py-3 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
-              <><Loader2 size={16} className="animate-spin" /> Analyse en cours... {progress}/{ALL_TICKERS.length}</>
+              <><Loader2 size={16} className="animate-spin" /> Analyse en cours... {completed}/{total}</>
+            ) : results.length > 0 ? (
+              <><RefreshCw size={16} /> Relancer</>
             ) : (
               "Lancer le screening"
             )}
           </button>
 
-          {results.length > 0 && !isLoading && (
+          {results.length > 0 && (
             <>
               <select
                 value={verdictFilter}
@@ -128,7 +158,7 @@ export default function ScreenerPage() {
                 className="bg-[#132032] border border-[rgba(201,168,76,0.2)] text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-all"
               >
                 <option value="all">Tous les verdicts</option>
-                <option value="BUY">Sous-évalué</option>
+                <option value="BUY">Sous-evalué</option>
                 <option value="HOLD">Juste valeur</option>
                 <option value="SELL">Surévalué</option>
               </select>
@@ -138,7 +168,7 @@ export default function ScreenerPage() {
                 onChange={(e) => setSectorFilter(e.target.value)}
                 className="bg-[#132032] border border-[rgba(201,168,76,0.2)] text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-all"
               >
-                {sectors.map(s => (
+                {sectors.map((s) => (
                   <option key={s} value={s}>{s === "all" ? "Tous les secteurs" : s}</option>
                 ))}
               </select>
@@ -152,14 +182,17 @@ export default function ScreenerPage() {
             <div className="h-2 bg-[rgba(255,255,255,0.06)] rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] rounded-full transition-all duration-300"
-                style={{ width: `${(progress / ALL_TICKERS.length) * 100}%` }}
+                style={{ width: `${(completed / total) * 100}%` }}
               />
             </div>
-            <p className="text-xs text-[#4a6070] mt-2">{progress}/{ALL_TICKERS.length} tickers analysés</p>
+            <p className="text-xs text-[#4a6070] mt-2">
+              {completed}/{total} analyses complétées
+              {failed > 0 && <span className="text-red-400 ml-2">({failed} échouée{failed > 1 ? "s" : ""})</span>}
+            </p>
           </div>
         )}
 
-        {/* Table */}
+        {/* Results table */}
         {filtered.length > 0 && (
           <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.14)] rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
@@ -185,7 +218,7 @@ export default function ScreenerPage() {
                       <td className="px-5 py-4 text-[#C9A84C] font-black">{r.ticker}</td>
                       <td className="px-5 py-4 text-white text-sm max-w-[180px] truncate">{r.name}</td>
                       <td className="px-5 py-4 text-[#6b7d91] text-sm">{r.sector}</td>
-                      <td className="px-5 py-4 text-right text-white font-semibold text-sm">${r.price.toFixed(2)}</td>
+                      <td className="px-5 py-4 text-right text-white font-semibold text-sm">{formatPrice(r.price, r.currency)}</td>
                       <td className="px-5 py-4 text-right text-white text-sm">{r.pe != null ? `${r.pe.toFixed(1)}x` : "N/A"}</td>
                       <td className={`px-5 py-4 text-right text-sm font-bold ${r.upside > 0 ? "text-[#00d4aa]" : "text-[#ff4d6d]"}`}>
                         {r.upside > 0 ? "+" : ""}{r.upside.toFixed(1)}%
@@ -199,13 +232,16 @@ export default function ScreenerPage() {
           </div>
         )}
 
+        {/* Empty state */}
         {!isLoading && results.length === 0 && (
           <div className="flex flex-col items-center justify-center py-32 text-center">
             <div className="w-16 h-16 rounded-2xl bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.18)] flex items-center justify-center mb-6">
               <span className="text-3xl">📊</span>
             </div>
             <h2 className="text-xl font-bold mb-2">Prêt à analyser</h2>
-            <p className="text-[#4a6070] text-sm">Cliquez sur &quot;Lancer le screening&quot; pour analyser 20 actions populaires</p>
+            <p className="text-[#4a6070] text-sm">
+              Cliquez sur &quot;Lancer le screening&quot; pour analyser {total} actions populaires (FR + US)
+            </p>
           </div>
         )}
       </div>

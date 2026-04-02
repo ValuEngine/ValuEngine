@@ -127,6 +127,10 @@ export async function analyzeStock(
   return res.json();
 }
 
+export function currencySymbol(ticker: string): string {
+  return ticker.endsWith(".PA") || ticker.endsWith(".DE") || ticker.endsWith(".AS") || ticker.endsWith(".BR") || ticker.endsWith(".MI") ? "€" : "$";
+}
+
 export function fmt(n: number | null | undefined, prefix = "$"): string {
   if (n == null || isNaN(n)) return "N/A";
   const a = Math.abs(n);

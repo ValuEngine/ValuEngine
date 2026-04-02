@@ -119,7 +119,7 @@ export default function PortfolioPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-black tracking-tight">Portefeuille</h1>
-            <p className="text-[#6b7d91] text-sm mt-1">Suivez vos positions et votre P&amp;L</p>
+            <p className="text-[#6b7d91] text-sm mt-1">Suis tes positions et ton P&amp;L en temps réel</p>
           </div>
           <button
             onClick={() => { setShowModal(true); setModalError(null); }}
@@ -215,8 +215,9 @@ export default function PortfolioPage() {
             <div className="w-16 h-16 rounded-2xl bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.18)] flex items-center justify-center mb-6">
               <span className="text-3xl">💼</span>
             </div>
-            <h2 className="text-xl font-bold mb-2">Portefeuille vide</h2>
-            <p className="text-[#4a6070] text-sm mb-6">Ajoutez vos positions pour suivre votre performance</p>
+            <h2 className="text-xl font-bold mb-2">Ton portefeuille est vide</h2>
+            <p className="text-[#4a6070] text-sm max-w-xs mb-2">Ajoute tes positions pour suivre ta performance et ton P&amp;L en temps réel.</p>
+            <p className="text-[#4a6070] text-xs mb-6">Exemple : 10 actions AAPL achetées à 185$</p>
             <button
               onClick={() => setShowModal(true)}
               className="flex items-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold px-6 py-3 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all"
@@ -244,7 +245,7 @@ export default function PortfolioPage() {
                     type="text"
                     value={newTicker}
                     onChange={(e) => setNewTicker(e.target.value.toUpperCase())}
-                    placeholder="Ex: AAPL"
+                    placeholder="Ex: AAPL, MC.PA"
                     className="w-full bg-[rgba(27,45,69,0.9)] border border-[rgba(201,168,76,0.25)] rounded-xl px-5 py-3 text-white placeholder-[#304560] text-sm font-semibold focus:outline-none focus:border-[#C9A84C] transition-all"
                   />
                 </div>
