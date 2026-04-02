@@ -105,34 +105,140 @@ body::before {
 /* Sélection de texte */
 ::selection { background: rgba(201,168,76,0.25); color: #fff; }
 
-/* ── Clerk custom theme ───────────────────────────────── */
+/* ── Clerk custom dark theme (nuclear override) ──────── */
+
+/* All Clerk backgrounds → dark */
 .cl-rootBox,
 .cl-card,
-.cl-userButtonPopoverCard {
+.cl-userButtonPopoverCard,
+.cl-modalContent,
+.cl-userProfile-root,
+.cl-profilePage,
+.cl-page,
+.cl-pageScrollBox,
+.cl-navbar,
+.cl-navbarMobileMenuRow,
+.cl-accordionContent,
+.cl-scrollBox,
+.cl-main,
+.cl-profileSection,
+.cl-profileSectionContent,
+.cl-activeDevice,
+.cl-activeDeviceListItem {
   background-color: #18181b !important;
+  background: #18181b !important;
+}
+
+.cl-modalContent,
+.cl-card {
   border: 1px solid #27272a !important;
 }
 
+/* All Clerk text → white/light (catch-all) */
+.cl-rootBox *,
+.cl-modalContent *,
+.cl-userProfile-root * {
+  --cl-chassis-text-primary: #ffffff;
+  --cl-chassis-text-secondary: #a1a1aa;
+}
+
+/* Primary text → white */
 .cl-headerTitle,
+.cl-headerTitle *,
+.cl-profileSectionTitle,
+.cl-profileSectionTitleText,
+.cl-profileSectionTitleText *,
 .cl-userPreviewMainIdentifier,
-.cl-userButtonPopoverActionButtonText,
+.cl-userPreviewMainIdentifier *,
+.cl-identityPreviewText,
+.cl-identityPreviewText *,
+.cl-formFieldLabel,
+.cl-formFieldLabel *,
+.cl-accordionTriggerButton,
+.cl-accordionTriggerButton *,
+.cl-breadcrumbsItem,
+.cl-breadcrumbsItem *,
+.cl-navbarButton,
+.cl-navbarButton *,
+.cl-activeDevice *,
+.cl-menuItem *,
 .cl-menuItem__manageAccount,
 .cl-menuItem__signOut,
-.cl-profileSectionTitleText,
-.cl-formFieldLabel,
-.cl-identityPreviewText,
-.cl-accordionTriggerButton {
+.cl-userButtonPopoverActionButtonText,
+.cl-userButtonPopoverActionButtonText *,
+.cl-profileSectionPrimaryButton *,
+.cl-alertText,
+.cl-alertText * {
   color: #ffffff !important;
 }
 
+/* Secondary text → zinc-400 */
 .cl-headerSubtitle,
+.cl-headerSubtitle *,
 .cl-userPreviewSecondaryIdentifier,
-.cl-footerActionText,
+.cl-userPreviewSecondaryIdentifier *,
+.cl-profileSectionContent > p,
 .cl-formFieldHintText,
-.cl-identityPreviewSecondary {
+.cl-footerActionText,
+.cl-dividerText,
+.cl-fileDropAreaHint {
   color: #a1a1aa !important;
 }
 
+/* Connected account email text specifically */
+.cl-profileSection__connectedAccounts *,
+.cl-connectedAccountList *,
+.cl-connectedAccountItem *,
+.cl-providerIcon + *,
+.cl-profileSectionContent span,
+.cl-profileSectionContent p,
+.cl-profileSectionContent div {
+  color: #e4e4e7 !important;
+}
+
+/* Navbar active state */
+.cl-navbarButton__active,
+.cl-navbarButton__active * {
+  color: #C9A84C !important;
+  background-color: rgba(201, 168, 76, 0.08) !important;
+}
+
+.cl-navbarButton:hover {
+  background-color: #27272a !important;
+}
+
+.cl-navbarButtonIcon {
+  color: #C9A84C !important;
+}
+
+/* Borders */
+.cl-profileSection,
+.cl-profileSection__profile,
+.cl-profileSection__connectedAccounts,
+.cl-profileSection__danger,
+.cl-profileSection__activeDevices {
+  border-color: #27272a !important;
+}
+
+.cl-navbar {
+  border-right: 1px solid #27272a !important;
+}
+
+/* Accent buttons → gold */
+.cl-profileSectionPrimaryButton,
+.cl-identityPreviewEditButton,
+.cl-footerActionLink,
+.cl-linkButton {
+  color: #C9A84C !important;
+  font-weight: 600 !important;
+}
+
+.cl-profileSectionPrimaryButton:hover,
+.cl-identityPreviewEditButton:hover {
+  background-color: rgba(201, 168, 76, 0.08) !important;
+}
+
+/* Forms */
 .cl-formFieldInput,
 .cl-phoneInputBox {
   background-color: #27272a !important;
@@ -155,12 +261,7 @@ body::before {
   background-color: #b8943d !important;
 }
 
-.cl-footerActionLink,
-.cl-identityPreviewEditButton {
-  color: #C9A84C !important;
-  font-weight: 600 !important;
-}
-
+/* Social / connected account buttons */
 .cl-socialButtonsBlockButton {
   background-color: #27272a !important;
   border-color: #3f3f46 !important;
@@ -171,6 +272,24 @@ body::before {
   color: #ffffff !important;
 }
 
+/* Avatar upload area */
+.cl-avatarBox {
+  outline: 2px solid rgba(201,168,76,0.5) !important;
+  outline-offset: 2px !important;
+}
+
+.cl-avatarImageActionsUpload,
+.cl-fileDropAreaButtonPrimary {
+  color: #C9A84C !important;
+  font-weight: 600 !important;
+}
+
+.cl-fileDropAreaBox {
+  background-color: #27272a !important;
+  border-color: #3f3f46 !important;
+}
+
+/* User button popover */
 .cl-userButtonPopoverActionButton:hover {
   background-color: rgba(201, 168, 76, 0.08) !important;
 }
@@ -179,29 +298,44 @@ body::before {
   color: #C9A84C !important;
 }
 
-.cl-avatarBox {
-  outline: 2px solid rgba(201,168,76,0.5) !important;
-  outline-offset: 2px !important;
-}
-
+/* Badges & footer */
 .cl-badge,
-.cl-userButtonPopoverFooter {
+.cl-userButtonPopoverFooter,
+.cl-footer {
   display: none !important;
 }
 
-.cl-userButtonPopoverActionButtonText,
-.cl-userButtonPopoverActionButtonText span,
-.cl-menuItem span,
-.cl-userPreviewMainIdentifier,
-.cl-userPreviewSecondaryIdentifier,
-.cl-userButtonPopoverUserPreviewMainIdentifier,
-.cl-userButtonPopoverUserPreviewSecondaryIdentifier {
-  color: #ffffff !important;
-  opacity: 1 !important;
+/* Menu list background */
+.cl-menuList {
+  background-color: #18181b !important;
+  border: 1px solid #27272a !important;
 }
 
-.cl-internal-b3fm6y,
-.cl-internal-1hp5nqm,
-.cl-internal-wkkub3 {
+/* Modal close button */
+.cl-modalCloseButton {
+  color: #a1a1aa !important;
+}
+
+.cl-modalCloseButton:hover {
   color: #ffffff !important;
+}
+
+/* Dividers */
+.cl-dividerLine {
+  background-color: #27272a !important;
+}
+
+/* Danger section */
+.cl-profileSection__danger .cl-profileSectionPrimaryButton {
+  color: #ef4444 !important;
+}
+
+/* Catch-all for any remaining internal Clerk classes with dark text */
+[class*="cl-internal"] {
+  color: inherit;
+}
+
+.cl-modalContent [class*="cl-internal"],
+.cl-userProfile-root [class*="cl-internal"] {
+  color: #e4e4e7 !important;
 }
