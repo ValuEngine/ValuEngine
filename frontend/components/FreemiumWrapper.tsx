@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useUser } from "@clerk/nextjs";
 import { Lock } from "lucide-react";
 
@@ -46,11 +47,18 @@ function hasReachedLimit(userId: string): boolean {
   return getUsage(userId).count >= DAILY_FREE_LIMIT;
 }
 
-/* ── Paywall modal ───────────────────────────────────────────────────── */
+/* ── Paywall modal (rendered via portal to escape stacking contexts) ── */
 
 function PaywallModal({ onClose, onUpgrade }: { onClose: () => void; onUpgrade: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(0,0,0,0.75)] backdrop-blur-sm">
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  const modal = (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
       <div className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(201,168,76,0.3)] rounded-2xl p-8 max-w-md w-full shadow-2xl animate-[slideUp_0.3s_ease-out]">
         <div className="flex flex-col items-center text-center">
           <div className="w-16 h-16 rounded-2xl bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.25)] flex items-center justify-center mb-5">
@@ -60,7 +68,7 @@ function PaywallModal({ onClose, onUpgrade }: { onClose: () => void; onUpgrade: 
           <p className="text-[#7a8fa3] text-sm leading-relaxed mb-6">
             Tu as utilisé tes{" "}
             <span className="text-[#C9A84C] font-bold">3 analyses gratuites</span>{" "}
-            aujourd'hui. Reviens demain ou passe au plan Pro pour des analyses illimitées.
+            aujourd&apos;hui. Reviens demain ou passe au plan Pro pour des analyses illimitées.
           </p>
           <div className="flex items-center gap-2 mb-7">
             {[0, 1, 2].map((i) => (
@@ -84,6 +92,10 @@ function PaywallModal({ onClose, onUpgrade }: { onClose: () => void; onUpgrade: 
       </div>
     </div>
   );
+
+  // Portal: render directly into document.body to escape any stacking context
+  if (!mounted) return null;
+  return createPortal(modal, document.body);
 }
 
 /* ── FreemiumGate ────────────────────────────────────────────────────── */
@@ -118,6 +130,7 @@ export function FreemiumGate({
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
+      else console.error("Stripe: pas d'URL retournée", data);
     } catch (err) {
       console.error("Erreur Stripe:", err);
     }
