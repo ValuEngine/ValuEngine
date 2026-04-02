@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import {
   TrendingUp, TrendingDown, Minus, Search, Settings2,
-  ChevronDown, ChevronUp, Loader2, Bell, Trash2,
+  ChevronDown, ChevronUp, Loader2, Bell, Trash2, Share2,
 } from "lucide-react";
 import { FreemiumGate } from "@/components/FreemiumWrapper";
 import { analyzeStock, fmt, pct, type AnalyzeResponse } from "@/lib/api";
@@ -469,6 +469,16 @@ function AnalyzePage() {
   const [showPaywall,   setShowPaywall]   = useState(false);
   const [pendingTicker, setPendingTicker] = useState<string | null>(null);
   const [activeTab,     setActiveTab]     = useState<TabId>("overview");
+  const [visitedTabs,  setVisitedTabs]  = useState<Set<TabId>>(() => new Set<TabId>(["overview"]));
+
+  useEffect(() => {
+    setVisitedTabs((prev) => {
+      if (prev.has(activeTab)) return prev;
+      const next = new Set(prev);
+      next.add(activeTab);
+      return next;
+    });
+  }, [activeTab]);
 
   const [growth,   setGrowth]   = useState(8);
   const [wacc,     setWacc]     = useState(10);
@@ -674,6 +684,23 @@ function AnalyzePage() {
           {data && vc && (
             <div className="animate-[fadeIn_0.4s_ease-out]">
 
+              {/* Analysis completeness */}
+              <div className="flex flex-wrap items-center gap-3 mb-6 px-3 py-2 bg-zinc-900/50 rounded-lg">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mr-1">Compl&#233;tude :</span>
+                {([
+                  { label: "DCF",     tabId: "overview" as TabId },
+                  { label: "Bull/Bear", tabId: "ai" as TabId },
+                  { label: "Comps",   tabId: "comps" as TabId },
+                  { label: "Matrice", tabId: "valuation" as TabId },
+                  { label: "SWOT",    tabId: "swot" as TabId },
+                  { label: "PESTLE",  tabId: "pestle" as TabId },
+                ] as const).map((s) => (
+                  <span key={s.label} className={`text-xs font-medium ${visitedTabs.has(s.tabId) ? "text-emerald-400" : "text-zinc-600"}`}>
+                    {visitedTabs.has(s.tabId) ? "\u2713" : "\u2717"} {s.label}
+                  </span>
+                ))}
+              </div>
+
               {/* Company header */}
               <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
                 <div>
@@ -685,7 +712,14 @@ function AnalyzePage() {
                       {data.company.sector}
                     </span>
                   </div>
-                  <p className="text-[#4a6070] text-sm mt-1">{data.company.industry} · {data.company.exchange}</p>
+                  <p className="text-[#4a6070] text-sm mt-1">
+                    {data.company.industry} · {data.company.exchange}
+                    {(data as any).share_id && (
+                      <button onClick={() => router.push(`/analyse/${(data as any).share_id}`)} className="ml-3 text-xs text-zinc-400 hover:text-[#C9A84C] transition-colors inline-flex items-center gap-1">
+                        <Share2 size={12} /> Partager
+                      </button>
+                    )}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-black">${data.company.price.toFixed(2)}</p>
@@ -757,6 +791,14 @@ function AnalyzePage() {
                         </p>
                       </div>
                     </div>
+                  </div>
+
+                  {/* AMF Warning */}
+                  <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-yellow-500/[0.08] border border-yellow-500/20 mb-6">
+                    <span className="text-yellow-400 mt-0.5">&#x26A0;&#xFE0F;</span>
+                    <p className="text-xs text-yellow-200/70 leading-relaxed">
+                      Cette estimation est bas&#233;e sur un mod&#232;le DCF math&#233;matique. Elle ne constitue pas un conseil en investissement au sens de la directive MIF II. Fais tes propres recherches.
+                    </p>
                   </div>
 
                   {/* Historical chart */}

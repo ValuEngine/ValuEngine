@@ -4,8 +4,9 @@ import Link from "next/link";
 export const revalidate = 3600; // ISR — revalidate every hour
 
 const SEO_TICKERS = [
-  "AAPL", "MSFT", "NVDA", "TSLA", "GOOGL", "AMZN", "META", "JPM", "V", "JNJ",
-  "ASML", "LVMH", "TTE", "BNP", "AIR", "OR", "SAN", "MC", "CAC", "DAX",
+  "MC.PA", "TTE.PA", "BNP.PA", "AIR.PA", "OR.PA", "SAN.PA",
+  "AAPL", "MSFT", "NVDA", "TSLA", "GOOGL", "AMZN", "META", "ASML", "NESN",
+  "LVMH", "JPM", "V", "JNJ",
 ];
 
 interface CompanyProfile {
@@ -68,7 +69,7 @@ export async function generateMetadata(
     openGraph: {
       title,
       description,
-      url: `https://valuengine.io/analyse-action/${t}`,
+      url: `https://valuengine.fr/analyse-action/${t}`,
       type: "article",
     },
     twitter: {

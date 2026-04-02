@@ -24,7 +24,7 @@ def send_alert_email(
     change_pct = round((current_price - target_price) / target_price * 100, 2) if target_price else 0
     sign = "+" if change_pct >= 0 else ""
     perf_color = "#3fb950" if change_pct >= 0 else "#f85149"
-    app_url = os.environ.get("FRONTEND_URL", "https://frontend-nine-gamma-21.vercel.app")
+    app_url = os.environ.get("FRONTEND_URL", "https://valuengine.fr")
 
     html = f"""<!DOCTYPE html>
 <html>
@@ -90,4 +90,71 @@ def send_alert_email(
         return True
     except Exception as e:
         print(f"[Email] Erreur: {e}")
+        return False
+
+
+def send_welcome_email(to: str, first_name: str) -> bool:
+    """Envoie un email de bienvenue après inscription."""
+    api_key = os.environ.get("RESEND_API_KEY", "")
+    if not api_key:
+        print("[Email] RESEND_API_KEY manquant — email non envoyé")
+        return False
+
+    resend.api_key = api_key
+
+    app_url = os.environ.get("FRONTEND_URL", "https://valuengine.fr")
+
+    html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#09090b;font-family:system-ui,-apple-system,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;padding:32px 16px;">
+
+    <div style="background:#18181b;border:1px solid #27272a;border-radius:16px;padding:32px;">
+      <div style="margin-bottom:24px;">
+        <span style="background:#C9A84C;color:#09090b;font-weight:800;padding:4px 14px;border-radius:999px;font-size:11px;letter-spacing:2px;text-transform:uppercase;">ValuEngine</span>
+      </div>
+
+      <h1 style="color:#ffffff;font-size:22px;font-weight:800;margin:0 0 6px 0;">Bienvenue {first_name} !</h1>
+      <p style="color:#a1a1aa;font-size:14px;line-height:1.6;margin:0 0 24px 0;">
+        Ton compte ValuEngine est prêt. Tu peux maintenant analyser n'importe quelle action
+        cotée en bourse grâce à notre modèle DCF augmenté par IA.
+      </p>
+
+      <p style="color:#a1a1aa;font-size:14px;line-height:1.6;margin:0 0 24px 0;">
+        Pour commencer, lance ta première analyse en un clic :
+      </p>
+
+      <a href="{app_url}/analyze?ticker=MC.PA"
+         style="display:inline-block;background:#C9A84C;color:#09090b;font-weight:800;padding:14px 32px;border-radius:10px;text-decoration:none;font-size:14px;">
+        Analyser LVMH maintenant →
+      </a>
+
+      <p style="color:#71717a;font-size:13px;line-height:1.6;margin:24px 0 0 0;">
+        Tu recevras aussi des alertes prix personnalisées et des analyses comparatives
+        pour prendre des décisions éclairées.
+      </p>
+    </div>
+
+    <p style="color:#3f3f46;font-size:11px;text-align:center;margin-top:20px;line-height:1.7;padding:0 8px;">
+      ValuEngine est un outil d'analyse financière à vocation éducative.
+      Les informations fournies ne constituent pas des conseils en investissement
+      au sens de la directive MIF II ni du règlement général de l'AMF.<br>
+      Pour ne plus recevoir ces emails, gérez vos préférences depuis votre compte.
+    </p>
+  </div>
+</body>
+</html>"""
+
+    try:
+        resend.Emails.send({
+            "from": "ValuEngine <contact@valuengine.fr>",
+            "to": [to],
+            "subject": f"Bienvenue sur ValuEngine, {first_name} \u2014 Lance ta premi\u00e8re analyse",
+            "html": html,
+        })
+        print(f"[Email] Welcome envoyé à {to}")
+        return True
+    except Exception as e:
+        print(f"[Email] Erreur welcome: {e}")
         return False

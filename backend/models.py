@@ -68,3 +68,4 @@ class AnalyzeResponse(BaseModel):
     analysis: BullBearAnalysis
     verdict: str          # "BUY" | "HOLD" | "SELL"
     verdict_label: str    # "Sous-évalué" | "Juste valeur" | "Surévalué"
+    share_id: Optional[str] = None

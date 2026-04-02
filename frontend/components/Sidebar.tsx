@@ -16,16 +16,28 @@ import {
   ChevronsLeft,
   Menu,
   X,
+  Star,
+  FlaskConical,
+  Info,
 } from "lucide-react";
 
-const NAV_ITEMS = [
+const MAIN_ITEMS = [
   { label: "Dashboard",      href: "/dashboard",    icon: LayoutDashboard },
   { label: "Analyser",       href: "/analyze",      icon: LineChart },
+  { label: "Watchlist",      href: "/dashboard",    icon: Star },
+  { label: "Portefeuille",   href: "/portfolio",    icon: Briefcase },
+];
+
+const SECONDARY_ITEMS = [
   { label: "Comparer",       href: "/compare",      icon: GitCompare },
   { label: "Screener",       href: "/screener",     icon: Filter },
-  { label: "Portefeuille",   href: "/portfolio",    icon: Briefcase },
   { label: "Track Record",   href: "/track-record", icon: TrendingUp },
+];
+
+const BOTTOM_ITEMS = [
   { label: "Blog",           href: "/blog",         icon: BookOpen },
+  { label: "Méthodologie",   href: "/methodology",  icon: FlaskConical },
+  { label: "À propos",       href: "/about",        icon: Info },
   { label: "Inviter",        href: "/referral",     icon: UserPlus },
 ];
 
@@ -69,30 +81,93 @@ export default function Sidebar() {
       </div>
 
       {/* Nav Items */}
-      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
-        {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
-          const isActive =
-            pathname === href ||
-            (href !== "/dashboard" && pathname.startsWith(href));
-          return (
-            <Link
-              key={href}
-              href={href}
-              onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative ${
-                isActive
-                  ? "bg-[#18181b] text-[#C9A84C] border-l-2 border-[#C9A84C] pl-[10px]"
-                  : "text-[#71717a] hover:bg-[#18181b] hover:text-[#e4e4e7]"
-              }`}
-            >
-              <Icon
-                size={16}
-                className={isActive ? "text-[#C9A84C]" : "text-[#52525b] group-hover:text-[#C9A84C]"}
-              />
-              {label}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 px-2 py-3 overflow-y-auto">
+        {/* Main */}
+        <div className="space-y-0.5">
+          {MAIN_ITEMS.map(({ label, href, icon: Icon }) => {
+            const isActive =
+              pathname === href ||
+              (href !== "/dashboard" && pathname.startsWith(href));
+            return (
+              <Link
+                key={label}
+                href={href}
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative ${
+                  isActive
+                    ? "bg-[#18181b] text-[#C9A84C] border-l-2 border-[#C9A84C] pl-[10px]"
+                    : "text-[#71717a] hover:bg-[#18181b] hover:text-[#e4e4e7]"
+                }`}
+              >
+                <Icon
+                  size={16}
+                  className={isActive ? "text-[#C9A84C]" : "text-[#52525b] group-hover:text-[#C9A84C]"}
+                />
+                {label}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Separator: Outils */}
+        <div className="border-t border-zinc-800/50 mt-4 pt-3 mb-2">
+          <span className="text-[10px] uppercase tracking-widest text-zinc-600 px-3">Outils</span>
+        </div>
+        <div className="space-y-0.5">
+          {SECONDARY_ITEMS.map(({ label, href, icon: Icon }) => {
+            const isActive =
+              pathname === href ||
+              (href !== "/dashboard" && pathname.startsWith(href));
+            return (
+              <Link
+                key={label}
+                href={href}
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative ${
+                  isActive
+                    ? "bg-[#18181b] text-[#C9A84C] border-l-2 border-[#C9A84C] pl-[10px]"
+                    : "text-[#71717a] hover:bg-[#18181b] hover:text-[#e4e4e7]"
+                }`}
+              >
+                <Icon
+                  size={16}
+                  className={isActive ? "text-[#C9A84C]" : "text-[#52525b] group-hover:text-[#C9A84C]"}
+                />
+                {label}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Separator: Ressources */}
+        <div className="border-t border-zinc-800/50 mt-4 pt-3 mb-2">
+          <span className="text-[10px] uppercase tracking-widest text-zinc-600 px-3">Ressources</span>
+        </div>
+        <div className="space-y-0.5">
+          {BOTTOM_ITEMS.map(({ label, href, icon: Icon }) => {
+            const isActive =
+              pathname === href ||
+              (href !== "/dashboard" && pathname.startsWith(href));
+            return (
+              <Link
+                key={label}
+                href={href}
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative ${
+                  isActive
+                    ? "bg-[#18181b] text-[#C9A84C] border-l-2 border-[#C9A84C] pl-[10px]"
+                    : "text-[#71717a] hover:bg-[#18181b] hover:text-[#e4e4e7]"
+                }`}
+              >
+                <Icon
+                  size={16}
+                  className={isActive ? "text-[#C9A84C]" : "text-[#52525b] group-hover:text-[#C9A84C]"}
+                />
+                {label}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
       {/* Bottom section */}

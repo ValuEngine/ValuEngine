@@ -15,6 +15,8 @@ const BREADCRUMBS: Record<string, string> = {
   "/blog":         "Blog",
   "/referral":     "Inviter des amis",
   "/legal":        "Mentions légales",
+  "/about":        "Qui sommes-nous",
+  "/methodology":  "Méthodologie",
 };
 
 function TopHeader() {

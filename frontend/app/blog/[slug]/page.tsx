@@ -1,5 +1,6 @@
 import AppLayout from "../../../components/AppLayout";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 
 const CONTENT: Record<string, { title: string; date: string; readTime: string; category: string; body: string }> = {
   "comment-lire-un-dcf": {
@@ -123,8 +124,6 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
     );
   }
 
-  const paragraphs = article.body.trim().split("\n").filter(l => l.trim());
-
   return (
     <AppLayout>
       <div className="p-6 max-w-3xl mx-auto">
@@ -136,23 +135,20 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
           <span className="text-xs" style={{ color: "var(--text-secondary)" }}>{article.date} · {article.readTime} de lecture</span>
         </div>
         <h1 className="text-3xl font-black mb-8 leading-tight" style={{ color: "var(--text-primary)" }}>{article.title}</h1>
-        <div className="prose prose-invert max-w-none">
-          {paragraphs.map((line, i) => {
-            if (line.startsWith("## ")) {
-              return <h2 key={i} className="text-xl font-bold mt-8 mb-4" style={{ color: "var(--text-primary)" }}>{line.slice(3)}</h2>;
-            }
-            if (line.startsWith("**") && line.endsWith("**")) {
-              return <p key={i} className="font-semibold my-2" style={{ color: "var(--text-primary)" }}>{line.slice(2, -2)}</p>;
-            }
-            if (line.startsWith("> ")) {
-              return <blockquote key={i} className="border-l-4 border-[#C9A84C] pl-4 italic my-4" style={{ color: "var(--text-secondary)" }}>{line.slice(2)}</blockquote>;
-            }
-            if (line.startsWith("- ")) {
-              return <li key={i} className="ml-4 my-1 list-disc" style={{ color: "var(--text-secondary)" }}>{line.slice(2)}</li>;
-            }
-            if (line.trim() === "") return null;
-            return <p key={i} className="leading-relaxed my-3" style={{ color: "var(--text-secondary)" }}>{line}</p>;
-          })}
+        <div className="prose prose-invert prose-sm max-w-none">
+          <ReactMarkdown
+            components={{
+              h2: ({ children }) => <h2 className="text-xl font-bold mt-8 mb-4" style={{ color: "var(--text-primary)" }}>{children}</h2>,
+              h3: ({ children }) => <h3 className="text-lg font-bold mt-6 mb-3" style={{ color: "var(--text-primary)" }}>{children}</h3>,
+              p: ({ children }) => <p className="leading-relaxed my-3" style={{ color: "var(--text-secondary)" }}>{children}</p>,
+              strong: ({ children }) => <strong className="font-semibold" style={{ color: "var(--text-primary)" }}>{children}</strong>,
+              ul: ({ children }) => <ul className="ml-4 my-2 list-disc" style={{ color: "var(--text-secondary)" }}>{children}</ul>,
+              li: ({ children }) => <li className="my-1" style={{ color: "var(--text-secondary)" }}>{children}</li>,
+              blockquote: ({ children }) => <blockquote className="border-l-4 border-[#C9A84C] pl-4 italic my-4" style={{ color: "var(--text-secondary)" }}>{children}</blockquote>,
+            }}
+          >
+            {article.body}
+          </ReactMarkdown>
         </div>
       </div>
     </AppLayout>

@@ -6,9 +6,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/dashboard", "/analyze", "/portfolio", "/screener", "/compare"],
+        disallow: ["/dashboard", "/analyze", "/portfolio", "/screener", "/compare", "/api"],
       },
     ],
-    sitemap: "https://valuengine.io/sitemap.xml",
+    sitemap: "https://valuengine.fr/sitemap.xml",
   };
 }

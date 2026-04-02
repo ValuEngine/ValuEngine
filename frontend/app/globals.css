@@ -6,17 +6,28 @@
 
 :root {
   --font-inter: 'Inter', system-ui, sans-serif;
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-card: #1c2128;
-  --border: #30363d;
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
+  --bg-primary: #09090b;
+  --bg-secondary: #111113;
+  --bg-card: #18181b;
+  --border: #27272a;
+  --text-primary: #e4e4e7;
+  --text-secondary: #71717a;
   --accent-gold: #C9A84C;
   --accent-blue: #58a6ff;
   --success: #3fb950;
   --danger: #f85149;
 }
+
+/* ── Stagger entry animations ─────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.anim-1 { animation: fadeUp 0.4s ease 0.05s both; }
+.anim-2 { animation: fadeUp 0.4s ease 0.10s both; }
+.anim-3 { animation: fadeUp 0.4s ease 0.15s both; }
+.anim-4 { animation: fadeUp 0.4s ease 0.20s both; }
+.anim-5 { animation: fadeUp 0.4s ease 0.25s both; }
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(16px); }
@@ -34,10 +45,23 @@
   from { opacity: 0; transform: translateX(100%); }
   to   { opacity: 1; transform: translateX(0); }
 }
+@keyframes tickerScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 .animate-fade-in-up { animation: fadeInUp 0.4s ease forwards; }
 .animate-pulse-gold  { animation: pulse-gold 2s infinite; }
 .skeleton {
-  background: linear-gradient(90deg, #1c2128 25%, #2d3748 50%, #1c2128 75%);
+  background: linear-gradient(90deg, #18181b 25%, #27272a 50%, #18181b 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -55,17 +79,28 @@ html {
 
 body {
   font-family: var(--font-inter);
-  background-color: #0a1628;
-  color: #ffffff;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
 }
 
 /* Scrollbar custom */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #0a1628; }
-::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.3); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.5); }
+::-webkit-scrollbar-track { background: #09090b; }
+::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.4); }
 
 /* Sélection de texte */
 ::selection { background: rgba(201,168,76,0.25); color: #fff; }
@@ -74,8 +109,8 @@ body {
 .cl-rootBox,
 .cl-card,
 .cl-userButtonPopoverCard {
-  background-color: #0f1f3d !important;
-  border: 1px solid rgba(201, 168, 76, 0.3) !important;
+  background-color: #18181b !important;
+  border: 1px solid #27272a !important;
 }
 
 .cl-headerTitle,
@@ -95,14 +130,14 @@ body {
 .cl-footerActionText,
 .cl-formFieldHintText,
 .cl-identityPreviewSecondary {
-  color: #cbd5e0 !important;
+  color: #a1a1aa !important;
 }
 
 .cl-formFieldInput,
 .cl-phoneInputBox {
-  background-color: #1a2d4d !important;
+  background-color: #27272a !important;
   color: #ffffff !important;
-  border-color: rgba(201, 168, 76, 0.3) !important;
+  border-color: #3f3f46 !important;
 }
 
 .cl-formFieldInput:focus {
@@ -112,7 +147,7 @@ body {
 
 .cl-formButtonPrimary {
   background-color: #C9A84C !important;
-  color: #0a1628 !important;
+  color: #09090b !important;
   font-weight: 700 !important;
 }
 
@@ -127,8 +162,8 @@ body {
 }
 
 .cl-socialButtonsBlockButton {
-  background-color: #1a2d4d !important;
-  border-color: rgba(201, 168, 76, 0.4) !important;
+  background-color: #27272a !important;
+  border-color: #3f3f46 !important;
   color: #ffffff !important;
 }
 
@@ -137,7 +172,7 @@ body {
 }
 
 .cl-userButtonPopoverActionButton:hover {
-  background-color: rgba(201, 168, 76, 0.1) !important;
+  background-color: rgba(201, 168, 76, 0.08) !important;
 }
 
 .cl-userButtonPopoverActionButtonIcon {
@@ -145,7 +180,7 @@ body {
 }
 
 .cl-avatarBox {
-  outline: 2px solid #C9A84C !important;
+  outline: 2px solid rgba(201,168,76,0.5) !important;
   outline-offset: 2px !important;
 }
 

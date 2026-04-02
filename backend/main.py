@@ -5,6 +5,7 @@ Endpoints pour l'analyse financière complète d'une action.
 
 import os
 import time
+import uuid
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -211,6 +212,22 @@ def analyze(req: AnalyzeRequest):
     else:
         verdict, verdict_label = "HOLD", "Juste valeur"
 
+    # ── 6. Share ID for public sharing ──────────────────────────────────
+    # Migration needed: ALTER TABLE analyses ADD COLUMN IF NOT EXISTS share_id TEXT;
+    share_id = uuid.uuid4().hex
+    try:
+        _sb_post("analyses", {
+            "ticker": ticker,
+            "company_name": company.name,
+            "verdict": verdict,
+            "price": price,
+            "intrinsic_value": dcf.intrinsic_value,
+            "upside_pct": dcf.upside_pct,
+            "share_id": share_id,
+        })
+    except Exception as e:
+        print(f"[Analyze] Erreur sauvegarde analyse: {e}")
+
     return AnalyzeResponse(
         company=company,
         dcf=dcf,
@@ -218,6 +235,7 @@ def analyze(req: AnalyzeRequest):
         analysis=analysis,
         verdict=verdict,
         verdict_label=verdict_label,
+        share_id=share_id,
     )
 
 
@@ -430,7 +448,7 @@ def pestle_endpoint(ticker: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-from services.email_service import send_alert_email
+from services.email_service import send_alert_email, send_welcome_email
 
 
 @app.post("/api/alerts")
@@ -560,24 +578,78 @@ async def create_checkout(request: Request):
     body = await request.json()
     user_id = body.get("userId", "")
     user_email = body.get("userEmail", "")
+    plan = body.get("plan", "monthly")  # "monthly" ou "yearly"
 
     if not stripe.api_key or stripe.api_key == "sk_test_REMPLACE":
         raise HTTPException(status_code=503, detail="Stripe non configuré")
+
+    if plan == "yearly":
+        price_id = os.environ.get("STRIPE_PRICE_ID_YEARLY", "")
+    else:
+        price_id = os.environ.get("STRIPE_PRICE_ID", "")
+
+    if not price_id:
+        raise HTTPException(status_code=400, detail=f"Price ID non configuré pour le plan '{plan}'")
 
     try:
         session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             line_items=[{
-                "price": os.environ.get("STRIPE_PRICE_ID", ""),
+                "price": price_id,
                 "quantity": 1,
             }],
             mode="subscription",
             success_url=os.environ.get("FRONTEND_URL", "http://localhost:3000") + "/success?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=os.environ.get("FRONTEND_URL", "http://localhost:3000") + "/?canceled=true",
             customer_email=user_email,
-            metadata={"userId": user_id},
+            metadata={"userId": user_id, "plan": plan},
         )
         return {"url": session.url}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/user/welcome")
+async def user_welcome(request: Request):
+    """Envoie un email de bienvenue à un nouvel utilisateur."""
+    body = await request.json()
+    email = body.get("email", "")
+    first_name = body.get("first_name", "")
+
+    if not email or not first_name:
+        raise HTTPException(status_code=400, detail="email et first_name requis")
+
+    ok = send_welcome_email(to=email, first_name=first_name)
+    if not ok:
+        raise HTTPException(status_code=500, detail="Erreur lors de l'envoi de l'email")
+    return {"ok": True}
+
+
+@app.get("/api/referral/{clerk_user_id}")
+def get_referral(clerk_user_id: str):
+    """Compte le nombre de filleuls d'un utilisateur."""
+    try:
+        rows = _sb_get("users", f"referred_by=eq.{clerk_user_id}&select=id")
+        count = len(rows)
+        return {"count": count, "reward_eligible": count >= 3}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Migration needed: ALTER TABLE analyses ADD COLUMN IF NOT EXISTS share_id TEXT;
+@app.get("/api/analyse/{share_id}")
+def get_shared_analysis(share_id: str):
+    """Retourne une analyse publique par son share_id (pas d'auth requise)."""
+    try:
+        rows = _sb_get(
+            "analyses",
+            f"share_id=eq.{share_id}&select=ticker,company_name,verdict,price,intrinsic_value,upside_pct,created_at&limit=1"
+        )
+        if not rows:
+            raise HTTPException(status_code=404, detail="Analyse introuvable")
+        return rows[0]
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -1,23 +1,25 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import AlertsProvider from "@/components/AlertsProvider";
+import PostHogProvider from "@/components/PostHogProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ValuEngine — Analyse financière IA pour investisseurs français",
-  description: "Valorisez n'importe quelle action en secondes : DCF, SWOT, PESTLE et verdicts IA. L'outil d'analyse boursière simplifié pour les investisseurs particuliers français.",
+  title: "ValuEngine — Analyse boursière IA pour investisseurs français",
+  description: "Valorise n'importe quelle action en 60 secondes : DCF interactif, analyse IA Bull/Bear, SWOT et PESTLE. L'outil d'analyse fondamentale en français.",
   keywords: ["analyse boursière", "valorisation action", "DCF", "investissement", "bourse france", "analyse financière", "valeur intrinsèque"],
+  metadataBase: new URL("https://valuengine.fr"),
   openGraph: {
-    title: "ValuEngine — Analyse financière IA pour investisseurs français",
-    description: "Valorisez n'importe quelle action en secondes : DCF, SWOT, PESTLE et verdicts IA. L'outil d'analyse boursière simplifié pour les investisseurs particuliers français.",
+    title: "ValuEngine — Analyse boursière IA pour investisseurs français",
+    description: "Valorise n'importe quelle action en 60 secondes : DCF interactif, analyse IA Bull/Bear, SWOT et PESTLE. L'outil d'analyse fondamentale en français.",
     type: "website",
-    url: "https://valuengine.io",
+    url: "https://valuengine.fr",
     images: [{ url: "/og-image.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ValuEngine — Analyse financière IA pour investisseurs français",
-    description: "Valorisez n'importe quelle action en secondes : DCF, SWOT, PESTLE et verdicts IA.",
+    title: "ValuEngine — Analyse boursière IA pour investisseurs français",
+    description: "Valorise n'importe quelle action en 60 secondes : DCF interactif, analyse IA Bull/Bear, SWOT et PESTLE.",
   },
   icons: {
     icon: "/favicon.svg",
@@ -62,6 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <body>
           {children}
           <AlertsProvider />
+          <PostHogProvider />
         </body>
       </html>
     </ClerkProvider>

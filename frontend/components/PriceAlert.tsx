@@ -116,7 +116,7 @@ export function usePriceAlerts() {
         if (hit) {
           triggered.push({
             id: Date.now() + Math.random(),
-            message: `🔔 ${alert.ticker} est à $${price.toFixed(2)} — votre alerte (${alert.condition === "above" ? ">" : "<"} $${alert.targetPrice}) est déclenchée !`,
+            message: `🔔 ${alert.ticker} est à $${price.toFixed(2)} — ton alerte (${alert.condition === "above" ? ">" : "<"} $${alert.targetPrice}) est déclenchée !`,
           });
         }
       } catch { /* skip */ }
