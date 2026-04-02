@@ -15,7 +15,6 @@ import {
   UserPlus,
   Menu,
   X,
-  Star,
   FlaskConical,
   Info,
 } from "lucide-react";
@@ -23,7 +22,6 @@ import {
 const MAIN_ITEMS = [
   { label: "Dashboard",      href: "/dashboard",    icon: LayoutDashboard },
   { label: "Analyser",       href: "/analyze",      icon: LineChart },
-  { label: "Watchlist",      href: "/dashboard",    icon: Star },
   { label: "Portefeuille",   href: "/portfolio",    icon: Briefcase },
 ];
 
@@ -100,7 +98,7 @@ export default function Sidebar() {
               >
                 <Icon
                   size={16}
-                  className={isActive ? "text-[#C9A84C]" : "text-[#52525b] group-hover:text-[#C9A84C]"}
+                  className={isActive ? "text-[#C9A84C]" : "text-[#52525b]"}
                 />
                 {label}
               </Link>
@@ -130,7 +128,7 @@ export default function Sidebar() {
               >
                 <Icon
                   size={16}
-                  className={isActive ? "text-[#C9A84C]" : "text-[#52525b] group-hover:text-[#C9A84C]"}
+                  className={isActive ? "text-[#C9A84C]" : "text-[#52525b]"}
                 />
                 {label}
               </Link>
@@ -160,7 +158,7 @@ export default function Sidebar() {
               >
                 <Icon
                   size={16}
-                  className={isActive ? "text-[#C9A84C]" : "text-[#52525b] group-hover:text-[#C9A84C]"}
+                  className={isActive ? "text-[#C9A84C]" : "text-[#52525b]"}
                 />
                 {label}
               </Link>
@@ -188,7 +186,18 @@ export default function Sidebar() {
         )}
         {isSignedIn && !isPro && (
           <button
-            onClick={() => router.push("/analyze")}
+            onClick={async () => {
+              if (!user) { router.push("/sign-up"); return; }
+              try {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/stripe/create-checkout`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ user_id: user.id, email: user.emailAddresses?.[0]?.emailAddress }),
+                });
+                const data = await res.json();
+                if (data.url) window.location.href = data.url;
+              } catch {}
+            }}
             className="w-full text-xs font-bold text-[#09090b] bg-[#C9A84C] hover:bg-[#b8943d] py-2 rounded-lg transition-colors mb-1"
           >
             Passer Pro ✦

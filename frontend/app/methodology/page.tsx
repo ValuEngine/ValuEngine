@@ -32,7 +32,7 @@ export default function MethodologyPage() {
             <p className="text-zinc-400 leading-relaxed text-sm">
               L&apos;ensemble est actualis&eacute; au <strong className="text-white">WACC (co&ucirc;t moyen
               pond&eacute;r&eacute; du capital)</strong>, que nous calibrons entre{" "}
-              <strong className="text-white">7&nbsp;% et 10&nbsp;%</strong> selon le secteur et le profil
+              <strong className="text-white">7&nbsp;% et 15&nbsp;%</strong> selon le secteur et le profil
               de risque de l&apos;entreprise.
             </p>
           </div>
@@ -109,6 +109,50 @@ export default function MethodologyPage() {
           </div>
         </section>
 
+        {/* L'analyse de sensibilité */}
+        <section className="mb-10">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-[#C9A84C] mb-4">
+            L&apos;analyse de sensibilit&eacute;
+          </h2>
+          <div className="rounded-xl bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] p-6 space-y-3">
+            <p className="text-zinc-400 leading-relaxed text-sm">
+              Un DCF ne donne pas <strong className="text-white">une</strong> valeur, mais un <strong className="text-white">spectre de valeurs</strong> selon les hypoth&egrave;ses retenues. C&apos;est pourquoi chaque analyse ValuEngine inclut une <strong className="text-white">matrice de sensibilit&eacute;</strong> qui croise diff&eacute;rents niveaux de WACC et de croissance terminale.
+            </p>
+            <p className="text-zinc-400 leading-relaxed text-sm">
+              Cette matrice vous permet de visualiser les sc&eacute;narios optimiste, central et pessimiste en un coup d&apos;&oelig;il. Si la majorit&eacute; des cellules indiquent un upside positif, le signal est robuste.
+            </p>
+            <div className="grid grid-cols-3 gap-3 mt-4">
+              <div className="rounded-lg bg-[#09090b] border border-[#27272a] p-4 text-center">
+                <p className="text-[#C9A84C] font-bold text-lg">WACC</p>
+                <p className="text-zinc-500 text-xs mt-1">Co&ucirc;t du capital &mdash; ajust&eacute; au risque sectoriel</p>
+              </div>
+              <div className="rounded-lg bg-[#09090b] border border-[#27272a] p-4 text-center">
+                <p className="text-[#C9A84C] font-bold text-lg">Croissance</p>
+                <p className="text-zinc-500 text-xs mt-1">Taux de croissance perp&eacute;tuel post-projection</p>
+              </div>
+              <div className="rounded-lg bg-[#09090b] border border-[#27272a] p-4 text-center">
+                <p className="text-[#C9A84C] font-bold text-lg">Upside</p>
+                <p className="text-zinc-500 text-xs mt-1">Potentiel de hausse pour chaque combinaison</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* L'analyse Bull & Bear IA */}
+        <section className="mb-10">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-[#C9A84C] mb-4">
+            L&apos;analyse Bull &amp; Bear IA
+          </h2>
+          <div className="rounded-xl bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] p-6 space-y-3">
+            <p className="text-zinc-400 leading-relaxed text-sm">
+              Chaque analyse inclut un <strong className="text-white">sc&eacute;nario optimiste (Bull Case)</strong> et un <strong className="text-white">sc&eacute;nario pessimiste (Bear Case)</strong> g&eacute;n&eacute;r&eacute;s par IA. Ces analyses qualitatives compl&egrave;tent le mod&egrave;le quantitatif du DCF.
+            </p>
+            <p className="text-zinc-400 leading-relaxed text-sm">
+              L&apos;IA contextualise les chiffres en analysant les <strong className="text-white">catalyseurs de croissance</strong>, les <strong className="text-white">risques structurels</strong>, la <strong className="text-white">position concurrentielle</strong> et les <strong className="text-white">tendances sectorielles</strong>.
+            </p>
+          </div>
+        </section>
+
         {/* Les limites du modele */}
         <section className="mb-10">
           <h2 className="text-xs font-bold uppercase tracking-widest text-[#C9A84C] mb-4">
@@ -123,7 +167,7 @@ export default function MethodologyPage() {
             <p className="text-zinc-400 leading-relaxed text-sm">
               ValuEngine est un <strong className="text-white">outil d&apos;aide &agrave; la
               d&eacute;cision</strong>, pas un oracle. Il fournit un cadre d&apos;analyse rigoureux,
-              mais la d&eacute;cision finale d&apos;investissement reste toujours la t&ocirc;tre.
+              mais la d&eacute;cision finale d&apos;investissement reste toujours la v&ocirc;tre.
             </p>
           </div>
         </section>

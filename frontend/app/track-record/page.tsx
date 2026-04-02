@@ -82,7 +82,7 @@ export default function TrackRecordPage() {
             },
             {
               label: "Analyses totales",
-              value: loading ? "—" : s ? String(s.total) : "0",
+              value: loading ? "—" : s && s.total > 0 ? String(s.total) : "—",
               sub: "50 dernières",
               color: "text-[#C9A84C]",
             },
@@ -154,6 +154,7 @@ export default function TrackRecordPage() {
                     {new Date(row.created_at).toLocaleDateString("fr-FR", {
                       day: "numeric",
                       month: "short",
+                      year: "numeric",
                     })}
                   </span>
                 </div>

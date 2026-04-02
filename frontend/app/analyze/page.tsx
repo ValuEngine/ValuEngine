@@ -60,7 +60,7 @@ function Section({ title, children, defaultOpen = true }: { title: string; child
     <div className="mb-6">
       <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between mb-4 group">
         <span className="text-[11px] font-bold uppercase tracking-[2px] text-[#C9A84C]">{title}</span>
-        <span className="text-[#4a6070] group-hover:text-[#C9A84C] transition-colors">
+        <span className="text-zinc-400 group-hover:text-[#C9A84C] transition-colors">
           {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </span>
       </button>
@@ -122,7 +122,7 @@ function SkeletonDashboard({ ticker }: { ticker: string }) {
         </div>
         <div className="space-y-2">
           {steps.map((s, i) => (
-            <div key={s} className={`flex items-center gap-3 text-xs transition-colors ${i < step ? "text-emerald-400" : i === step ? "text-[#C9A84C]" : "text-zinc-600"}`}>
+            <div key={s} className={`flex items-center gap-3 text-xs transition-colors ${i < step ? "text-emerald-400" : i === step ? "text-[#C9A84C]" : "text-zinc-500"}`}>
               {i < step ? (
                 <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5 flex-shrink-0"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.78 5.22a.75.75 0 00-1.06 0L7 8.94 5.28 7.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25a.75.75 0 000-1.06z" /></svg>
               ) : i === step ? (
@@ -250,7 +250,7 @@ function SwotSection({ ticker }: { ticker: string }) {
     <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
         <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C]">Analyse SWOT</p>
-        <button onClick={() => setData(null)} className="text-xs text-[#4a6070] hover:text-white transition-colors">Régénérer</button>
+        <button onClick={() => setData(null)} className="text-xs text-zinc-400 hover:text-white transition-colors">Régénérer</button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {quadrants.map(({ key, label, items, border, bg }) => (
@@ -323,7 +323,7 @@ function PestleSection({ ticker }: { ticker: string }) {
     <div>
       <div className="flex items-center justify-between mb-4">
         <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C]">Analyse PESTLE</p>
-        <button onClick={() => setData(null)} className="text-xs text-[#4a6070] hover:text-white transition-colors">Régénérer</button>
+        <button onClick={() => setData(null)} className="text-xs text-zinc-400 hover:text-white transition-colors">Régénérer</button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {cards.map(({ key, label, icon, text }) => (
@@ -478,7 +478,7 @@ function PriceAlertSection({ ticker, tickerName }: { ticker: string; tickerName:
         <div className="skeleton h-8 rounded-lg w-full" />
       ) : alerts.length > 0 && (
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[1.5px] text-zinc-600 mb-2">Alertes actives</p>
+          <p className="text-[10px] font-bold uppercase tracking-[1.5px] text-zinc-500 mb-2">Alertes actives</p>
           <div className="space-y-1.5">
             {alerts.map(a => (
               <div key={a.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800">
@@ -623,7 +623,7 @@ function AnalyzePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3 sm:gap-4">
             <div className="flex-1 flex items-center gap-2 sm:gap-3 max-w-md">
               <div className="relative flex-1">
-                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#4a6070]" />
+                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
                 <input
                   type="text"
                   value={inputValue}
@@ -649,7 +649,7 @@ function AnalyzePage() {
                   className={`flex items-center gap-2 text-xs font-bold px-3 py-2 rounded-lg border transition-all ${
                     showAdvanced
                       ? "bg-[rgba(201,168,76,0.12)] border-[rgba(201,168,76,0.3)] text-[#C9A84C]"
-                      : "border-[rgba(255,255,255,0.08)] text-[#4a6070] hover:text-white"
+                      : "border-[rgba(255,255,255,0.08)] text-zinc-400 hover:text-white"
                   }`}
                 >
                   <Settings2 size={14} />
@@ -723,7 +723,7 @@ function AnalyzePage() {
             <div className="bg-[rgba(255,77,109,0.07)] border border-[rgba(255,77,109,0.2)] rounded-2xl p-8 text-center max-w-lg mx-auto mt-16">
               <p className="text-[#ff4d6d] font-bold text-lg mb-3">Connexion impossible</p>
               <p className="text-[#7a8fa3] text-sm leading-relaxed mb-1">{error}</p>
-              <p className="text-zinc-600 text-xs mb-5">Le serveur peut mettre quelques secondes à se réveiller lors de la première requête.</p>
+              <p className="text-zinc-500 text-xs mb-5">Le serveur peut mettre quelques secondes à se réveiller lors de la première requête.</p>
               <button
                 onClick={() => runAnalysis(ticker || inputValue)}
                 className="inline-flex items-center gap-2 bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold px-6 py-2.5 rounded-xl transition-colors text-sm"
@@ -740,7 +740,7 @@ function AnalyzePage() {
                 <Search size={24} className="text-[#C9A84C]" />
               </div>
               <h2 className="text-xl font-bold mb-2">Entrez un ticker pour commencer</h2>
-              <p className="text-[#4a6070] text-sm max-w-xs">
+              <p className="text-zinc-400 text-sm max-w-xs">
                 Exemples :{" "}
                 {["AAPL", "MC.PA", "TSLA", "TTE.PA", "NVDA"].map((t, i) => (
                   <span key={t}>
@@ -767,7 +767,7 @@ function AnalyzePage() {
                   { label: "SWOT",    tabId: "swot" as TabId },
                   { label: "PESTLE",  tabId: "pestle" as TabId },
                 ] as const).map((s) => (
-                  <span key={s.label} className={`text-xs font-medium ${visitedTabs.has(s.tabId) ? "text-emerald-400" : "text-zinc-600"}`}>
+                  <span key={s.label} className={`text-xs font-medium ${visitedTabs.has(s.tabId) ? "text-emerald-400" : "text-zinc-500"}`}>
                     {visitedTabs.has(s.tabId) ? "\u2713" : "\u2717"} {s.label}
                   </span>
                 ))}
@@ -778,13 +778,13 @@ function AnalyzePage() {
                 <div>
                   <div className="flex items-center gap-3 flex-wrap">
                     <h1 className="text-2xl sm:text-3xl font-black tracking-tight">{data.company.name}</h1>
-                    <span className="text-[#4a6070] text-xl font-light">·</span>
+                    <span className="text-zinc-400 text-xl font-light">·</span>
                     <span className="text-xl text-[#6b7d91] font-mono">{data.company.ticker}</span>
                     <span className="text-xs font-bold uppercase tracking-wider text-[#C9A84C] bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.25)] px-3 py-1 rounded-full">
                       {data.company.sector}
                     </span>
                   </div>
-                  <p className="text-[#4a6070] text-sm mt-1">
+                  <p className="text-zinc-400 text-sm mt-1">
                     {data.company.industry} · {data.company.exchange}
                     {(data as any).share_id && (
                       <button onClick={() => router.push(`/analyse/${(data as any).share_id}`)} className="ml-3 text-xs text-zinc-400 hover:text-[#C9A84C] transition-colors inline-flex items-center gap-1">
@@ -795,7 +795,7 @@ function AnalyzePage() {
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-black">{currencySymbol(data.company.ticker)}{data.company.price.toFixed(2)}</p>
-                  <p className="text-xs text-[#4a6070] mt-0.5">{data.company.currency} · Cours actuel</p>
+                  <p className="text-xs text-zinc-400 mt-0.5">{data.company.currency} · Cours actuel</p>
                 </div>
               </div>
 
@@ -1044,7 +1044,7 @@ function AnalyzePage() {
 
               <p className="text-[#2a3a4a] text-xs text-center mt-8 pb-4">
                 ValuEngine est un outil d&apos;aide à la décision. Les analyses ne constituent pas des conseils en investissement.
-                FCF issu des données Yahoo Finance. Tout investissement comporte des risques. · ValuEngine 2025
+                FCF issu des données Yahoo Finance. Tout investissement comporte des risques. · ValuEngine 2026
               </p>
             </div>
           )}

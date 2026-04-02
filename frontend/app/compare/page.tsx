@@ -63,6 +63,7 @@ export default function ComparePage() {
     const t1 = ticker1.trim().toUpperCase();
     const t2 = ticker2.trim().toUpperCase();
     if (!t1 || !t2) { setError("Veuillez saisir deux tickers."); return; }
+    if (t1 === t2) { setError("Les deux tickers doivent être différents."); return; }
     setLoading(true);
     setError(null);
     setData1(null);
@@ -75,7 +76,7 @@ export default function ComparePage() {
       setData1(r1);
       setData2(r2);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Ticker introuvable ou erreur serveur.");
+      setError(e instanceof Error ? e.message : "Un des tickers est introuvable. Vérifiez les symboles saisis.");
     } finally {
       setLoading(false);
     }
@@ -135,6 +136,13 @@ export default function ComparePage() {
           </div>
           {error && <p className="text-[#ff4d6d] text-sm mt-4">{error}</p>}
         </div>
+
+        {!data1 && !data2 && !loading && !error && (
+          <div className="rounded-2xl border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm p-12 text-center">
+            <p className="text-zinc-400 text-sm mb-2">Entre deux tickers pour lancer la comparaison</p>
+            <p className="text-zinc-600 text-xs">Exemples : AAPL vs MSFT, MC.PA vs OR.PA, TSLA vs RIVN</p>
+          </div>
+        )}
 
         {/* Comparison Table */}
         {data1 && data2 && (

@@ -11,11 +11,6 @@ export default function SuccessPage() {
   useEffect(() => {
     if (!isLoaded) return;
 
-    // localStorage fallback
-    if (user?.id) localStorage.setItem(`pro_${user.id}`, "true");
-    localStorage.setItem("valuengine_pro", "true");
-    localStorage.setItem("valuengine_pro_ts", Date.now().toString());
-
     // Persistance Supabase — marque is_pro: true côté serveur
     fetch("/api/db/user", {
       method: "PATCH",
@@ -28,7 +23,7 @@ export default function SuccessPage() {
   }, [isLoaded, user, router]);
 
   return (
-    <main className="min-h-screen bg-[#0a1628] flex items-center justify-center">
+    <main className="min-h-screen bg-[#09090b] flex items-center justify-center">
       <div className="text-center space-y-6">
         <div className="text-6xl">🎉</div>
         <h1 className="text-3xl font-bold text-white">
@@ -41,6 +36,12 @@ export default function SuccessPage() {
         <p className="text-[#C9A84C] text-sm">
           Redirection en cours...
         </p>
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="text-sm text-[#C9A84C] hover:underline mt-2"
+        >
+          Aller au dashboard →
+        </button>
       </div>
     </main>
   );

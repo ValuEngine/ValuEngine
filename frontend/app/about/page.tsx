@@ -41,9 +41,9 @@ export default function AboutPage() {
         {/* L'equipe */}
         <section className="mb-10">
           <h2 className="text-xs font-bold uppercase tracking-widest text-[#C9A84C] mb-4">
-            L&apos;&eacute;quipe
+            Fondateur
           </h2>
-          <div className="flex flex-wrap gap-6">
+          <div className="max-w-md">
             <div className="rounded-xl bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] p-6 min-w-[280px] max-w-md">
               <div className="flex items-center gap-4 mb-3">
                 <div className="w-12 h-12 rounded-full bg-[#C9A84C]/15 border border-[#C9A84C]/30 flex items-center justify-center text-[#C9A84C] font-bold text-lg">

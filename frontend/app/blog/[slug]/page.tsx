@@ -3,9 +3,110 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 
 const CONTENT: Record<string, { title: string; date: string; readTime: string; category: string; body: string }> = {
+  "investir-actions-europeennes-2026": {
+    title: "Investir dans les actions européennes en 2026 : ce qu'il faut savoir",
+    date: "2 Avril 2026",
+    readTime: "5 min",
+    category: "Stratégie",
+    body: `## Le contexte européen en 2026
+
+Les marchés européens traversent une période intéressante. Avec des valorisations moyennes inférieures de 30% aux marchés américains, le **CAC 40** et le **DAX** attirent l'attention des investisseurs value.
+
+## Pourquoi l'Europe est sous-évaluée
+
+**1. L'écart de valorisation historique**
+Le P/E moyen du S&P 500 tourne autour de 22x contre 14x pour le STOXX 600. Cet écart n'a jamais été aussi large depuis 20 ans.
+
+**2. Des entreprises mondiales à prix réduit**
+LVMH, ASML, SAP, TotalEnergies — ces champions mondiaux se traitent à des multiples bien inférieurs à leurs équivalents américains.
+
+**3. Le rendement des dividendes**
+Le rendement moyen des dividendes en Europe est de 3,2% contre 1,4% aux US. Pour un investisseur orienté revenus, c'est un argument de poids.
+
+## Les risques à surveiller
+
+- **Croissance économique modérée** : l'Europe croît moins vite que les US
+- **Risque géopolitique** : la proximité avec les zones de tension reste un facteur
+- **Innovation tech** : l'Europe a raté le virage IA, les géants tech sont américains
+
+## Comment analyser une action européenne
+
+Sur ValuEngine, les tickers européens se terminent par un suffixe : **.PA** (Paris), **.DE** (Francfort), **.AS** (Amsterdam). Le modèle DCF s'applique exactement de la même manière.
+
+> L'investissement en actions européennes nécessite la même rigueur d'analyse que pour les actions américaines. Le DCF reste votre meilleur allié.`,
+  },
+  "marge-de-securite-graham": {
+    title: "La marge de sécurité : le concept le plus important en investissement",
+    date: "25 Mars 2026",
+    readTime: "7 min",
+    category: "Éducation",
+    body: `## L'origine du concept
+
+Benjamin Graham, le père de l'investissement value, a introduit la **marge de sécurité** dans son livre *The Intelligent Investor* (1949). L'idée est élégante dans sa simplicité : n'achetez jamais une action à sa juste valeur, achetez-la toujours **en dessous**.
+
+## La définition simple
+
+La marge de sécurité = **(Valeur intrinsèque − Prix de marché) / Valeur intrinsèque**
+
+Si une action vaut 100€ selon votre DCF et qu'elle se trade à 70€, votre marge de sécurité est de 30%.
+
+## Pourquoi c'est essentiel
+
+**1. Vos estimations sont toujours fausses**
+Un DCF repose sur des hypothèses. La croissance future, le WACC, le terminal growth — tout est une estimation. La marge de sécurité absorbe ces erreurs.
+
+**2. Le marché peut rester irrationnel longtemps**
+Même si vous avez raison sur les fondamentaux, le cours peut baisser avant de remonter. La marge de sécurité vous donne un coussin psychologique et financier.
+
+**3. Le risque asymétrique**
+Avec une marge de sécurité de 30%, le pire scénario est un rendement nul. Le meilleur scénario est un rendement de 50%+.
+
+## Comment l'utiliser dans ValuEngine
+
+L'**upside %** affiché dans chaque analyse est exactement la marge de sécurité. Un upside de +35% signifie que le prix de marché est 35% en dessous de la valeur intrinsèque calculée.
+
+**Règle d'or** : ne considérez un achat que si l'upside est d'au moins **+20%** pour une large cap, ou **+40%** pour une small cap plus risquée.`,
+  },
+  "fcf-yield-indicateur": {
+    title: "Le FCF Yield : l'indicateur que les pros regardent en premier",
+    date: "18 Mars 2026",
+    readTime: "6 min",
+    category: "Finance",
+    body: `## Oubliez le P/E ratio
+
+Le ratio cours/bénéfice (P/E) est l'indicateur le plus populaire, mais il est facilement manipulable. Les bénéfices nets incluent des éléments comptables non-cash (amortissements, provisions, charges exceptionnelles) qui n'ont rien à voir avec la capacité réelle de l'entreprise à générer du cash.
+
+## Le FCF Yield : la vraie mesure
+
+Le **FCF Yield** (rendement du flux de trésorerie libre) = **FCF / Market Cap × 100**
+
+C'est le pourcentage du cash réellement généré par l'entreprise par rapport à sa valorisation boursière.
+
+## Pourquoi c'est supérieur au P/E
+
+**1. Le cash ne ment pas**
+Les bénéfices peuvent être manipulés comptablement. Le Free Cash Flow, c'est l'argent réel qui entre dans les caisses.
+
+**2. Comparable entre secteurs**
+Le P/E varie énormément entre secteurs (tech à 30x vs utilities à 15x). Le FCF Yield normalise cette comparaison.
+
+**3. C'est ce que Buffett regarde**
+"Owner earnings" — ce que Buffett appelle les vrais bénéfices d'un propriétaire — correspondent au FCF.
+
+## Les seuils à retenir
+
+- **FCF Yield > 8%** : potentiellement sous-évalué
+- **FCF Yield 4-8%** : correctement valorisé
+- **FCF Yield < 4%** : cher, surtout pour une entreprise mature
+- **FCF Yield négatif** : l'entreprise brûle du cash — prudence
+
+## Où trouver le FCF Yield
+
+Dans chaque analyse ValuEngine, le **FCF** est affiché dans les KPI financiers. Divisez-le par la Market Cap pour obtenir le FCF Yield. C'est aussi un des critères utilisés dans notre modèle DCF.`,
+  },
   "comment-lire-un-dcf": {
     title: "Comment lire une analyse DCF en 5 minutes",
-    date: "1 Avril 2025",
+    date: "1 Mars 2026",
     readTime: "5 min",
     category: "Éducation",
     body: `## Qu'est-ce que le DCF ?
@@ -35,7 +136,7 @@ Si elle est inférieure → l'action se paye à prime (risque de surévaluation)
   },
   "bull-vs-bear-case": {
     title: "Bull Case vs Bear Case : comment trancher ?",
-    date: "28 Mars 2025",
+    date: "20 Février 2026",
     readTime: "4 min",
     category: "Stratégie",
     body: `## Le dilemme de l'investisseur
@@ -69,7 +170,7 @@ N'achetez que si la valeur intrinsèque est au moins 30% supérieure au cours. �
   },
   "wacc-explique": {
     title: "Le WACC expliqué simplement",
-    date: "20 Mars 2025",
+    date: "10 Février 2026",
     readTime: "6 min",
     category: "Finance",
     body: `## Pourquoi le WACC est-il si important ?
