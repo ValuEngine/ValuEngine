@@ -39,7 +39,7 @@ def _safe_float(val, default: float = 0.0) -> float:
 def _fmp_get(path: str, params: dict = {}) -> dict | list:
     """Appel HTTP vers l'API FMP (stable endpoints) avec gestion d'erreur."""
     api_key = os.environ.get("FMP_API_KEY", "")
-    base = "https://financialmodelingprep.com/stable"
+    base = "https://financialmodelingprep.com/api/v3"
     url = f"{base}{path}"
     params = {**params, "apikey": api_key}
     try:
@@ -66,22 +66,22 @@ def get_company_data(ticker: str) -> dict:
         return cached
 
     # ── 1. Profil entreprise ─────────────────────────────────────────────────
-    profile_raw = _fmp_get(f"/profile", {"symbol": ticker})
+    profile_raw = _fmp_get(f"/profile/{ticker}", {})
     if not profile_raw or not isinstance(profile_raw, list) or not profile_raw[0]:
         raise ValueError(f"Ticker '{ticker}' introuvable sur FMP.")
 
     p = profile_raw[0]
 
     # ── 2. Income statement (dernière année) ─────────────────────────────────
-    income_raw = _fmp_get(f"/income-statement", {"symbol": ticker, "limit": 1})
+    income_raw = _fmp_get(f"/income-statement/{ticker}", {"limit": 1})
     inc = income_raw[0] if isinstance(income_raw, list) and income_raw else {}
 
     # ── 3. Cash flow statement ───────────────────────────────────────────────
-    cf_raw = _fmp_get(f"/cash-flow-statement", {"symbol": ticker, "limit": 1})
+    cf_raw = _fmp_get(f"/cash-flow-statement/{ticker}", {"limit": 1})
     cf = cf_raw[0] if isinstance(cf_raw, list) and cf_raw else {}
 
     # ── 4. Balance sheet ─────────────────────────────────────────────────────
-    bs_raw = _fmp_get(f"/balance-sheet-statement", {"symbol": ticker, "limit": 1})
+    bs_raw = _fmp_get(f"/balance-sheet-statement/{ticker}", {"limit": 1})
     bs = bs_raw[0] if isinstance(bs_raw, list) and bs_raw else {}
 
     # ── Calculs ───────────────────────────────────────────────────────────────
@@ -119,7 +119,7 @@ def get_company_data(ticker: str) -> dict:
 
     # Croissance CA : comparaison avec l'année précédente
     revenue_growth: Optional[float] = None
-    income_2y = _fmp_get(f"/income-statement", {"symbol": ticker, "limit": 2})
+    income_2y = _fmp_get(f"/income-statement/{ticker}", {"limit": 2})
     if isinstance(income_2y, list) and len(income_2y) >= 2:
         rev_curr = _safe_float(income_2y[0].get("revenue"))
         rev_prev = _safe_float(income_2y[1].get("revenue"))
@@ -165,10 +165,16 @@ def get_peers_data(ticker: str, sector: str) -> list[dict]:
     Récupère les données des entreprises comparables via FMP.
     Utilise les peer companies de FMP ou un fallback sectoriel.
     """
-    peers_raw = _fmp_get(f"/stock-peers", {"symbol": ticker})
+    peers_raw = _fmp_get(f"/stock_peers_bulk", {"symbol": ticker})
     peers: list[str] = []
     if isinstance(peers_raw, list) and peers_raw:
-        peers = [p["symbol"] for p in peers_raw[:6] if p.get("symbol") != ticker]
+        # v3 format: [{"symbol": "AAPL", "peersList": ["MSFT", "GOOGL", ...]}]
+        first = peers_raw[0] if peers_raw else {}
+        peer_list = first.get("peersList", [])
+        if peer_list:
+            peers = [p for p in peer_list[:6] if p != ticker]
+        else:
+            peers = [p["symbol"] for p in peers_raw[:6] if p.get("symbol") and p.get("symbol") != ticker]
 
     # Fallback sectoriel si FMP ne retourne rien
     if not peers:
@@ -193,13 +199,13 @@ def get_peers_data(ticker: str, sector: str) -> list[dict]:
         if peer == ticker:
             continue
         try:
-            profile = _fmp_get(f"/profile", {"symbol": peer})
+            profile = _fmp_get(f"/profile/{peer}", {})
             if not isinstance(profile, list) or not profile:
                 continue
             pr = profile[0]
 
             # Income statement pour calculer les ratios (évite /key-metrics et /ratios qui sont payants)
-            peer_income = _fmp_get(f"/income-statement", {"symbol": peer, "limit": 1})
+            peer_income = _fmp_get(f"/income-statement/{peer}", {"limit": 1})
             pi = peer_income[0] if isinstance(peer_income, list) and peer_income else {}
 
             peer_price = _safe_float(pr.get("price"))
