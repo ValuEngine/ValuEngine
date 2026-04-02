@@ -759,7 +759,7 @@ function AnalyzePage() {
 
               {/* Analysis completeness */}
               <div className="flex flex-wrap items-center gap-3 mb-6 px-3 py-2 bg-zinc-900/50 rounded-lg">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mr-1">Compl&#233;tude :</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mr-1">Complétude :</span>
                 {([
                   { label: "DCF",     tabId: "overview" as TabId },
                   { label: "Bull/Bear", tabId: "ai" as TabId },
@@ -874,9 +874,9 @@ function AnalyzePage() {
 
                   {/* AMF Warning */}
                   <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-yellow-500/[0.08] border border-yellow-500/20 mb-6">
-                    <span className="text-yellow-400 mt-0.5">&#x26A0;&#xFE0F;</span>
+                    <span className="text-yellow-400 mt-0.5">⚠️</span>
                     <p className="text-xs text-yellow-200/70 leading-relaxed">
-                      Cette estimation est bas&#233;e sur un mod&#232;le DCF math&#233;matique. Elle ne constitue pas un conseil en investissement au sens de la directive MIF II. Fais tes propres recherches.
+                      Cette estimation est basée sur un modèle DCF mathématique. Elle ne constitue pas un conseil en investissement au sens de la directive MIF II. Fais tes propres recherches.
                     </p>
                   </div>
 

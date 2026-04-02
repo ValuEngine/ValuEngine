@@ -18,10 +18,10 @@ export default function AboutPage() {
           </h2>
           <div className="rounded-xl bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] p-6">
             <p className="text-zinc-400 leading-relaxed text-sm">
-              Cr&eacute;&eacute; par un investisseur particulier frustr&eacute; par les outils anglais complexes
-              et les plateformes fran&ccedil;aises sans analyse fondamentale s&eacute;rieuse. ValuEngine est
-              n&eacute; d&apos;un besoin simple&nbsp;: avoir acc&egrave;s &agrave; un DCF professionnel, en
-              fran&ccedil;ais, sans passer par Bloomberg.
+              Créé par un investisseur particulier frustré par les outils anglais complexes
+              et les plateformes françaises sans analyse fondamentale sérieuse. ValuEngine est
+              né d&apos;un besoin simple: avoir accès à un DCF professionnel, en
+              français, sans passer par Bloomberg.
             </p>
           </div>
         </section>
@@ -33,7 +33,7 @@ export default function AboutPage() {
           </h2>
           <div className="rounded-xl bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] p-6">
             <p className="text-zinc-400 leading-relaxed text-sm">
-              D&eacute;mocratiser l&apos;analyse fondamentale pour les investisseurs particuliers francophones.
+              Démocratiser l&apos;analyse fondamentale pour les investisseurs particuliers francophones.
             </p>
           </div>
         </section>
@@ -52,12 +52,12 @@ export default function AboutPage() {
                 <div>
                   <p className="text-white font-semibold">Ilias</p>
                   <p className="text-zinc-500 text-sm">Fondateur</p>
-                  <p className="text-[#C9A84C] text-xs">Ing&eacute;nieur &amp; investisseur particulier</p>
+                  <p className="text-[#C9A84C] text-xs">Ingénieur &amp; investisseur particulier</p>
                 </div>
               </div>
               <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-                Passionn&eacute; de finance quantitative et d&apos;IA, j&apos;ai cr&eacute;&eacute; ValuEngine pour
-                d&eacute;mocratiser les outils d&apos;analyse r&eacute;serv&eacute;s aux professionnels.
+                Passionné de finance quantitative et d&apos;IA, j&apos;ai créé ValuEngine pour
+                démocratiser les outils d&apos;analyse réservés aux professionnels.
               </p>
               <a
                 href="https://linkedin.com/in/ilias-moulouade"
@@ -85,16 +85,16 @@ export default function AboutPage() {
               </p>
             </div>
             <div className="rounded-xl bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] p-6">
-              <h3 className="text-white font-semibold mb-2">P&eacute;dagogie</h3>
+              <h3 className="text-white font-semibold mb-2">Pédagogie</h3>
               <p className="text-zinc-400 text-sm leading-relaxed">
-                On explique chaque m&eacute;trique pour que tu comprennes, pas juste que tu suives.
+                On explique chaque métrique pour que tu comprennes, pas juste que tu suives.
               </p>
             </div>
             <div className="rounded-xl bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] p-6">
-              <h3 className="text-white font-semibold mb-2">Ind&eacute;pendance</h3>
+              <h3 className="text-white font-semibold mb-2">Indépendance</h3>
               <p className="text-zinc-400 text-sm leading-relaxed">
-                Aucun conflit d&apos;int&eacute;r&ecirc;t, aucun partenariat r&eacute;mun&eacute;r&eacute; avec
-                les &eacute;metteurs analys&eacute;s.
+                Aucun conflit d&apos;intérêt, aucun partenariat rémunéré avec
+                les émetteurs analysés.
               </p>
             </div>
           </div>
@@ -106,7 +106,7 @@ export default function AboutPage() {
             href="/analyze"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#C9A84C] hover:bg-[#b8963f] text-black font-semibold text-sm transition-colors"
           >
-            Lancer ta premi&egrave;re analyse &rarr;
+            Lancer ta première analyse →
           </Link>
         </div>
       </div>

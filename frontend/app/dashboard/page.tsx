@@ -339,7 +339,7 @@ export default function DashboardPage() {
           ) : watchlistItems.length === 0 ? (
             <div className="rounded-xl p-8 border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm text-center">
               <p className="text-sm text-zinc-400 mb-1">Ajoute tes premiers tickers à suivre</p>
-              <p className="text-xs text-zinc-600">Clique sur &quot;Ajouter&quot; pour commencer</p>
+              <p className="text-xs text-zinc-600">Clique sur “Ajouter” pour commencer</p>
             </div>
           ) : (
             <div className="rounded-xl border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm overflow-hidden">

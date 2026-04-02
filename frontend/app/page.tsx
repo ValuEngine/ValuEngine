@@ -252,19 +252,19 @@ export default function LandingPage() {
 
           <div className="inline-flex items-center gap-2 text-xs tracking-[0.2em] text-zinc-500 border border-zinc-800 rounded-full px-4 py-1.5 mb-8">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            1ER OUTIL DE VALORISATION DCF EN FRAN&Ccedil;AIS
+            1ER OUTIL DE VALORISATION DCF EN FRANÇAIS
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white text-center leading-[1.1] tracking-tight mb-6">
-            Prends de meilleures<br />d&eacute;cisions d&apos;investissement,{" "}
+            Prends de meilleures<br />décisions d&apos;investissement,{" "}
             <span style={{ background: "linear-gradient(135deg, #C9A84C, #f5d78e)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               plus vite
             </span>
           </h1>
 
           <p className="text-base sm:text-lg text-zinc-400 text-center max-w-xl mx-auto mb-10">
-            Valorisation DCF, arguments Bull &amp; Bear par IA, matrice de sensibilit&eacute; — en 60 secondes, en fran&ccedil;ais, avec un{" "}
-            <Link href="/track-record" className="text-[#C9A84C] hover:underline">Track Record v&eacute;rifi&eacute;</Link>.
+            Valorisation DCF, arguments Bull &amp; Bear par IA, matrice de sensibilité — en 60 secondes, en français, avec un{" "}
+            <Link href="/track-record" className="text-[#C9A84C] hover:underline">Track Record vérifié</Link>.
           </p>
 
           {/* Smart Search bar */}
@@ -294,7 +294,7 @@ export default function LandingPage() {
                 <span className="text-white font-bold text-sm">${searchResult.price.toFixed(2)}</span>
               </button>
             )}
-            {hasError && <p className="mt-2 text-red-400 text-xs text-center font-medium">Ticker introuvable. V&eacute;rifie le symbole (ex: AAPL, MC.PA).</p>}
+            {hasError && <p className="mt-2 text-red-400 text-xs text-center font-medium">Ticker introuvable. Vérifie le symbole (ex: AAPL, MC.PA).</p>}
           </div>
 
           <div className="flex items-center justify-center gap-2 flex-wrap mb-6">
@@ -314,8 +314,8 @@ export default function LandingPage() {
       <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Comment &ccedil;a marche</p>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Une analyse compl&egrave;te en 3 &eacute;tapes.</h2>
+            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Comment ça marche</p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Une analyse complète en 3 étapes.</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {HOW_IT_WORKS.map(({ n, title, desc }) => (
@@ -341,8 +341,8 @@ export default function LandingPage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> LIVE
               </span>
             </div>
-            <h2 className="text-3xl font-bold tracking-tight">Nos verdicts, v&eacute;rifi&eacute;s en temps r&eacute;el</h2>
-            <p className="text-zinc-500 text-sm mt-2">Aucun autre outil ne publie ses performances pass&eacute;es. Nous si.</p>
+            <h2 className="text-3xl font-bold tracking-tight">Nos verdicts, vérifiés en temps réel</h2>
+            <p className="text-zinc-500 text-sm mt-2">Aucun autre outil ne publie ses performances passées. Nous si.</p>
           </div>
 
           {summary && (
@@ -379,14 +379,14 @@ export default function LandingPage() {
                     </div>
                     <div className="flex items-center gap-4 flex-shrink-0">
                       <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isBuy ? "bg-emerald-500/10 text-emerald-400" : isSell ? "bg-red-500/10 text-red-400" : "bg-yellow-500/10 text-yellow-400"}`}>
-                        {isBuy ? "Sous-&eacute;valu&eacute;" : isSell ? "Sur&eacute;valu&eacute;" : "Juste valeur"}
+                        {isBuy ? "Sous-évalué" : isSell ? "Surévalué" : "Juste valeur"}
                       </span>
                       {entry.performance_pct != null && (
                         <span className={`text-sm font-bold w-16 text-right ${isUp ? "text-emerald-400" : "text-red-400"}`}>
                           {isUp ? "+" : ""}{entry.performance_pct.toFixed(1)}%
                         </span>
                       )}
-                      <span className="text-[#C9A84C] text-xs group-hover:translate-x-0.5 transition-transform">&rarr;</span>
+                      <span className="text-[#C9A84C] text-xs group-hover:translate-x-0.5 transition-transform">→</span>
                     </div>
                   </Link>
                 );
@@ -395,7 +395,7 @@ export default function LandingPage() {
           )}
           <div className="text-center">
             <Link href="/track-record" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 px-5 py-2.5 rounded-lg transition-all">
-              Voir le Track Record complet &rarr;
+              Voir le Track Record complet →
             </Link>
           </div>
         </div>
@@ -430,7 +430,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Pourquoi ValuEngine</p>
-            <h2 className="text-3xl font-bold tracking-tight">Ce qui nous diff&eacute;rencie</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Ce qui nous différencie</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 text-center">
@@ -438,21 +438,21 @@ export default function LandingPage() {
                 <Shield size={22} className="text-emerald-400" />
               </div>
               <h3 className="text-sm font-bold mb-2">Transparence totale</h3>
-              <p className="text-xs text-zinc-500 leading-relaxed">Nous publions notre Track Record en temps r&eacute;el. Chaque verdict est v&eacute;rifiable. Aucun autre outil ne fait &ccedil;a.</p>
+              <p className="text-xs text-zinc-500 leading-relaxed">Nous publions notre Track Record en temps réel. Chaque verdict est vérifiable. Aucun autre outil ne fait ça.</p>
             </div>
             <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 text-center">
               <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mx-auto mb-4">
                 <Zap size={22} className="text-blue-400" />
               </div>
               <h3 className="text-sm font-bold mb-2">60 secondes</h3>
-              <p className="text-xs text-zinc-500 leading-relaxed">Une analyse DCF compl&egrave;te prend 2-3 heures sur Excel. ValuEngine la g&eacute;n&egrave;re en moins d&apos;une minute.</p>
+              <p className="text-xs text-zinc-500 leading-relaxed">Une analyse DCF complète prend 2-3 heures sur Excel. ValuEngine la génère en moins d&apos;une minute.</p>
             </div>
             <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 text-center">
               <div className="w-12 h-12 rounded-xl bg-[rgba(201,168,76,0.1)] flex items-center justify-center mx-auto mb-4">
                 <BarChart3 size={22} className="text-[#C9A84C]" />
               </div>
-              <h3 className="text-sm font-bold mb-2">100% en fran&ccedil;ais</h3>
-              <p className="text-xs text-zinc-500 leading-relaxed">Le seul outil de valorisation DCF + IA con&ccedil;u pour les investisseurs francophones. Actions US et europ&eacute;ennes.</p>
+              <h3 className="text-sm font-bold mb-2">100% en français</h3>
+              <p className="text-xs text-zinc-500 leading-relaxed">Le seul outil de valorisation DCF + IA conçu pour les investisseurs francophones. Actions US et européennes.</p>
             </div>
           </div>
         </div>
@@ -475,7 +475,7 @@ export default function LandingPage() {
             {/* Free */}
             <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-8 hover:border-[#3f3f46] transition-colors">
               <p className="text-xs font-bold tracking-widest uppercase text-zinc-500 mb-3">Gratuit</p>
-              <p className="text-5xl font-black mb-1">0&euro;</p>
+              <p className="text-5xl font-black mb-1">0€</p>
               <p className="text-zinc-500 text-sm mb-8">Pour toujours</p>
               <ul className="space-y-3 text-sm mb-8">
                 {["3 analyses par jour", "Verdict DCF (sous-évalué / surévalué)", "Estimation de valeur intrinsèque"].map((item) => (
@@ -494,12 +494,12 @@ export default function LandingPage() {
               <p className="text-xs font-bold tracking-widest uppercase text-[#C9A84C] mb-3">Pro</p>
               {annual ? (
                 <>
-                  <p className="text-5xl font-black mb-1">99&euro;</p>
-                  <p className="text-zinc-500 text-sm mb-8">par an &middot; soit 8,25&euro;/mois</p>
+                  <p className="text-5xl font-black mb-1">99€</p>
+                  <p className="text-zinc-500 text-sm mb-8">par an · soit 8,25€/mois</p>
                 </>
               ) : (
                 <>
-                  <p className="text-5xl font-black mb-1">12&euro;</p>
+                  <p className="text-5xl font-black mb-1">12€</p>
                   <p className="text-zinc-500 text-sm mb-8">par mois</p>
                 </>
               )}
@@ -511,7 +511,7 @@ export default function LandingPage() {
               <button onClick={() => router.push(isSignedIn ? "/dashboard" : "/sign-up")} className="w-full bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2">
                 Passer Pro <ChevronRight size={16} />
               </button>
-              <p className="text-center text-zinc-600 text-xs mt-3">Sans engagement &middot; Annulable &agrave; tout moment</p>
+              <p className="text-center text-zinc-600 text-xs mt-3">Sans engagement · Annulable à tout moment</p>
             </div>
           </div>
         </div>
@@ -521,7 +521,7 @@ export default function LandingPage() {
       <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Questions fr&eacute;quentes</p>
+            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Questions fréquentes</p>
             <h2 className="text-3xl font-bold tracking-tight">Tout ce que tu veux savoir</h2>
           </div>
           <div>
@@ -536,12 +536,12 @@ export default function LandingPage() {
       <section className="relative z-10 py-12 px-6 border-t border-[#27272a]">
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex items-center justify-center gap-6 flex-wrap text-zinc-500 text-xs font-medium">
-            <span className="flex items-center gap-1.5"><Shield size={12} className="text-emerald-400" /> Donn&eacute;es Financial Modeling Prep</span>
-            <span className="text-zinc-700">&middot;</span>
+            <span className="flex items-center gap-1.5"><Shield size={12} className="text-emerald-400" /> Données Financial Modeling Prep</span>
+            <span className="text-zinc-700">·</span>
             <span className="flex items-center gap-1.5"><Shield size={12} className="text-blue-400" /> IA Anthropic Claude</span>
-            <span className="text-zinc-700">&middot;</span>
-            <span className="flex items-center gap-1.5"><Shield size={12} className="text-[#C9A84C]" /> H&eacute;berg&eacute; en UE</span>
-            <span className="text-zinc-700">&middot;</span>
+            <span className="text-zinc-700">·</span>
+            <span className="flex items-center gap-1.5"><Shield size={12} className="text-[#C9A84C]" /> Hébergé en UE</span>
+            <span className="text-zinc-700">·</span>
             <span className="border border-zinc-800 px-3 py-1 rounded-full">RGPD Conforme</span>
           </div>
         </div>
@@ -555,19 +555,19 @@ export default function LandingPage() {
               <span className="text-[#C9A84C] font-black text-xs leading-none">V</span>
             </div>
             <span className="text-sm font-bold">ValuEngine</span>
-            <span className="text-zinc-600 text-sm">&copy; 2026</span>
+            <span className="text-zinc-600 text-sm">© 2026</span>
           </div>
           <div className="flex items-center gap-4 text-zinc-600 text-xs">
-            <Link href="/legal" className="hover:text-zinc-400 transition-colors">Mentions l&eacute;gales</Link>
-            <span>&middot;</span>
-            <Link href="/about" className="hover:text-zinc-400 transition-colors">&Agrave; propos</Link>
-            <span>&middot;</span>
-            <Link href="/methodology" className="hover:text-zinc-400 transition-colors">M&eacute;thodologie</Link>
-            <span>&middot;</span>
+            <Link href="/legal" className="hover:text-zinc-400 transition-colors">Mentions légales</Link>
+            <span>·</span>
+            <Link href="/about" className="hover:text-zinc-400 transition-colors">À propos</Link>
+            <span>·</span>
+            <Link href="/methodology" className="hover:text-zinc-400 transition-colors">Méthodologie</Link>
+            <span>·</span>
             <a href="mailto:contact@valuengine.fr" className="hover:text-zinc-400 transition-colors">Contact</a>
           </div>
           <p className="text-zinc-600 text-xs text-center max-w-sm">
-            Outil d&apos;aide &agrave; la d&eacute;cision uniquement. Ne constitue pas un conseil en investissement.
+            Outil d&apos;aide à la décision uniquement. Ne constitue pas un conseil en investissement.
           </p>
         </div>
       </footer>
@@ -578,7 +578,7 @@ export default function LandingPage() {
           onClick={() => router.push("/analyze")}
           className="fixed bottom-6 right-6 z-50 bg-[#C9A84C] hover:bg-[#b8943d] text-[#09090b] font-bold px-5 py-3 rounded-xl shadow-lg shadow-[rgba(201,168,76,0.25)] transition-all hover:scale-105 text-sm"
         >
-          Analyser une action &rarr;
+          Analyser une action →
         </button>
       )}
 

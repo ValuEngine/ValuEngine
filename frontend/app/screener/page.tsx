@@ -240,7 +240,7 @@ export default function ScreenerPage() {
             </div>
             <h2 className="text-xl font-bold mb-2">Prêt à analyser</h2>
             <p className="text-[#4a6070] text-sm">
-              Cliquez sur &quot;Lancer le screening&quot; pour analyser {total} actions populaires (FR + US)
+              Cliquez sur "Lancer le screening" pour analyser {total} actions populaires (FR + US)
             </p>
           </div>
         )}
