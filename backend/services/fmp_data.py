@@ -72,25 +72,17 @@ def get_company_data(ticker: str) -> dict:
 
     p = profile_raw[0]
 
-    # ── 2. Key metrics ───────────────────────────────────────────────────────
-    metrics_raw = _fmp_get(f"/key-metrics", {"symbol": ticker, "period": "TTM"})
-    m = metrics_raw[0] if isinstance(metrics_raw, list) and metrics_raw else {}
-
-    # ── 3. Income statement (dernière année) ─────────────────────────────────
+    # ── 2. Income statement (dernière année) ─────────────────────────────────
     income_raw = _fmp_get(f"/income-statement", {"symbol": ticker, "limit": 1})
     inc = income_raw[0] if isinstance(income_raw, list) and income_raw else {}
 
-    # ── 4. Cash flow statement ───────────────────────────────────────────────
+    # ── 3. Cash flow statement ───────────────────────────────────────────────
     cf_raw = _fmp_get(f"/cash-flow-statement", {"symbol": ticker, "limit": 1})
     cf = cf_raw[0] if isinstance(cf_raw, list) and cf_raw else {}
 
-    # ── 5. Balance sheet ─────────────────────────────────────────────────────
+    # ── 4. Balance sheet ─────────────────────────────────────────────────────
     bs_raw = _fmp_get(f"/balance-sheet-statement", {"symbol": ticker, "limit": 1})
     bs = bs_raw[0] if isinstance(bs_raw, list) and bs_raw else {}
-
-    # ── 6. Financial ratios ──────────────────────────────────────────────────
-    ratios_raw = _fmp_get(f"/ratios", {"symbol": ticker, "period": "TTM"})
-    rat = ratios_raw[0] if isinstance(ratios_raw, list) and ratios_raw else {}
 
     # ── Calculs ───────────────────────────────────────────────────────────────
     price       = _safe_float(p.get("price"))
@@ -109,16 +101,17 @@ def get_company_data(ticker: str) -> dict:
     total_cash  = _safe_float(bs.get("cashAndCashEquivalents"))
     net_debt    = max(total_debt - total_cash, 0.0)
 
-    # Enterprise value
-    ev = _safe_float(m.get("enterpriseValue")) or (market_cap + net_debt)
+    # Enterprise value (calculé, pas besoin de /key-metrics)
+    ev = market_cap + net_debt
 
-    # Ratios
-    pe_ratio      = _safe_float(rat.get("priceToEarningsRatio")) or None
-    forward_pe    = None  # Non disponible dans stable
-    ev_ebitda     = _safe_float(m.get("evToEBITDA")) or None
-    pb_ratio      = _safe_float(rat.get("priceToBookRatio")) or None
-    roe           = _safe_float(m.get("returnOnEquity")) or None
-    profit_margin = _safe_float(rat.get("netProfitMargin")) or (net_income / revenue if revenue else None)
+    # Ratios (calculés à partir des financial statements, pas besoin de /ratios)
+    total_equity = _safe_float(bs.get("totalStockholdersEquity"))
+    pe_ratio      = (price / (net_income / shares)) if (net_income and shares and net_income > 0) else None
+    forward_pe    = None
+    ev_ebitda     = (ev / ebitda) if ebitda and ebitda > 0 else None
+    pb_ratio      = (market_cap / total_equity) if total_equity and total_equity > 0 else None
+    roe           = (net_income / total_equity) if total_equity and total_equity > 0 else None
+    profit_margin = (net_income / revenue) if revenue and revenue > 0 else None
     beta          = _safe_float(p.get("beta")) or None
     eps           = _safe_float(inc.get("epsDiluted") or inc.get("eps")) or None
     last_div      = _safe_float(p.get("lastDividend"))
@@ -205,21 +198,26 @@ def get_peers_data(ticker: str, sector: str) -> list[dict]:
                 continue
             pr = profile[0]
 
-            metrics = _fmp_get(f"/key-metrics", {"symbol": peer, "period": "TTM"})
-            mr = metrics[0] if isinstance(metrics, list) and metrics else {}
+            # Income statement pour calculer les ratios (évite /key-metrics et /ratios qui sont payants)
+            peer_income = _fmp_get(f"/income-statement", {"symbol": peer, "limit": 1})
+            pi = peer_income[0] if isinstance(peer_income, list) and peer_income else {}
 
-            ratios = _fmp_get(f"/ratios", {"symbol": peer, "period": "TTM"})
-            rr = ratios[0] if isinstance(ratios, list) and ratios else {}
+            peer_price = _safe_float(pr.get("price"))
+            peer_mcap = _safe_float(pr.get("marketCap"))
+            peer_ni = _safe_float(pi.get("netIncome"))
+            peer_rev = _safe_float(pi.get("revenue"))
+            peer_ebitda = _safe_float(pi.get("ebitda"))
+            peer_shares = _safe_float(pi.get("weightedAverageShsOutDil") or pi.get("weightedAverageShsOut"), default=1.0)
 
             results.append({
                 "ticker":         peer,
                 "name":           pr.get("companyName") or peer,
-                "price":          _safe_float(pr.get("price")),
-                "market_cap":     _safe_float(pr.get("marketCap")),
-                "pe_ratio":       _safe_float(rr.get("priceToEarningsRatio")) or None,
-                "ev_ebitda":      _safe_float(mr.get("evToEBITDA")) or None,
+                "price":          peer_price,
+                "market_cap":     peer_mcap,
+                "pe_ratio":       (peer_price / (peer_ni / peer_shares)) if (peer_ni and peer_shares and peer_ni > 0) else None,
+                "ev_ebitda":      (peer_mcap / peer_ebitda) if peer_ebitda and peer_ebitda > 0 else None,
                 "revenue_growth": None,
-                "profit_margin":  _safe_float(rr.get("netProfitMargin")) or None,
+                "profit_margin":  (peer_ni / peer_rev) if peer_rev and peer_rev > 0 else None,
             })
         except Exception:
             continue
