@@ -120,7 +120,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 /* ── Main component ──────────────────────────────────────────────────── */
 export default function LandingPage() {
   const router = useRouter();
-  const { isSignedIn } = useUser();
+  const { isSignedIn, user } = useUser();
   const [ticker, setTicker] = useState("");
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -508,7 +508,27 @@ export default function LandingPage() {
                   <li key={item} className="flex items-center gap-3 text-white"><div className="w-1.5 h-1.5 rounded-full bg-[#C9A84C] flex-shrink-0" />{item}</li>
                 ))}
               </ul>
-              <button onClick={() => router.push(isSignedIn ? "/dashboard" : "/sign-up")} className="w-full bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2">
+              <button
+                onClick={async () => {
+                  if (!isSignedIn) { router.push("/sign-up"); return; }
+                  try {
+                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://peaceful-acceptance-production-2e1d.up.railway.app";
+                    const res = await fetch(`${apiUrl}/api/stripe/create-checkout`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        userId: user?.id,
+                        userEmail: user?.emailAddresses?.[0]?.emailAddress,
+                        plan: annual ? "yearly" : "monthly",
+                      }),
+                    });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                    else alert(data.detail || "Erreur lors de la création du paiement.");
+                  } catch { alert("Impossible de contacter le serveur de paiement."); }
+                }}
+                className="w-full bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
+              >
                 Passer Pro <ChevronRight size={16} />
               </button>
               <p className="text-center text-zinc-600 text-xs mt-3">Sans engagement · Annulable à tout moment</p>
