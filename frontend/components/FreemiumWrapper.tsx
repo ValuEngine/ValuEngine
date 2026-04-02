@@ -127,19 +127,24 @@ export function FreemiumGate({
   const handleUpgrade = async () => {
     if (!user) return;
     try {
-      const res = await fetch("/api/stripe/create-checkout", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://peaceful-acceptance-production-2e1d.up.railway.app";
+      const res = await fetch(`${apiUrl}/api/stripe/create-checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: user.id,
           userEmail: user.primaryEmailAddress?.emailAddress || "",
+          plan: "monthly",
         }),
       });
       const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else console.error("Stripe: pas d'URL retournée", data);
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.detail || "Erreur lors de la création du paiement. Réessaie.");
+      }
     } catch (err) {
-      console.error("Erreur Stripe:", err);
+      alert("Impossible de contacter le serveur de paiement. Réessaie dans quelques secondes.");
     }
   };
 

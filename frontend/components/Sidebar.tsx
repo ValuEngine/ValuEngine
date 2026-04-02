@@ -189,14 +189,25 @@ export default function Sidebar() {
             onClick={async () => {
               if (!user) { router.push("/sign-up"); return; }
               try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/stripe/create-checkout`, {
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://peaceful-acceptance-production-2e1d.up.railway.app";
+                const res = await fetch(`${apiUrl}/api/stripe/create-checkout`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ user_id: user.id, email: user.emailAddresses?.[0]?.emailAddress }),
+                  body: JSON.stringify({
+                    userId: user.id,
+                    userEmail: user.emailAddresses?.[0]?.emailAddress,
+                    plan: "monthly",
+                  }),
                 });
                 const data = await res.json();
-                if (data.url) window.location.href = data.url;
-              } catch {}
+                if (data.url) {
+                  window.location.href = data.url;
+                } else {
+                  alert(data.detail || "Erreur lors de la création du paiement. Réessaie.");
+                }
+              } catch (e) {
+                alert("Impossible de contacter le serveur de paiement. Réessaie dans quelques secondes.");
+              }
             }}
             className="w-full text-xs font-bold text-[#09090b] bg-[#C9A84C] hover:bg-[#b8943d] py-2 rounded-lg transition-colors mb-1"
           >
