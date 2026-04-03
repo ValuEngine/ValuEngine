@@ -128,7 +128,7 @@ export default function ScreenerPage() {
       <div className="min-h-screen text-white px-4 sm:px-6 md:px-10 py-4 sm:py-8">
 
         <div className="mb-8">
-          <h1 className="text-3xl font-black tracking-tight">Screener</h1>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Screener</h1>
           <p className="text-[#6b7d91] text-sm mt-1">
             Analyse automatique de {total} actions majeures (FR + US)
           </p>
@@ -139,7 +139,7 @@ export default function ScreenerPage() {
           <button
             onClick={handleScreen}
             disabled={isLoading}
-            className="flex items-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold px-8 py-3 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold px-6 sm:px-8 py-3 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto min-h-[44px]"
           >
             {isLoading ? (
               <><Loader2 size={16} className="animate-spin" /> Analyse en cours... {completed}/{total}</>
@@ -155,7 +155,7 @@ export default function ScreenerPage() {
               <select
                 value={verdictFilter}
                 onChange={(e) => setVerdictFilter(e.target.value as VerdictFilter)}
-                className="bg-[#132032] border border-[rgba(201,168,76,0.2)] text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-all"
+                className="bg-[#132032] border border-[rgba(201,168,76,0.2)] text-white text-base sm:text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-all"
               >
                 <option value="all">Tous les verdicts</option>
                 <option value="BUY">Sous-évalué</option>
@@ -166,7 +166,7 @@ export default function ScreenerPage() {
               <select
                 value={sectorFilter}
                 onChange={(e) => setSectorFilter(e.target.value)}
-                className="bg-[#132032] border border-[rgba(201,168,76,0.2)] text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-all"
+                className="bg-[#132032] border border-[rgba(201,168,76,0.2)] text-white text-base sm:text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-all"
               >
                 {sectors.map((s) => (
                   <option key={s} value={s}>{s === "all" ? "Tous les secteurs" : s}</option>

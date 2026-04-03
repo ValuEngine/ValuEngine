@@ -71,6 +71,11 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input, button, a, select {
+  touch-action: manipulation;
 }
 
 html,
@@ -116,6 +121,27 @@ body::before {
 
 /* Sélection de texte */
 ::selection { background: rgba(201,168,76,0.25); color: #fff; }
+
+/* ── iOS: disable sticky hover states ──────── */
+@media (hover: none) {
+  button:hover,
+  a:hover,
+  [role="button"]:hover {
+    background-color: inherit !important;
+  }
+}
+
+/* ── Touch feedback for all interactive elements ──────── */
+button,
+a,
+[role="button"] {
+  transition: transform 0.1s ease;
+}
+button:active,
+a:active,
+[role="button"]:active {
+  transform: scale(0.97);
+}
 
 /* ── Clerk custom dark theme (nuclear override) ──────── */
 

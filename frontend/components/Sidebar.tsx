@@ -78,7 +78,7 @@ export default function Sidebar() {
       </div>
 
       {/* Nav Items */}
-      <nav className="flex-1 px-2 py-3 overflow-y-auto">
+      <nav className="flex-1 px-2 py-3 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
         {/* Main */}
         <div className="space-y-0.5">
           {MAIN_ITEMS.map(({ label, href, icon: Icon }) => {

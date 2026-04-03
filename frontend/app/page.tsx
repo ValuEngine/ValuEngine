@@ -316,7 +316,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Comment ça marche</p>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Une analyse complète en 3 étapes.</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Une analyse complète en 3 étapes.</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {HOW_IT_WORKS.map(({ n, title, desc }) => (
@@ -342,7 +342,7 @@ export default function LandingPage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> LIVE
               </span>
             </div>
-            <h2 className="text-3xl font-bold tracking-tight">Nos verdicts, vérifiés en temps réel</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Nos verdicts, vérifiés en temps réel</h2>
             <p className="text-zinc-500 text-sm mt-2">Aucun autre outil ne publie ses performances passées. Nous si.</p>
           </div>
 
@@ -407,7 +407,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Ce que tu obtiens</p>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
               6 outils d&apos;analyse professionnels,<br /><span className="text-zinc-500">accessibles en un clic.</span>
             </h2>
           </div>
@@ -431,7 +431,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Aperçu</p>
-            <h2 className="text-3xl font-bold tracking-tight mb-3">Une analyse complète en un coup d&apos;œil</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">Une analyse complète en un coup d&apos;œil</h2>
             <p className="text-sm text-zinc-500 max-w-lg mx-auto">Verdict DCF, analyse IA Bull & Bear, et matrice de sensibilité — tout ce dont tu as besoin pour prendre une décision éclairée.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
@@ -447,7 +447,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Pourquoi ValuEngine</p>
-            <h2 className="text-3xl font-bold tracking-tight">Ce qui nous différencie</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Ce qui nous différencie</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 text-center">
@@ -480,7 +480,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Témoignages</p>
-            <h2 className="text-3xl font-bold tracking-tight">Ce qu&apos;en pensent nos utilisateurs</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Ce qu&apos;en pensent nos utilisateurs</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
@@ -536,7 +536,7 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Tarifs</p>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6">Simple. Transparent. Sans engagement.</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-6">Simple. Transparent. Sans engagement.</h2>
             <div className="inline-flex items-center bg-zinc-900 border border-zinc-800 rounded-full p-1">
               <button onClick={() => setAnnual(false)} className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${!annual ? "bg-[#C9A84C] text-black" : "text-zinc-400 hover:text-white"}`}>Mensuel</button>
               <button onClick={() => setAnnual(true)} className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${annual ? "bg-[#C9A84C] text-black" : "text-zinc-400 hover:text-white"}`}>
@@ -548,7 +548,7 @@ export default function LandingPage() {
             {/* Free */}
             <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 sm:p-8 hover:border-[#3f3f46] transition-colors">
               <p className="text-xs font-bold tracking-widest uppercase text-zinc-500 mb-3">Gratuit</p>
-              <p className="text-5xl font-black mb-1">0€</p>
+              <p className="text-4xl sm:text-5xl font-black mb-1">0€</p>
               <p className="text-zinc-500 text-sm mb-8">Pour toujours</p>
               <ul className="space-y-3 text-sm mb-8">
                 {["3 analyses par jour", "Verdict DCF (sous-évalué / surévalué)", "Estimation de valeur intrinsèque"].map((item) => (
@@ -567,12 +567,12 @@ export default function LandingPage() {
               <p className="text-xs font-bold tracking-widest uppercase text-[#C9A84C] mb-3">Pro</p>
               {annual ? (
                 <>
-                  <p className="text-5xl font-black mb-1">99€</p>
+                  <p className="text-4xl sm:text-5xl font-black mb-1">99€</p>
                   <p className="text-zinc-500 text-sm mb-8">par an · soit 8,25€/mois</p>
                 </>
               ) : (
                 <>
-                  <p className="text-5xl font-black mb-1">12€</p>
+                  <p className="text-4xl sm:text-5xl font-black mb-1">12€</p>
                   <p className="text-zinc-500 text-sm mb-8">par mois</p>
                 </>
               )}
@@ -615,7 +615,7 @@ export default function LandingPage() {
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Questions fréquentes</p>
-            <h2 className="text-3xl font-bold tracking-tight">Tout ce que tu veux savoir</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Tout ce que tu veux savoir</h2>
           </div>
           <div>
             {FAQ.map((item) => (

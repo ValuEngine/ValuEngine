@@ -108,7 +108,7 @@ export default async function TickerSEOPage(
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
 
         {/* Breadcrumb */}
         <nav className="text-xs text-zinc-600 mb-8 flex items-center gap-2 flex-wrap">
@@ -128,7 +128,7 @@ export default async function TickerSEOPage(
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={profile.image} alt={profile.name} className="w-10 h-10 rounded-xl object-contain bg-white p-1" />
                 )}
-                <h1 className="text-3xl font-black">{profile.name}</h1>
+                <h1 className="text-2xl sm:text-3xl font-black">{profile.name}</h1>
                 <span className="text-xl text-zinc-500 font-mono">{t}</span>
                 {profile.sector && (
                   <span className="text-xs font-bold uppercase tracking-wider text-[#C9A84C] bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.25)] px-3 py-1 rounded-full">
@@ -182,7 +182,7 @@ export default async function TickerSEOPage(
           </>
         ) : (
           <div className="mb-10">
-            <h1 className="text-3xl font-black mb-2">{t}</h1>
+            <h1 className="text-2xl sm:text-3xl font-black mb-2">{t}</h1>
             <p className="text-zinc-500 mb-4">Données de marché non disponibles pour ce ticker.</p>
           </div>
         )}
@@ -200,7 +200,7 @@ export default async function TickerSEOPage(
           </p>
           <Link
             href={`/analyze?ticker=${t}`}
-            className="inline-flex items-center gap-2 bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold px-8 py-3 rounded-xl transition-all text-sm"
+            className="inline-flex items-center gap-2 bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold px-6 sm:px-8 py-3 rounded-xl transition-all text-sm w-full sm:w-auto justify-center min-h-[44px]"
           >
             Voir l&apos;analyse complète →
           </Link>

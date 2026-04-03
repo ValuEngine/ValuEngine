@@ -235,7 +235,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
           <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#C9A84C]/20 text-[#C9A84C] mr-3">{article.category}</span>
           <span className="text-xs" style={{ color: "var(--text-secondary)" }}>{article.date} · {article.readTime} de lecture</span>
         </div>
-        <h1 className="text-3xl font-black mb-8 leading-tight" style={{ color: "var(--text-primary)" }}>{article.title}</h1>
+        <h1 className="text-2xl sm:text-3xl font-black mb-8 leading-tight" style={{ color: "var(--text-primary)" }}>{article.title}</h1>
         <div className="prose prose-invert prose-sm max-w-none">
           <ReactMarkdown
             components={{

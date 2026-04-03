@@ -118,7 +118,7 @@ export default function PortfolioPage() {
 
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-black tracking-tight">Portefeuille</h1>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Portefeuille</h1>
             <p className="text-[#6b7d91] text-sm mt-1">Suis tes positions et ton P&amp;L en temps réel</p>
           </div>
           <button
@@ -246,7 +246,7 @@ export default function PortfolioPage() {
                     value={newTicker}
                     onChange={(e) => setNewTicker(e.target.value.toUpperCase())}
                     placeholder="Ex: AAPL, MC.PA"
-                    className="w-full bg-[rgba(27,45,69,0.9)] border border-[rgba(201,168,76,0.25)] rounded-xl px-5 py-3 text-white placeholder-[#304560] text-sm font-semibold focus:outline-none focus:border-[#C9A84C] transition-all"
+                    className="w-full bg-[rgba(27,45,69,0.9)] border border-[rgba(201,168,76,0.25)] rounded-xl px-5 py-3 text-white placeholder-[#304560] text-base sm:text-sm font-semibold focus:outline-none focus:border-[#C9A84C] transition-all"
                   />
                 </div>
                 <div>
@@ -258,7 +258,7 @@ export default function PortfolioPage() {
                     placeholder="Ex: 10"
                     min="0"
                     step="0.01"
-                    className="w-full bg-[rgba(27,45,69,0.9)] border border-[rgba(201,168,76,0.25)] rounded-xl px-5 py-3 text-white placeholder-[#304560] text-sm font-semibold focus:outline-none focus:border-[#C9A84C] transition-all"
+                    className="w-full bg-[rgba(27,45,69,0.9)] border border-[rgba(201,168,76,0.25)] rounded-xl px-5 py-3 text-white placeholder-[#304560] text-base sm:text-sm font-semibold focus:outline-none focus:border-[#C9A84C] transition-all"
                   />
                 </div>
                 <div>
@@ -270,7 +270,7 @@ export default function PortfolioPage() {
                     placeholder="Ex: 150.00"
                     min="0"
                     step="0.01"
-                    className="w-full bg-[rgba(27,45,69,0.9)] border border-[rgba(201,168,76,0.25)] rounded-xl px-5 py-3 text-white placeholder-[#304560] text-sm font-semibold focus:outline-none focus:border-[#C9A84C] transition-all"
+                    className="w-full bg-[rgba(27,45,69,0.9)] border border-[rgba(201,168,76,0.25)] rounded-xl px-5 py-3 text-white placeholder-[#304560] text-base sm:text-sm font-semibold focus:outline-none focus:border-[#C9A84C] transition-all"
                   />
                 </div>
               </div>

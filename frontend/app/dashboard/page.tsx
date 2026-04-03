@@ -311,7 +311,7 @@ export default function DashboardPage() {
                   onChange={e => { setAddInput(e.target.value.toUpperCase()); setAddError(""); }}
                   onKeyDown={e => e.key === "Enter" && handleAddTicker()}
                   placeholder="Ex: MC.PA, AAPL, TSLA..."
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-white placeholder-zinc-600 text-sm focus:outline-none focus:border-[rgba(201,168,76,0.5)] transition-all"
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-white placeholder-zinc-600 text-base sm:text-sm focus:outline-none focus:border-[rgba(201,168,76,0.5)] transition-all"
                 />
                 {addError && <p className="text-xs text-red-400 mt-1">{addError}</p>}
               </div>

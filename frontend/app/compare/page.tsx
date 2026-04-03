@@ -97,7 +97,7 @@ export default function ComparePage() {
       <div className="min-h-screen text-white px-4 sm:px-6 md:px-10 py-4 sm:py-8">
 
         <div className="mb-8">
-          <h1 className="text-3xl font-black tracking-tight">Comparer deux titres</h1>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Comparer deux titres</h1>
           <p className="text-[#6b7d91] text-sm mt-1">Analyse côte à côte avec valorisation DCF</p>
         </div>
 
@@ -129,7 +129,7 @@ export default function ComparePage() {
             <button
               onClick={handleCompare}
               disabled={loading || !ticker1 || !ticker2}
-              className="flex items-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold px-8 py-3 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+              className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold px-6 sm:px-8 py-3 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap w-full sm:w-auto min-h-[44px]"
             >
               {loading ? <><Loader2 size={16} className="animate-spin" /> Analyse...</> : "Comparer"}
             </button>

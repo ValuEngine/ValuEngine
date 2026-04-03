@@ -226,7 +226,7 @@ export default function AnalyseSharePage({ params }: { params: { id: string } })
         <div className="text-center mb-10">
           <Link
             href="/analyze"
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0d1117] font-bold px-8 py-3.5 rounded-xl text-base hover:shadow-[0_4px_20px_rgba(201,168,76,0.4)] hover:scale-[1.02] transition-all"
+            className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0d1117] font-bold px-6 sm:px-8 py-3.5 rounded-xl text-base hover:shadow-[0_4px_20px_rgba(201,168,76,0.4)] hover:scale-[1.02] transition-all w-full sm:w-auto min-h-[44px]"
           >
             Faire ta propre analyse
             <span className="text-lg">&rarr;</span>

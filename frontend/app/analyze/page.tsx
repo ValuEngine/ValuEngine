@@ -455,7 +455,7 @@ function PriceAlertSection({ ticker, tickerName }: { ticker: string; tickerName:
           onChange={e => { setTargetPrice(e.target.value); setCreateError(""); }}
           onKeyDown={e => e.key === "Enter" && handleCreate()}
           placeholder="Prix cible ($)"
-          className="flex-1 min-w-[140px] bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white text-sm placeholder-zinc-600 focus:outline-none focus:border-[rgba(201,168,76,0.5)] transition-all"
+          className="flex-1 min-w-[140px] bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white text-base sm:text-sm placeholder-zinc-600 focus:outline-none focus:border-[rgba(201,168,76,0.5)] transition-all"
         />
 
         <button
@@ -801,7 +801,7 @@ function AnalyzePage() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-black">{currencySymbol(data.company.ticker)}{data.company.price.toFixed(2)}</p>
+                  <p className="text-2xl sm:text-3xl font-black">{currencySymbol(data.company.ticker)}{data.company.price.toFixed(2)}</p>
                   <p className="text-xs text-zinc-400 mt-0.5">{data.company.currency} · Cours actuel</p>
                 </div>
               </div>
@@ -855,14 +855,14 @@ function AnalyzePage() {
                       </div>
                     </div>
                     {/* Price vs intrinsic side by side */}
-                    <div className="flex gap-6 flex-shrink-0">
+                    <div className="flex gap-4 sm:gap-6 flex-shrink-0">
                       <div className="text-center">
                         <p className="text-xs text-[#5d7289] uppercase tracking-wider mb-1">Prix actuel</p>
-                        <p className="text-3xl font-black text-white">{currencySymbol(data.company.ticker)}{data.company.price.toFixed(2)}</p>
+                        <p className="text-2xl sm:text-3xl font-black text-white">{currencySymbol(data.company.ticker)}{data.company.price.toFixed(2)}</p>
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-[#5d7289] uppercase tracking-wider mb-1">Valeur DCF</p>
-                        <p className="text-3xl font-black" style={{ color: vc.color }}>
+                        <p className="text-2xl sm:text-3xl font-black" style={{ color: vc.color }}>
                           {currencySymbol(data.company.ticker)}{data.dcf.intrinsic_value.toFixed(2)}
                         </p>
                         <p className="text-sm font-bold mt-1" style={{ color: vc.color }}>

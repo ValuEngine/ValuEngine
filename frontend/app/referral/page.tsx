@@ -46,7 +46,7 @@ export default function ReferralPage() {
           <div className="w-16 h-16 rounded-2xl bg-[#C9A84C]/10 border border-[#C9A84C]/20 flex items-center justify-center mx-auto mb-4">
             <Gift size={28} className="text-[#C9A84C]" />
           </div>
-          <h1 className="text-3xl font-black mb-2" style={{ color: "var(--text-primary)" }}>
+          <h1 className="text-2xl sm:text-3xl font-black mb-2" style={{ color: "var(--text-primary)" }}>
             Invite tes amis
           </h1>
           <p className="max-w-md mx-auto" style={{ color: "var(--text-secondary)" }}>

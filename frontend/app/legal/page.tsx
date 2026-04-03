@@ -4,7 +4,7 @@ export default function LegalPage() {
   return (
     <AppLayout>
       <div className="min-h-screen text-white px-4 sm:px-6 md:px-16 py-8 sm:py-10 max-w-3xl mx-auto">
-        <h1 className="text-3xl font-black tracking-tight mb-2">Mentions légales & CGU</h1>
+        <h1 className="text-2xl sm:text-3xl font-black tracking-tight mb-2">Mentions légales & CGU</h1>
         <p className="text-[#6b7d91] text-sm mb-10">Dernière mise à jour : avril 2026</p>
 
         <section className="mb-8">
