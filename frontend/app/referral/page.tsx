@@ -47,14 +47,14 @@ export default function ReferralPage() {
             <Gift size={28} className="text-[#C9A84C]" />
           </div>
           <h1 className="text-3xl font-black mb-2" style={{ color: "var(--text-primary)" }}>
-            Invitez vos amis
+            Invite tes amis
           </h1>
           <p className="max-w-md mx-auto" style={{ color: "var(--text-secondary)" }}>
-            Invitez 3 amis et recevez{" "}
+            Invite 3 amis et reçois{" "}
             <span className="text-[#C9A84C] font-bold">1 mois Pro offert</span>.
-            Vos amis profitent eux aussi de{" "}
+            Tes amis profitent eux aussi de{" "}
             <span className="text-[#C9A84C] font-bold">3 analyses gratuites</span>{" "}
-            en bonus. Chaque inscription via votre lien compte.
+            en bonus. Chaque inscription via ton lien compte.
           </p>
         </div>
 
@@ -64,7 +64,7 @@ export default function ReferralPage() {
           style={{ background: "rgba(24,24,27,0.8)", borderColor: "var(--border)" }}
         >
           <label className="text-sm block mb-2" style={{ color: "var(--text-secondary)" }}>
-            Votre lien de parrainage
+            Ton lien de parrainage
           </label>
           <div className="flex gap-2">
             <input
@@ -111,7 +111,7 @@ export default function ReferralPage() {
           style={{ background: "rgba(24,24,27,0.8)", borderColor: "var(--border)" }}
         >
           <h3 className="font-bold mb-4" style={{ color: "var(--text-primary)" }}>
-            Vos parrainages
+            Tes parrainages
           </h3>
 
           {/* Count */}
@@ -133,8 +133,8 @@ export default function ReferralPage() {
           </div>
           <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
             {referrals >= goal
-              ? "Bravo ! Vous avez débloqué 1 mois Pro gratuit."
-              : `Plus que ${goal - referrals} invitation${goal - referrals > 1 ? "s" : ""} pour débloquer votre récompense.`}
+              ? "Bravo ! Tu as débloqué 1 mois Pro gratuit."
+              : `Plus que ${goal - referrals} invitation${goal - referrals > 1 ? "s" : ""} pour débloquer ta récompense.`}
           </p>
         </div>
 
@@ -151,19 +151,19 @@ export default function ReferralPage() {
               <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#C9A84C]/10 border border-[#C9A84C]/20 flex items-center justify-center text-xs font-bold text-[#C9A84C]">
                 1
               </span>
-              Partagez votre lien unique avec vos amis
+              Partage ton lien unique avec tes amis
             </li>
             <li className="flex items-start gap-3">
               <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#C9A84C]/10 border border-[#C9A84C]/20 flex items-center justify-center text-xs font-bold text-[#C9A84C]">
                 2
               </span>
-              Vos amis s&apos;inscrivent via votre lien
+              Tes amis s&apos;inscrivent via ton lien
             </li>
             <li className="flex items-start gap-3">
               <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#C9A84C]/10 border border-[#C9A84C]/20 flex items-center justify-center text-xs font-bold text-[#C9A84C]">
                 3
               </span>
-              A 3 inscriptions, vous recevez 1 mois d&apos;accès Pro gratuitement
+              À 3 inscriptions, tu reçois 1 mois d&apos;accès Pro gratuitement
             </li>
           </ol>
         </div>

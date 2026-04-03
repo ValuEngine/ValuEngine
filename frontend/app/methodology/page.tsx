@@ -119,7 +119,7 @@ export default function MethodologyPage() {
               Un DCF ne donne pas <strong className="text-white">une</strong> valeur, mais un <strong className="text-white">spectre de valeurs</strong> selon les hypothèses retenues. C&apos;est pourquoi chaque analyse ValuEngine inclut une <strong className="text-white">matrice de sensibilité</strong> qui croise différents niveaux de WACC et de croissance terminale.
             </p>
             <p className="text-zinc-400 leading-relaxed text-sm">
-              Cette matrice vous permet de visualiser les scénarios optimiste, central et pessimiste en un coup d&apos;œil. Si la majorité des cellules indiquent un upside positif, le signal est robuste.
+              Cette matrice te permet de visualiser les scénarios optimiste, central et pessimiste en un coup d&apos;œil. Si la majorité des cellules indiquent un upside positif, le signal est robuste.
             </p>
             <div className="grid grid-cols-3 gap-3 mt-4">
               <div className="rounded-lg bg-[#09090b] border border-[#27272a] p-4 text-center">
@@ -179,7 +179,7 @@ export default function MethodologyPage() {
           </h2>
           <div className="rounded-xl border-2 border-[#C9A84C]/40 bg-[#C9A84C]/5 p-6">
             <p className="text-[#C9A84C]/90 text-sm leading-relaxed">
-              ValuEngine n&apos;est pas un conseiller en investissement au sens de la directive MIFII.
+              ValuEngine n&apos;est pas un conseiller en investissement au sens de la directive MIF II.
               Les analyses fournies sont des estimations mathématiques basées sur des
               données publiques et des modèles statistiques. Elles ne constituent en aucun
               cas une recommandation d&apos;achat, de vente ou de détention de titres financiers.

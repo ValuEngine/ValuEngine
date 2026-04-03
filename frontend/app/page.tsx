@@ -498,7 +498,7 @@ export default function LandingPage() {
               },
               {
                 prenom: "Julie", initiale: "J", profil: "Étudiante en finance — Master CCA", ville: "Toulouse", note: 4,
-                texte: "J'utilise ValuEngine pour mes études de cas. Le modèle DCF est bien implémenté et les ratios de trading comps m'évitent de chercher les données manuellement. Seul bémol : j'aurais aimé pouvoir exporter le rapport en PDF.",
+                texte: "J'utilise ValuEngine pour mes études de cas. Le modèle DCF est bien implémenté et les ratios de trading comps m'évitent de chercher les données manuellement. L'analyse Bull/Bear IA est un vrai plus pour structurer mes présentations.",
               },
               {
                 prenom: "Karim", initiale: "K", profil: "Chef de projet — portefeuille long terme", ville: "Marseille", note: 5,

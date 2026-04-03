@@ -30,7 +30,7 @@ const ARTICLES = [
   {
     slug: "comment-lire-un-dcf",
     title: "Comment lire une analyse DCF en 5 minutes",
-    excerpt: "Le DCF (Discounted Cash Flow) est la méthode de valorisation préférée de Warren Buffett. On vous explique comment l'interpréter.",
+    excerpt: "Le DCF (Discounted Cash Flow) est la méthode de valorisation préférée de Warren Buffett. On t'explique comment l'interpréter.",
     date: "1 Mars 2026",
     readTime: "5 min",
     category: "Éducation",

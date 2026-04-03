@@ -65,13 +65,14 @@ const DEMO_ENTRIES: TrackRecordEntry[] = [
 
 function computeSummary(entries: TrackRecordEntry[]): TrackRecordResponse["summary"] {
   const scoreable = entries.filter(
-    (e) => e.performance_pct != null && (e.verdict === "BUY" || e.verdict === "SELL")
+    (e) => e.performance_pct != null && ["BUY", "SELL", "HOLD"].includes(e.verdict)
   );
 
   const wins = scoreable.filter((e) => {
     const perf = e.performance_pct ?? 0;
     if (e.verdict === "BUY") return perf > 0;
     if (e.verdict === "SELL") return perf < 0;
+    if (e.verdict === "HOLD") return Math.abs(perf) <= 10;
     return false;
   }).length;
 

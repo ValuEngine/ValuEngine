@@ -33,7 +33,7 @@ Le rendement moyen des dividendes en Europe est de 3,2% contre 1,4% aux US. Pour
 
 Sur ValuEngine, les tickers européens se terminent par un suffixe : **.PA** (Paris), **.DE** (Francfort), **.AS** (Amsterdam). Le modèle DCF s'applique exactement de la même manière.
 
-> L'investissement en actions européennes nécessite la même rigueur d'analyse que pour les actions américaines. Le DCF reste votre meilleur allié.`,
+> L'investissement en actions européennes nécessite la même rigueur d'analyse que pour les actions américaines. Le DCF reste ton meilleur allié.`,
   },
   "marge-de-securite-graham": {
     title: "La marge de sécurité : le concept le plus important en investissement",
@@ -42,21 +42,21 @@ Sur ValuEngine, les tickers européens se terminent par un suffixe : **.PA** (Pa
     category: "Éducation",
     body: `## L'origine du concept
 
-Benjamin Graham, le père de l'investissement value, a introduit la **marge de sécurité** dans son livre *The Intelligent Investor* (1949). L'idée est élégante dans sa simplicité : n'achetez jamais une action à sa juste valeur, achetez-la toujours **en dessous**.
+Benjamin Graham, le père de l'investissement value, a introduit la **marge de sécurité** dans son livre *The Intelligent Investor* (1949). L'idée est élégante dans sa simplicité : n'achète jamais une action à sa juste valeur, achète-la toujours **en dessous**.
 
 ## La définition simple
 
 La marge de sécurité = **(Valeur intrinsèque − Prix de marché) / Valeur intrinsèque**
 
-Si une action vaut 100€ selon votre DCF et qu'elle se trade à 70€, votre marge de sécurité est de 30%.
+Si une action vaut 100€ selon ton DCF et qu'elle se trade à 70€, ta marge de sécurité est de 30%.
 
 ## Pourquoi c'est essentiel
 
-**1. Vos estimations sont toujours fausses**
+**1. Tes estimations sont toujours fausses**
 Un DCF repose sur des hypothèses. La croissance future, le WACC, le terminal growth — tout est une estimation. La marge de sécurité absorbe ces erreurs.
 
 **2. Le marché peut rester irrationnel longtemps**
-Même si vous avez raison sur les fondamentaux, le cours peut baisser avant de remonter. La marge de sécurité vous donne un coussin psychologique et financier.
+Même si tu as raison sur les fondamentaux, le cours peut baisser avant de remonter. La marge de sécurité te donne un coussin psychologique et financier.
 
 **3. Le risque asymétrique**
 Avec une marge de sécurité de 30%, le pire scénario est un rendement nul. Le meilleur scénario est un rendement de 50%+.
@@ -65,14 +65,14 @@ Avec une marge de sécurité de 30%, le pire scénario est un rendement nul. Le 
 
 L'**upside %** affiché dans chaque analyse est exactement la marge de sécurité. Un upside de +35% signifie que le prix de marché est 35% en dessous de la valeur intrinsèque calculée.
 
-**Règle d'or** : ne considérez un achat que si l'upside est d'au moins **+20%** pour une large cap, ou **+40%** pour une small cap plus risquée.`,
+**Règle d'or** : ne considère un achat que si l'upside est d'au moins **+20%** pour une large cap, ou **+40%** pour une small cap plus risquée.`,
   },
   "fcf-yield-indicateur": {
     title: "Le FCF Yield : l'indicateur que les pros regardent en premier",
     date: "18 Mars 2026",
     readTime: "6 min",
     category: "Finance",
-    body: `## Oubliez le P/E ratio
+    body: `## Oublie le P/E ratio
 
 Le ratio cours/bénéfice (P/E) est l'indicateur le plus populaire, mais il est facilement manipulable. Les bénéfices nets incluent des éléments comptables non-cash (amortissements, provisions, charges exceptionnelles) qui n'ont rien à voir avec la capacité réelle de l'entreprise à générer du cash.
 
@@ -119,7 +119,7 @@ Le **Discounted Cash Flow** (flux de trésorerie actualisé) est une méthode de
 C'est la vitesse à laquelle l'entreprise va augmenter ses flux de trésorerie libres. Pour une entreprise mature comme Apple, on utilise 6-8%. Pour une hypercroissance comme Nvidia, on peut aller jusqu'à 15-20%.
 
 **2. Le WACC (taux d'actualisation)**
-C'est le coût moyen pondéré du capital. Il reflète le risque de l'investissement. Plus le WACC est élevé, plus vous exigez de rendement. Typiquement entre 8% et 12%.
+C'est le coût moyen pondéré du capital. Il reflète le risque de l'investissement. Plus le WACC est élevé, plus tu exiges de rendement. Typiquement entre 8% et 12%.
 
 **3. Le taux de croissance terminal**
 C'est la croissance perpétuelle après la période de projection (généralement 5 ans). On l'aligne sur la croissance économique long terme : 2-3%.
@@ -166,7 +166,7 @@ Déterminez à quel prix le bear case devient attractif. Si même dans le pire s
 Assignez une probabilité à chaque scénario. Valeur = (Bull × P_bull) + (Base × P_base) + (Bear × P_bear).
 
 **Méthode 3 : La marge de sécurité**
-N'achetez que si la valeur intrinsèque est au moins 30% supérieure au cours. Ça vous protège contre vos propres erreurs d'estimation.`,
+N'achète que si la valeur intrinsèque est au moins 30% supérieure au cours. Ça te protège contre tes propres erreurs d'estimation.`,
   },
   "wacc-explique": {
     title: "Le WACC expliqué simplement",
@@ -189,7 +189,7 @@ Où :
 - **Rd** = coût de la dette
 - **T** = taux d'imposition
 
-## Comment choisir votre WACC
+## Comment choisir ton WACC
 
 **Entreprise large cap stable** (Apple, Microsoft, Coca-Cola) : 8-9%
 

@@ -100,12 +100,18 @@ export default function TrackRecordPage() {
     if (perfFilter === "winners") {
       entries = entries.filter((e) => {
         if (e.performance_pct == null) return false;
-        return e.verdict === "SELL" ? e.performance_pct < 0 : e.performance_pct > 0;
+        if (e.verdict === "BUY") return e.performance_pct > 0;
+        if (e.verdict === "SELL") return e.performance_pct < 0;
+        if (e.verdict === "HOLD") return Math.abs(e.performance_pct) <= 10;
+        return false;
       });
     } else if (perfFilter === "losers") {
       entries = entries.filter((e) => {
         if (e.performance_pct == null) return false;
-        return e.verdict === "SELL" ? e.performance_pct > 0 : e.performance_pct < 0;
+        if (e.verdict === "BUY") return e.performance_pct <= 0;
+        if (e.verdict === "SELL") return e.performance_pct >= 0;
+        if (e.verdict === "HOLD") return Math.abs(e.performance_pct) > 10;
+        return false;
       });
     }
     return entries;
@@ -327,6 +333,11 @@ export default function TrackRecordPage() {
             Commencer gratuitement
           </button>
         </div>
+
+        {/* Disclaimer */}
+        <p className="text-[11px] text-zinc-600 text-center mt-6">
+          Les performances passées ne préjugent pas des performances futures. Outil éducatif — pas un conseil en investissement au sens de la directive MIF II.
+        </p>
 
       </div>
     </AppLayout>

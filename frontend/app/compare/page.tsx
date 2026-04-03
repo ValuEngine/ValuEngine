@@ -62,7 +62,7 @@ export default function ComparePage() {
   const handleCompare = async () => {
     const t1 = ticker1.trim().toUpperCase();
     const t2 = ticker2.trim().toUpperCase();
-    if (!t1 || !t2) { setError("Veuillez saisir deux tickers."); return; }
+    if (!t1 || !t2) { setError("Saisis deux tickers pour comparer."); return; }
     if (t1 === t2) { setError("Les deux tickers doivent être différents."); return; }
     setLoading(true);
     setError(null);
