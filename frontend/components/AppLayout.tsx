@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { Bell } from "lucide-react";
@@ -24,6 +25,13 @@ function TopHeader() {
   const pathname = usePathname();
   const { user } = useUser();
   const { isPro } = useProStatus(user?.id);
+
+  // Sync user to Supabase on first visit (ensures row exists)
+  useEffect(() => {
+    if (user?.id) {
+      fetch("/api/db/user", { method: "POST" }).catch(() => {});
+    }
+  }, [user?.id]);
 
   const pageLabel = BREADCRUMBS[pathname] ?? BREADCRUMBS[Object.keys(BREADCRUMBS).find(k => pathname.startsWith(k)) ?? ""] ?? "App";
 
