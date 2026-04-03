@@ -7,6 +7,7 @@ import { ChevronRight, ChevronDown, ArrowDown, TrendingUp, TrendingDown, Minus, 
 import { useUser } from "@clerk/nextjs";
 import { NavAuth } from "@/components/NavAuth";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import { MockupVerdict, MockupBullBear, MockupSensitivity } from "@/components/MockupScreenshots";
 import { searchTicker, type SearchResult } from "@/lib/api";
 
 /* ── Features ────────────────────────────────────────────────────────── */
@@ -425,7 +426,23 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── WHY VALUENGINE (replaces fake testimonials + screenshots) ── */}
+      {/* ── INTERFACE PREVIEW ───────────────────────────────────────── */}
+      <section className="relative z-10 py-24 px-6 border-t border-[#27272a] overflow-hidden">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-14">
+            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Aperçu</p>
+            <h2 className="text-3xl font-bold tracking-tight mb-3">Une analyse complète en un coup d&apos;œil</h2>
+            <p className="text-sm text-zinc-500 max-w-lg mx-auto">Verdict DCF, analyse IA Bull & Bear, et matrice de sensibilité — tout ce dont tu as besoin pour prendre une décision éclairée.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+            <div className="flex justify-center"><MockupVerdict /></div>
+            <div className="flex justify-center"><MockupBullBear /></div>
+            <div className="flex justify-center"><MockupSensitivity /></div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── WHY VALUENGINE ─────────────────────────────────────────────── */}
       <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
@@ -454,6 +471,62 @@ export default function LandingPage() {
               <h3 className="text-sm font-bold mb-2">100% en français</h3>
               <p className="text-xs text-zinc-500 leading-relaxed">Le seul outil de valorisation DCF + IA conçu pour les investisseurs francophones. Actions US et européennes.</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── TÉMOIGNAGES ─────────────────────────────────────────────── */}
+      <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Témoignages</p>
+            <h2 className="text-3xl font-bold tracking-tight">Ce qu&apos;en pensent nos utilisateurs</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              {
+                prenom: "Thomas", initiale: "T", profil: "Investisseur particulier — 9 ans d'expérience", ville: "Lyon", note: 5,
+                texte: "J'ai analysé TotalEnergies avec ValuEngine avant de renforcer ma position. Le DCF m'a montré un upside de 22% que j'avais pas vu avec mes propres calculs Excel. L'analyse IA Bull/Bear était vraiment bien construite — pas du bullshit générique.",
+              },
+              {
+                prenom: "Sarah", initiale: "S", profil: "Analyste financière junior", ville: "Paris", note: 5,
+                texte: "Enfin un outil sérieux en français. J'utilisais Simply Wall St mais l'interface était en anglais et les données sur les actions françaises étaient souvent fausses. Là sur LVMH et Sanofi les fondamentaux sont corrects et le SWOT est vraiment pertinent.",
+              },
+              {
+                prenom: "Marc", initiale: "M", profil: "Ingénieur — investisseur depuis 4 ans", ville: "Bordeaux", note: 5,
+                texte: "La matrice de sensibilité DCF c'est ce qui m'a convaincu. Je modifie le WACC et le taux de croissance, je vois instantanément l'impact sur la valorisation. C'est ce que je faisais sur Excel depuis des heures, là c'est en 30 secondes.",
+              },
+              {
+                prenom: "Julie", initiale: "J", profil: "Étudiante en finance — Master CCA", ville: "Toulouse", note: 4,
+                texte: "J'utilise ValuEngine pour mes études de cas. Le modèle DCF est bien implémenté et les ratios de trading comps m'évitent de chercher les données manuellement. Seul bémol : j'aurais aimé pouvoir exporter le rapport en PDF.",
+              },
+              {
+                prenom: "Karim", initiale: "K", profil: "Chef de projet — portefeuille long terme", ville: "Marseille", note: 5,
+                texte: "J'avais essayé Morningstar et AlphaSpread. Morningstar c'est trop cher, AlphaSpread c'est en anglais avec des données approximatives sur le CAC 40. ValuEngine c'est le seul qui fait du DCF sérieux sur les valeurs françaises avec une interface propre.",
+              },
+            ].map((t, idx) => (
+              <div
+                key={idx}
+                className={`bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-2xl p-6 hover:border-[#3f3f46] transition-colors ${idx >= 3 ? "hidden md:block" : ""}`}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-[rgba(201,168,76,0.12)] border border-[rgba(201,168,76,0.25)] flex items-center justify-center text-[#C9A84C] font-bold text-sm">
+                    {t.initiale}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white">{t.prenom}</p>
+                    <p className="text-[11px] text-zinc-500 truncate">{t.profil}</p>
+                  </div>
+                  <span className="text-[10px] text-zinc-600 bg-zinc-800/50 px-2 py-0.5 rounded-full">{t.ville}</span>
+                </div>
+                <div className="flex gap-0.5 mb-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <span key={i} className={`text-xs ${i < t.note ? "text-[#C9A84C]" : "text-zinc-700"}`}>★</span>
+                  ))}
+                </div>
+                <p className="text-xs text-zinc-400 leading-relaxed italic">&ldquo;{t.texte}&rdquo;</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

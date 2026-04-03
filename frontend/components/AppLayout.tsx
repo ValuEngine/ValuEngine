@@ -78,7 +78,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
         <footer className="mt-auto px-6 py-3 text-xs text-center text-[#71717a] border-t border-[#27272a] bg-[#09090b]/60 backdrop-blur-sm">
-          © 2025 ValuEngine — Outil d&apos;analyse éducatif.{" "}
+          © 2026 ValuEngine — Outil d&apos;analyse éducatif.{" "}
           Les données et analyses présentées ne constituent pas des conseils en investissement au sens de la directive MIF II.{" "}
           Performances passées ne présagent pas des performances futures.{" "}
           <a href="/legal" className="underline hover:text-[#C9A84C] transition-colors">Mentions légales & CGU</a>
