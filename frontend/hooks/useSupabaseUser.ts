@@ -29,15 +29,9 @@ export function useSupabaseUser() {
         if (res.ok) {
           const data = await res.json();
           setDbUser(data);
-          // Sync is_pro to localStorage as fallback
-          if (data?.is_pro && user?.id) {
-            localStorage.setItem(`pro_${user.id}`, "true");
-            localStorage.setItem("valuengine_pro", "true");
-            localStorage.setItem("valuengine_pro_ts", Date.now().toString());
-          }
         }
       } catch {
-        // fail silently — localStorage fallback still works
+        // fail silently
       } finally {
         setLoading(false);
       }

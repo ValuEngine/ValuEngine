@@ -2,6 +2,7 @@
 
 import { useUser, UserButton, SignInButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { useProStatus } from "@/hooks/useProStatus";
 
 const avatarAppearance = {
   elements: {
@@ -44,23 +45,11 @@ export function NavAuth() {
   );
 }
 
-function checkIsPro(userId?: string): boolean {
-  if (typeof window === "undefined") return false;
-  if (userId && localStorage.getItem(`pro_${userId}`) === "true") return true;
-  const globalPro = localStorage.getItem("valuengine_pro");
-  const globalTs = localStorage.getItem("valuengine_pro_ts");
-  if (globalPro === "true" && globalTs) {
-    const age = Date.now() - parseInt(globalTs);
-    if (age < 30 * 24 * 60 * 60 * 1000) return true;
-  }
-  return false;
-}
-
 export function NavAuthCompact() {
   const { isSignedIn, user } = useUser();
+  const { isPro } = useProStatus(user?.id);
 
   if (isSignedIn) {
-    const isPro = checkIsPro(user?.id);
 
     return (
       <div className="flex items-center gap-2">

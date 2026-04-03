@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useUser, UserButton } from "@clerk/nextjs";
+import { useProStatus } from "@/hooks/useProStatus";
 import {
   LayoutDashboard,
   LineChart,
@@ -57,10 +58,7 @@ export default function Sidebar() {
   const { isSignedIn, user } = useUser();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isPro =
-    typeof window !== "undefined" && user
-      ? localStorage.getItem(`pro_${user.id}`) === "true"
-      : false;
+  const { isPro } = useProStatus(user?.id);
 
   const firstName = user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] || "Utilisateur";
 

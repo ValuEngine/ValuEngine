@@ -528,6 +528,9 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+          <p className="text-[10px] text-zinc-600 text-center mt-8 max-w-xl mx-auto leading-relaxed">
+            Les t&eacute;moignages pr&eacute;sent&eacute;s sont des exemples illustratifs bas&eacute;s sur des cas d&apos;usage r&eacute;els. Les pr&eacute;noms et profils ont &eacute;t&eacute; modifi&eacute;s pour prot&eacute;ger la vie priv&eacute;e des utilisateurs. Les r&eacute;sultats peuvent varier.
+          </p>
         </div>
       </section>
 

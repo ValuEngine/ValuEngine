@@ -4,10 +4,13 @@ Endpoints pour l'analyse financière complète d'une action.
 """
 
 import os
+import re
 import time
 import uuid
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import quote as url_quote
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -16,20 +19,39 @@ from dotenv import load_dotenv
 import httpx
 import stripe
 import yfinance as yf
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from models import AnalyzeRequest, AnalyzeResponse, CompanyData, DCFResult, SensitivityMatrix, BullBearAnalysis
 from services.dcf import calculate_dcf, sensitivity_analysis
 from services.ai_analyst import get_bull_bear_analysis, get_swot_analysis, get_pestle_analysis
 
 load_dotenv(Path(__file__).parent / ".env", override=True)
 
+# ── Logging ─────────────────────────────────────────────────────────────────
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("valuengine")
+
 FMP_KEY = os.environ.get("FMP_API_KEY", "")
 USE_FMP = bool(FMP_KEY and FMP_KEY.strip())
 # yfinance is the primary data source (free, unlimited, full financial statements)
 # FMP free plan only supports /quote and /profile — not financial statements
 from services.market_data import get_company_data as _get_data, get_peers_data
-print(f"[DataSource] yfinance ✓ | FMP={'enabled' if USE_FMP else 'disabled'}")
+logger.info(f"[DataSource] yfinance | FMP={'enabled' if USE_FMP else 'disabled'}")
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
+
+# ── Input sanitization ──────────────────────────────────────────────────────
+_SAFE_ID_RE = re.compile(r"^[a-zA-Z0-9_\-]+$")
+
+def _safe_id(value: str) -> str:
+    """Validate and return a safe identifier for Supabase queries."""
+    if not value or not _SAFE_ID_RE.match(value):
+        raise HTTPException(status_code=400, detail="Identifiant invalide")
+    return value
+
+# ── Rate limiter ────────────────────────────────────────────────────────────
+limiter = Limiter(key_func=get_remote_address)
 
 # ── Supabase REST helpers (alerts) ───────────────────────────────────────────
 _SUPA_URL  = os.environ.get("SUPABASE_URL", "").rstrip("/")
@@ -79,7 +101,7 @@ def _get_today_analysis_count(user_id: str) -> int:
         )
         return len(rows)
     except Exception as e:
-        print(f"[Freemium] Error counting analyses for {user_id}: {e}")
+        logger.error(f"[Freemium] Error counting analyses: {e}")
         return 0
 
 
@@ -99,7 +121,7 @@ def _is_user_pro(user_id: str) -> bool:
             return datetime.fromisoformat(pro_until.replace("Z", "+00:00")) > datetime.now(timezone.utc)
         return False
     except Exception as e:
-        print(f"[Freemium] Error checking pro status for {user_id}: {e}")
+        logger.error(f"[Freemium] Error checking pro status: {e}")
         return False
 
 
@@ -109,6 +131,10 @@ app = FastAPI(
     version="2.0.0",
 )
 
+# Rate limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # CORS — autorise le frontend Next.js (localhost:3000 en dev, domaine prod)
 _frontend_url = os.environ.get("FRONTEND_URL", "")
 app.add_middleware(
@@ -117,12 +143,13 @@ app.add_middleware(
         "http://localhost:3000",
         "https://valuengine.io",
         "https://valuengine.fr",
+        "https://www.valuengine.fr",
         _frontend_url,
     ],
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origin_regex=r"https://valuengine[a-z0-9\-]*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=["Content-Type", "Authorization", "Stripe-Signature"],
 )
 
 
@@ -182,12 +209,13 @@ def market_overview():
         _MARKET_CACHE = {"data": results, "ts": now}
         return results
     except Exception as e:
-        print(f"[market-overview] yfinance error: {e}")
+        logger.warning(f"[market-overview] yfinance error: {e}")
         return _MARKET_FALLBACK
 
 
 @app.post("/api/analyze", response_model=AnalyzeResponse)
-def analyze(req: AnalyzeRequest):
+@limiter.limit("10/minute")
+def analyze(request: Request, req: AnalyzeRequest):
     """
     Endpoint principal : analyse complète d'une action.
     - Données de marché (yfinance)
@@ -218,7 +246,8 @@ def analyze(req: AnalyzeRequest):
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur lors de la récupération des données : {e}")
+        logger.error(f"Data fetch error for {ticker}: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors de la récupération des données")
 
     company = CompanyData(**raw)
 
@@ -292,7 +321,7 @@ def analyze(req: AnalyzeRequest):
     try:
         _sb_post("analyses", analysis_record)
     except Exception as e:
-        print(f"[Analyze] Erreur sauvegarde analyse: {e}")
+        logger.error(f"[Analyze] Erreur sauvegarde analyse: {e}")
 
     return AnalyzeResponse(
         company=company,
@@ -314,7 +343,8 @@ def peers(ticker: str, sector: str = "Technology"):
         result = get_peers_data(ticker.upper(), sector)
         return {"peers": result}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Internal error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 VALID_PERIODS = {"1mo", "3mo", "6mo", "1y", "2y", "5y"}
@@ -344,7 +374,8 @@ def history(ticker: str, period: str = "1y"):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Internal error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 @app.get("/api/search/{ticker}")
@@ -364,7 +395,8 @@ def search(ticker: str):
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Internal error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 @app.get("/api/quotes")
@@ -424,7 +456,8 @@ def quote(ticker: str):
         except HTTPException:
             raise
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            logger.error(f"Internal error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
     else:
         try:
             fi = yf.Ticker(t).fast_info
@@ -467,7 +500,8 @@ def profile(ticker: str):
         except HTTPException:
             raise
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            logger.error(f"Internal error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
     else:
         try:
             info = yf.Ticker(t).info
@@ -491,27 +525,32 @@ def profile(ticker: str):
         except HTTPException:
             raise
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            logger.error(f"Internal error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 @app.get("/api/ai/swot/{ticker}")
-def swot_endpoint(ticker: str):
+@limiter.limit("5/minute")
+def swot_endpoint(request: Request, ticker: str):
     try:
         raw = _get_data(ticker.upper())
         result = get_swot_analysis(raw)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Internal error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 @app.get("/api/ai/pestle/{ticker}")
-def pestle_endpoint(ticker: str):
+@limiter.limit("5/minute")
+def pestle_endpoint(request: Request, ticker: str):
     try:
         raw = _get_data(ticker.upper())
         result = get_pestle_analysis(raw)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Internal error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 from services.email_service import send_alert_email, send_welcome_email
@@ -548,11 +587,13 @@ async def create_alert(req: Request):
         })
         return record
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Internal error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 @app.get("/api/alerts/{clerk_user_id}")
 def get_alerts(clerk_user_id: str):
+    clerk_user_id = _safe_id(clerk_user_id)
     try:
         alerts = _sb_get(
             "alerts",
@@ -560,16 +601,19 @@ def get_alerts(clerk_user_id: str):
         )
         return alerts
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Internal error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 @app.delete("/api/alerts/{alert_id}")
 def delete_alert(alert_id: str):
+    alert_id = _safe_id(alert_id)
     try:
         _sb_patch("alerts", f"id=eq.{alert_id}", {"active": False})
         return {"ok": True}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Internal error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 @app.post("/api/alerts/check")
@@ -578,7 +622,8 @@ def check_alerts():
     try:
         alerts = _sb_get("alerts", "active=eq.true&is_triggered=eq.false")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Supabase error: {e}")
+        logger.error(f"Supabase error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
     if not alerts:
         return {"checked": 0, "triggered": 0}
@@ -643,6 +688,7 @@ def check_alerts():
 
 
 @app.post("/api/stripe/create-checkout")
+@limiter.limit("3/minute")
 async def create_checkout(request: Request):
     body = await request.json()
     user_id = body.get("userId", "")
@@ -675,7 +721,8 @@ async def create_checkout(request: Request):
         )
         return {"url": session.url}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Internal error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 @app.post("/api/user/welcome")
@@ -697,12 +744,14 @@ async def user_welcome(request: Request):
 @app.get("/api/referral/{clerk_user_id}")
 def get_referral(clerk_user_id: str):
     """Compte le nombre de filleuls d'un utilisateur."""
+    clerk_user_id = _safe_id(clerk_user_id)
     try:
         rows = _sb_get("users", f"referred_by=eq.{clerk_user_id}&select=id")
         count = len(rows)
         return {"count": count, "reward_eligible": count >= 3}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Internal error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 # Migration needed: ALTER TABLE analyses ADD COLUMN IF NOT EXISTS share_id TEXT;
@@ -720,12 +769,14 @@ def get_shared_analysis(share_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Internal error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 @app.get("/api/usage/{user_id}")
 def get_usage(user_id: str):
     """Retourne l'usage quotidien et le statut Pro d'un utilisateur."""
+    user_id = _safe_id(user_id)
     is_pro = _is_user_pro(user_id)
     used = _get_today_analysis_count(user_id)
     return {
@@ -733,6 +784,57 @@ def get_usage(user_id: str):
         "limit": FREE_DAILY_LIMIT,
         "is_pro": is_pro,
     }
+
+
+@app.get("/api/user/pro-status/{user_id}")
+def get_pro_status(user_id: str):
+    """Retourne le statut Pro vérifié côté serveur via Supabase."""
+    user_id = _safe_id(user_id)
+    is_pro = _is_user_pro(user_id)
+    return {"is_pro": is_pro}
+
+
+@app.get("/api/stripe/verify-session")
+async def verify_stripe_session(session_id: str):
+    """Vérifie une session Stripe Checkout et active le Pro si valide."""
+    if not stripe.api_key or stripe.api_key == "sk_test_REMPLACE":
+        raise HTTPException(status_code=503, detail="Stripe non configuré")
+    if not session_id:
+        raise HTTPException(status_code=400, detail="session_id requis")
+
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+    except Exception as e:
+        logger.error(f"Stripe session error: {e}")
+        raise HTTPException(status_code=400, detail="Session de paiement invalide")
+
+    if session.payment_status != "paid":
+        raise HTTPException(status_code=402, detail="Paiement non confirmé")
+
+    user_id = session.metadata.get("userId", "")
+    plan = session.metadata.get("plan", "monthly")
+    subscription_id = session.subscription
+
+    if not user_id:
+        raise HTTPException(status_code=400, detail="userId manquant dans la session")
+
+    # Activate Pro in Supabase
+    from datetime import timedelta
+    pro_duration = timedelta(days=365) if plan == "yearly" else timedelta(days=31)
+    pro_until = (datetime.now(timezone.utc) + pro_duration).isoformat()
+
+    try:
+        _sb_patch("users", f"clerk_user_id=eq.{user_id}", {
+            "is_pro": True,
+            "pro_until": pro_until,
+            "stripe_subscription_id": subscription_id or "",
+        })
+        logger.info(f"[Stripe] Pro activé via verify-session, plan={plan}")
+    except Exception as e:
+        logger.error(f"[Stripe] Erreur activation Pro: {e}")
+        raise HTTPException(status_code=500, detail="Erreur activation Pro")
+
+    return {"is_pro": True, "user_id": user_id, "plan": plan}
 
 
 @app.post("/api/stripe/webhook")
@@ -752,6 +854,37 @@ async def stripe_webhook(request: Request):
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         user_id = session.get("metadata", {}).get("userId", "")
-        print(f"[Stripe] Paiement confirmé pour userId={user_id}")
+        plan = session.get("metadata", {}).get("plan", "monthly")
+        subscription_id = session.get("subscription", "")
+
+        if user_id:
+            from datetime import timedelta
+            pro_duration = timedelta(days=365) if plan == "yearly" else timedelta(days=31)
+            pro_until = (datetime.now(timezone.utc) + pro_duration).isoformat()
+            try:
+                _sb_patch("users", f"clerk_user_id=eq.{user_id}", {
+                    "is_pro": True,
+                    "pro_until": pro_until,
+                    "stripe_subscription_id": subscription_id or "",
+                })
+                logger.info(f"[Stripe Webhook] Pro activé, plan={plan}")
+            except Exception as e:
+                logger.error(f"[Stripe Webhook] Erreur activation Pro: {e}")
+
+    elif event["type"] == "customer.subscription.deleted":
+        subscription = event["data"]["object"]
+        sub_id = subscription.get("id", "")
+        if sub_id and _SUPA_URL and _SUPA_KEY:
+            try:
+                rows = _sb_get("users", f"stripe_subscription_id=eq.{sub_id}&select=clerk_user_id")
+                if rows:
+                    uid = rows[0]["clerk_user_id"]
+                    _sb_patch("users", f"clerk_user_id=eq.{uid}", {
+                        "is_pro": False,
+                        "stripe_subscription_id": "",
+                    })
+                    logger.info(f"[Stripe Webhook] Pro révoqué (sub revoked)")
+            except Exception as e:
+                logger.error(f"[Stripe Webhook] Erreur révocation Pro: {e}")
 
     return {"status": "ok"}

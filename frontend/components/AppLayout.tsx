@@ -4,6 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import { Bell } from "lucide-react";
 import Sidebar from "./Sidebar";
 import AnimatedBackground from "./AnimatedBackground";
+import { useProStatus } from "@/hooks/useProStatus";
 
 const BREADCRUMBS: Record<string, string> = {
   "/dashboard":    "Dashboard",
@@ -22,12 +23,7 @@ const BREADCRUMBS: Record<string, string> = {
 function TopHeader() {
   const pathname = usePathname();
   const { user } = useUser();
-
-  const isPro =
-    typeof window !== "undefined" && user
-      ? localStorage.getItem(`pro_${user.id}`) === "true" ||
-        localStorage.getItem("valuengine_pro") === "true"
-      : false;
+  const { isPro } = useProStatus(user?.id);
 
   const pageLabel = BREADCRUMBS[pathname] ?? BREADCRUMBS[Object.keys(BREADCRUMBS).find(k => pathname.startsWith(k)) ?? ""] ?? "App";
 
