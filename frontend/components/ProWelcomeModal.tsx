@@ -207,19 +207,3 @@ export default function ProWelcomeModal({ show, onClose }: ProWelcomeModalProps)
   if (!mounted || !show) return null;
   return createPortal(<ModalContent onClose={onClose} />, document.body);
 }
-
-/** Check if the Pro welcome modal should be shown. */
-export function shouldShowProWelcome(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    const seen = localStorage.getItem(WELCOME_SEEN_KEY);
-    if (seen) return false;
-    // Check if pro was just activated
-    const activated = localStorage.getItem("ve_pro_activated");
-    if (activated) {
-      const ts = parseInt(activated);
-      return Date.now() - ts < 60 * 60 * 1000; // within last hour
-    }
-  } catch {}
-  return false;
-}

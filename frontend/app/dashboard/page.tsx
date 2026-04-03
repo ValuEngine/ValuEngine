@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { ArrowRight, Plus, X, Loader2, ChevronRight } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
-import ProWelcomeModal, { shouldShowProWelcome } from "@/components/ProWelcomeModal";
+import ProWelcomeModal from "@/components/ProWelcomeModal";
+import { shouldShowProWelcome } from "@/hooks/useProStatus";
 import { warmupBackend } from "@/lib/api";
 
 interface RecentEntry {
