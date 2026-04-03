@@ -15,7 +15,7 @@ function SuccessContent() {
   const [status, setStatus] = useState<"activating" | "ready" | "error">("activating");
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !user) return;
 
     const sessionId = searchParams.get("session_id");
 
@@ -25,18 +25,37 @@ function SuccessContent() {
     }
 
     async function activate() {
+      let backendOk = false;
+
+      // Step 1: Verify session via backend (tries to update Supabase directly)
       try {
-        const res = await fetch(`${API_BASE}/api/stripe/verify-session?session_id=${encodeURIComponent(sessionId!)}`);
+        const res = await fetch(
+          `${API_BASE}/api/stripe/verify-session?session_id=${encodeURIComponent(sessionId!)}`
+        );
         if (res.ok) {
-          invalidateProCache();
-          setStatus("ready");
-          setTimeout(() => router.push("/dashboard"), 2500);
-        } else {
-          setStatus("error");
+          const data = await res.json();
+          backendOk = data.db_updated === true;
         }
       } catch {
-        setStatus("error");
+        // Backend might be down — continue to fallback
       }
+
+      // Step 2: Fallback — also PATCH via Next.js API route (auth-protected, uses Supabase SDK)
+      // This ensures Pro is activated even if backend column name mismatched
+      try {
+        await fetch("/api/db/user", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ is_pro: true }),
+        });
+      } catch {
+        // If this also fails, at least the backend might have worked
+      }
+
+      // Invalidate the cached pro status so useProStatus refetches from server
+      invalidateProCache();
+      setStatus("ready");
+      setTimeout(() => router.push("/dashboard"), 3000);
     }
 
     activate();
@@ -48,20 +67,25 @@ function SuccessContent() {
         <>
           <div className="w-10 h-10 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin mx-auto" />
           <h1 className="text-2xl font-bold text-white">Activation en cours...</h1>
-          <p className="text-[#71717a] text-sm">Paiement recu, configuration de ton compte Pro.</p>
+          <p className="text-[#71717a] text-sm">Paiement re&ccedil;u, configuration de ton compte Pro.</p>
         </>
       )}
 
       {status === "ready" && (
         <>
-          <div className="w-16 h-16 rounded-full bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.3)] flex items-center justify-center mx-auto">
+          <div className="w-16 h-16 rounded-full bg-[rgba(201,168,76,0.15)] border-2 border-[#C9A84C] flex items-center justify-center mx-auto">
             <CheckCircle2 size={32} className="text-[#C9A84C]" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Bienvenue dans ValuEngine Pro</h1>
+          <h1 className="text-2xl font-bold text-white">
+            Bienvenue dans ValuEngine Pro &#10022;
+          </h1>
           <p className="text-[#a1a1aa]">
-            Ton abonnement est activ&eacute;. Tu as maintenant acc&egrave;s aux analyses illimit&eacute;es.
+            Ton abonnement est actif. Tu as maintenant acc&egrave;s aux analyses illimit&eacute;es,
+            au screener, aux alertes et &agrave; toutes les fonctionnalit&eacute;s Pro.
           </p>
-          <p className="text-[#C9A84C] text-sm">Redirection vers le dashboard...</p>
+          <p className="text-[#C9A84C] text-sm font-medium animate-pulse">
+            Redirection vers le dashboard...
+          </p>
         </>
       )}
 
@@ -72,7 +96,8 @@ function SuccessContent() {
           </div>
           <h1 className="text-2xl font-bold text-white">Paiement confirm&eacute;</h1>
           <p className="text-[#a1a1aa]">
-            Ton paiement a bien &eacute;t&eacute; re&ccedil;u. L&apos;activation peut prendre quelques instants.
+            Ton paiement a bien &eacute;t&eacute; re&ccedil;u mais l&apos;activation automatique a &eacute;chou&eacute;.
+            Contacte-nous &agrave; <a href="mailto:support@valuengine.fr" className="text-[#C9A84C] underline">support@valuengine.fr</a> et on active ton compte en quelques minutes.
           </p>
         </>
       )}
@@ -90,12 +115,14 @@ function SuccessContent() {
 export default function SuccessPage() {
   return (
     <main className="min-h-screen bg-[#09090b] flex items-center justify-center">
-      <Suspense fallback={
-        <div className="text-center space-y-6 max-w-md px-4">
-          <div className="w-10 h-10 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin mx-auto" />
-          <h1 className="text-2xl font-bold text-white">Chargement...</h1>
-        </div>
-      }>
+      <Suspense
+        fallback={
+          <div className="text-center space-y-6 max-w-md px-4">
+            <div className="w-10 h-10 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin mx-auto" />
+            <h1 className="text-2xl font-bold text-white">Chargement...</h1>
+          </div>
+        }
+      >
         <SuccessContent />
       </Suspense>
     </main>

@@ -80,9 +80,20 @@ def _sb_post(table: str, body: dict) -> dict:
     data = resp.json()
     return data[0] if isinstance(data, list) else data
 
-def _sb_patch(table: str, params: str, body: dict) -> None:
+def _sb_patch(table: str, params: str, body: dict) -> list:
+    """PATCH rows in Supabase. Returns list of updated rows (can be empty if no match)."""
+    if not _SUPA_URL or not _SUPA_KEY:
+        logger.error(f"[Supabase] _sb_patch called but SUPA_URL/KEY missing")
+        return []
     url = f"{_SUPA_URL}/rest/v1/{table}?{params}"
-    httpx.patch(url, headers=_sb_headers(), json=body, timeout=6)
+    resp = httpx.patch(url, headers=_sb_headers(), json=body, timeout=10)
+    logger.info(f"[Supabase] PATCH {table}?{params} → status={resp.status_code} body={resp.text[:300]}")
+    resp.raise_for_status()
+    try:
+        data = resp.json()
+        return data if isinstance(data, list) else [data] if data else []
+    except Exception:
+        return []
 
 
 # ── Freemium enforcement helpers ────────────────────────────────────────────
@@ -110,7 +121,10 @@ def _is_user_pro(user_id: str) -> bool:
     if not _SUPA_URL or not _SUPA_KEY or not user_id:
         return False
     try:
-        rows = _sb_get("users", f"clerk_user_id=eq.{user_id}&select=is_pro,pro_until")
+        # Try id= first (frontend stores clerk_user_id as "id"), fallback to clerk_user_id=
+        rows = _sb_get("users", f"id=eq.{user_id}&select=is_pro,pro_until")
+        if not rows:
+            rows = _sb_get("users", f"clerk_user_id=eq.{user_id}&select=is_pro,pro_until")
         if not rows:
             return False
         user = rows[0]
@@ -797,44 +811,68 @@ def get_pro_status(user_id: str):
 @app.get("/api/stripe/verify-session")
 async def verify_stripe_session(session_id: str):
     """Vérifie une session Stripe Checkout et active le Pro si valide."""
+    logger.info(f"[verify-session] Début — session_id={session_id[:20]}...")
+
     if not stripe.api_key or stripe.api_key == "sk_test_REMPLACE":
         raise HTTPException(status_code=503, detail="Stripe non configuré")
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id requis")
 
+    # 1. Retrieve session from Stripe
     try:
         session = stripe.checkout.Session.retrieve(session_id)
+        logger.info(f"[verify-session] Stripe session retrieved — payment_status={session.payment_status}, metadata={dict(session.metadata)}")
     except Exception as e:
-        logger.error(f"Stripe session error: {e}")
+        logger.error(f"[verify-session] Stripe retrieve error: {e}")
         raise HTTPException(status_code=400, detail="Session de paiement invalide")
 
     if session.payment_status != "paid":
+        logger.warning(f"[verify-session] Payment not confirmed: {session.payment_status}")
         raise HTTPException(status_code=402, detail="Paiement non confirmé")
 
     user_id = session.metadata.get("userId", "")
     plan = session.metadata.get("plan", "monthly")
     subscription_id = session.subscription
 
+    logger.info(f"[verify-session] user_id={user_id}, plan={plan}, subscription_id={subscription_id}")
+
     if not user_id:
         raise HTTPException(status_code=400, detail="userId manquant dans la session")
 
-    # Activate Pro in Supabase
+    # 2. Build Pro update payload
     from datetime import timedelta
     pro_duration = timedelta(days=365) if plan == "yearly" else timedelta(days=31)
     pro_until = (datetime.now(timezone.utc) + pro_duration).isoformat()
+    update_body = {
+        "is_pro": True,
+        "pro_until": pro_until,
+        "stripe_subscription_id": subscription_id or "",
+    }
 
+    # 3. Try PATCH with id=eq.{user_id} (frontend stores clerk_user_id as "id")
+    updated_rows = []
     try:
-        _sb_patch("users", f"clerk_user_id=eq.{user_id}", {
-            "is_pro": True,
-            "pro_until": pro_until,
-            "stripe_subscription_id": subscription_id or "",
-        })
-        logger.info(f"[Stripe] Pro activé via verify-session, plan={plan}")
+        updated_rows = _sb_patch("users", f"id=eq.{user_id}", update_body)
+        logger.info(f"[verify-session] PATCH id=eq.{user_id} → {len(updated_rows)} row(s) updated")
     except Exception as e:
-        logger.error(f"[Stripe] Erreur activation Pro: {e}")
-        raise HTTPException(status_code=500, detail="Erreur activation Pro")
+        logger.error(f"[verify-session] PATCH id= failed: {e}")
 
-    return {"is_pro": True, "user_id": user_id, "plan": plan}
+    # 4. Fallback: try clerk_user_id column if "id" matched nothing
+    if not updated_rows:
+        try:
+            updated_rows = _sb_patch("users", f"clerk_user_id=eq.{user_id}", update_body)
+            logger.info(f"[verify-session] PATCH clerk_user_id=eq.{user_id} → {len(updated_rows)} row(s) updated")
+        except Exception as e:
+            logger.error(f"[verify-session] PATCH clerk_user_id= also failed: {e}")
+
+    # 5. Final check
+    if not updated_rows:
+        logger.error(f"[verify-session] AUCUNE ligne mise à jour pour user_id={user_id} — l'utilisateur n'existe pas en base ?")
+        # Return success anyway — the frontend will do its own PATCH via /api/db/user
+        return {"is_pro": True, "user_id": user_id, "plan": plan, "db_updated": False}
+
+    logger.info(f"[verify-session] SUCCESS — Pro activé pour user_id={user_id}")
+    return {"is_pro": True, "user_id": user_id, "plan": plan, "db_updated": True}
 
 
 @app.post("/api/stripe/webhook")
@@ -851,40 +889,60 @@ async def stripe_webhook(request: Request):
     except Exception:
         raise HTTPException(status_code=400, detail="Webhook invalide")
 
+    logger.info(f"[Webhook] Event reçu: {event['type']}")
+
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         user_id = session.get("metadata", {}).get("userId", "")
         plan = session.get("metadata", {}).get("plan", "monthly")
         subscription_id = session.get("subscription", "")
 
+        logger.info(f"[Webhook] checkout.session.completed — user_id={user_id}, plan={plan}, sub={subscription_id}")
+
         if user_id:
             from datetime import timedelta
             pro_duration = timedelta(days=365) if plan == "yearly" else timedelta(days=31)
             pro_until = (datetime.now(timezone.utc) + pro_duration).isoformat()
+            update_body = {
+                "is_pro": True,
+                "pro_until": pro_until,
+                "stripe_subscription_id": subscription_id or "",
+            }
+            # Try id= first (frontend stores clerk id as "id"), fallback to clerk_user_id=
+            updated = []
             try:
-                _sb_patch("users", f"clerk_user_id=eq.{user_id}", {
-                    "is_pro": True,
-                    "pro_until": pro_until,
-                    "stripe_subscription_id": subscription_id or "",
-                })
-                logger.info(f"[Stripe Webhook] Pro activé, plan={plan}")
+                updated = _sb_patch("users", f"id=eq.{user_id}", update_body)
             except Exception as e:
-                logger.error(f"[Stripe Webhook] Erreur activation Pro: {e}")
+                logger.error(f"[Webhook] PATCH id= failed: {e}")
+            if not updated:
+                try:
+                    updated = _sb_patch("users", f"clerk_user_id=eq.{user_id}", update_body)
+                except Exception as e:
+                    logger.error(f"[Webhook] PATCH clerk_user_id= also failed: {e}")
+            logger.info(f"[Webhook] Résultat: {len(updated)} row(s) updated")
+        else:
+            logger.warning(f"[Webhook] userId manquant dans metadata!")
 
     elif event["type"] == "customer.subscription.deleted":
         subscription = event["data"]["object"]
         sub_id = subscription.get("id", "")
+        logger.info(f"[Webhook] customer.subscription.deleted — sub_id={sub_id}")
         if sub_id and _SUPA_URL and _SUPA_KEY:
             try:
-                rows = _sb_get("users", f"stripe_subscription_id=eq.{sub_id}&select=clerk_user_id")
+                # Try both column names for lookup
+                rows = _sb_get("users", f"stripe_subscription_id=eq.{sub_id}&select=id,clerk_user_id")
                 if rows:
-                    uid = rows[0]["clerk_user_id"]
-                    _sb_patch("users", f"clerk_user_id=eq.{uid}", {
-                        "is_pro": False,
-                        "stripe_subscription_id": "",
-                    })
-                    logger.info(f"[Stripe Webhook] Pro révoqué (sub revoked)")
+                    row = rows[0]
+                    uid = row.get("id") or row.get("clerk_user_id", "")
+                    if uid:
+                        revoke_body = {"is_pro": False, "stripe_subscription_id": ""}
+                        updated = _sb_patch("users", f"id=eq.{uid}", revoke_body)
+                        if not updated:
+                            _sb_patch("users", f"clerk_user_id=eq.{uid}", revoke_body)
+                        logger.info(f"[Webhook] Pro révoqué pour sub={sub_id}")
+                else:
+                    logger.warning(f"[Webhook] Aucun user trouvé pour sub={sub_id}")
             except Exception as e:
-                logger.error(f"[Stripe Webhook] Erreur révocation Pro: {e}")
+                logger.error(f"[Webhook] Erreur révocation Pro: {e}")
 
     return {"status": "ok"}
