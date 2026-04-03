@@ -8,7 +8,7 @@ import re
 import time
 import uuid
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote as url_quote
 from fastapi import FastAPI, HTTPException, Request
@@ -840,7 +840,6 @@ async def verify_stripe_session(session_id: str):
         raise HTTPException(status_code=400, detail="userId manquant dans la session")
 
     # 2. Build Pro update payload
-    from datetime import timedelta
     pro_duration = timedelta(days=365) if plan == "yearly" else timedelta(days=31)
     pro_until = (datetime.now(timezone.utc) + pro_duration).isoformat()
     update_body = {
@@ -877,72 +876,105 @@ async def verify_stripe_session(session_id: str):
 
 @app.post("/api/stripe/webhook")
 async def stripe_webhook(request: Request):
+    """
+    Webhook Stripe — TOUJOURS retourner 200 pour éviter les retries infinis.
+    Les erreurs sont loggées mais ne crashent jamais le handler.
+    """
+    import traceback
+
     payload = await request.body()
-    sig_header = request.headers.get("stripe-signature", "")
+    sig_header = request.headers.get("stripe-signature")
     webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 
+    # ── 1. Vérification de signature ────────────────────────────────────
     if not webhook_secret:
-        raise HTTPException(status_code=503, detail="Webhook secret non configuré")
+        logger.error("[Webhook] STRIPE_WEBHOOK_SECRET non configuré sur Railway")
+        return JSONResponse({"error": "Webhook secret missing"}, status_code=400)
 
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Webhook invalide")
+    except ValueError as e:
+        logger.error(f"[Webhook] Payload invalide: {e}")
+        return JSONResponse({"error": "Invalid payload"}, status_code=400)
+    except Exception as e:
+        logger.error(f"[Webhook] Signature invalide: {e}")
+        return JSONResponse({"error": "Invalid signature"}, status_code=400)
 
-    logger.info(f"[Webhook] Event reçu: {event['type']}")
+    # ── 2. Handler principal — try/except global → TOUJOURS 200 ─────────
+    try:
+        event_type = event.get("type", "unknown")
+        logger.info(f"[Webhook] Event reçu: {event_type}")
 
-    if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
-        user_id = session.get("metadata", {}).get("userId", "")
-        plan = session.get("metadata", {}).get("plan", "monthly")
-        subscription_id = session.get("subscription", "")
+        if event_type == "checkout.session.completed":
+            session = event["data"]["object"]
+            metadata = session.get("metadata") or {}
 
-        logger.info(f"[Webhook] checkout.session.completed — user_id={user_id}, plan={plan}, sub={subscription_id}")
+            # Log la metadata complète pour debug
+            logger.info(f"[Webhook] Session metadata: {metadata}")
+            logger.info(f"[Webhook] Session subscription: {session.get('subscription')}")
 
-        if user_id:
-            from datetime import timedelta
+            user_id = metadata.get("userId", "")
+            plan = metadata.get("plan", "monthly")
+            subscription_id = session.get("subscription", "")
+
+            if not user_id:
+                logger.error("[Webhook] ERREUR: userId ABSENT dans session.metadata")
+                logger.error(f"[Webhook] metadata complète = {metadata}")
+                return {"status": "ok"}
+
             pro_duration = timedelta(days=365) if plan == "yearly" else timedelta(days=31)
             pro_until = (datetime.now(timezone.utc) + pro_duration).isoformat()
             update_body = {
                 "is_pro": True,
                 "pro_until": pro_until,
-                "stripe_subscription_id": subscription_id or "",
+                "stripe_subscription_id": str(subscription_id or ""),
             }
-            # Try id= first (frontend stores clerk id as "id"), fallback to clerk_user_id=
+
+            # Essai 1 : id = clerk_user_id (schéma frontend)
             updated = []
             try:
                 updated = _sb_patch("users", f"id=eq.{user_id}", update_body)
+                logger.info(f"[Webhook] PATCH id=eq.{user_id} → {len(updated)} row(s)")
             except Exception as e:
-                logger.error(f"[Webhook] PATCH id= failed: {e}")
+                logger.error(f"[Webhook] PATCH id= erreur: {e}")
+
+            # Essai 2 : clerk_user_id column (schéma alternatif)
             if not updated:
                 try:
                     updated = _sb_patch("users", f"clerk_user_id=eq.{user_id}", update_body)
+                    logger.info(f"[Webhook] PATCH clerk_user_id= → {len(updated)} row(s)")
                 except Exception as e:
-                    logger.error(f"[Webhook] PATCH clerk_user_id= also failed: {e}")
-            logger.info(f"[Webhook] Résultat: {len(updated)} row(s) updated")
+                    logger.error(f"[Webhook] PATCH clerk_user_id= erreur: {e}")
+
+            if updated:
+                logger.info(f"[Webhook] SUCCESS — Pro activé, plan={plan}")
+            else:
+                logger.error(f"[Webhook] ECHEC — 0 rows updated pour user_id={user_id}")
+
+        elif event_type == "customer.subscription.deleted":
+            sub_id = event["data"]["object"].get("id", "")
+            logger.info(f"[Webhook] subscription.deleted — sub_id={sub_id}")
+
+            if sub_id and _SUPA_URL and _SUPA_KEY:
+                try:
+                    rows = _sb_get("users", f"stripe_subscription_id=eq.{sub_id}&select=id")
+                    if rows:
+                        uid = rows[0].get("id", "")
+                        if uid:
+                            _sb_patch("users", f"id=eq.{uid}", {"is_pro": False, "stripe_subscription_id": ""})
+                            logger.info(f"[Webhook] Pro révoqué pour sub={sub_id}")
+                    else:
+                        logger.warning(f"[Webhook] Aucun user trouvé pour sub={sub_id}")
+                except Exception as e:
+                    logger.error(f"[Webhook] Erreur révocation: {e}")
+
         else:
-            logger.warning(f"[Webhook] userId manquant dans metadata!")
+            logger.info(f"[Webhook] Event ignoré: {event_type}")
 
-    elif event["type"] == "customer.subscription.deleted":
-        subscription = event["data"]["object"]
-        sub_id = subscription.get("id", "")
-        logger.info(f"[Webhook] customer.subscription.deleted — sub_id={sub_id}")
-        if sub_id and _SUPA_URL and _SUPA_KEY:
-            try:
-                # Try both column names for lookup
-                rows = _sb_get("users", f"stripe_subscription_id=eq.{sub_id}&select=id,clerk_user_id")
-                if rows:
-                    row = rows[0]
-                    uid = row.get("id") or row.get("clerk_user_id", "")
-                    if uid:
-                        revoke_body = {"is_pro": False, "stripe_subscription_id": ""}
-                        updated = _sb_patch("users", f"id=eq.{uid}", revoke_body)
-                        if not updated:
-                            _sb_patch("users", f"clerk_user_id=eq.{uid}", revoke_body)
-                        logger.info(f"[Webhook] Pro révoqué pour sub={sub_id}")
-                else:
-                    logger.warning(f"[Webhook] Aucun user trouvé pour sub={sub_id}")
-            except Exception as e:
-                logger.error(f"[Webhook] Erreur révocation Pro: {e}")
+    except Exception as e:
+        # Catch-all : log TOUT mais retourne 200 quand même
+        logger.error(f"[Webhook] ERREUR CRITIQUE NON GÉRÉE: {e}")
+        logger.error(traceback.format_exc())
 
+    # TOUJOURS retourner 200 — Stripe arrête les retries
     return {"status": "ok"}
