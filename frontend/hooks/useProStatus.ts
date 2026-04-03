@@ -10,11 +10,18 @@ function _notify() {
   _listeners.forEach((fn) => fn());
 }
 
+function _setGlobal(value: boolean) {
+  if (_globalIsPro !== value) {
+    _globalIsPro = value;
+    _notify();
+  }
+}
+
 // ── Public API ─────────────────────────────────────────────────────────
 
 /**
  * Called by success page after payment.
- * Sets optimistic Pro flag + updates ALL mounted components instantly.
+ * Immediately updates all mounted components + sets localStorage flag.
  */
 export function activateProNow(): void {
   _globalIsPro = true;
@@ -27,7 +34,8 @@ export function activateProNow(): void {
 
 /**
  * Hook pour vérifier le statut Pro.
- * useSyncExternalStore → pas de bug SSR, état partagé entre tous les composants.
+ * 1. Lit localStorage au montage → réponse instantanée
+ * 2. Vérifie avec le serveur (GET /api/db/user) → confirmation
  */
 export function useProStatus(userId?: string): { isPro: boolean } {
   const isPro = useSyncExternalStore(
@@ -36,21 +44,64 @@ export function useProStatus(userId?: string): { isPro: boolean } {
       return () => { _listeners.delete(listener); };
     },
     () => _globalIsPro,
-    () => false // getServerSnapshot → toujours false, pas de hydration mismatch
+    () => false
   );
 
-  // Client-only : lit localStorage au montage pour les rechargements de page
+  // Client-only : lit localStorage au montage (instantané)
   useEffect(() => {
-    const flag = localStorage.getItem("ve_pro_activated");
-    const activatedAt = localStorage.getItem("ve_pro_activated_at");
-    const isRecent =
-      activatedAt && Date.now() - parseInt(activatedAt) < 24 * 60 * 60 * 1000;
-
-    if (flag === "true" && isRecent) {
-      _globalIsPro = true;
-      _notify();
-    }
+    try {
+      const flag = localStorage.getItem("ve_pro_activated");
+      const at = localStorage.getItem("ve_pro_activated_at");
+      const isRecent = at && (Date.now() - parseInt(at)) < 24 * 60 * 60 * 1000;
+      if (flag === "true" && isRecent) {
+        _setGlobal(true);
+      }
+    } catch {}
   }, []);
+
+  // Vérifie avec le serveur une fois que l'user est identifié
+  useEffect(() => {
+    if (!userId) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch("/api/db/user");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+
+        if (data && data.is_pro === true) {
+          _setGlobal(true);
+          // Persister le flag pour les prochains rechargements
+          try {
+            localStorage.setItem("ve_pro_activated", "true");
+            if (!localStorage.getItem("ve_pro_activated_at")) {
+              localStorage.setItem("ve_pro_activated_at", Date.now().toString());
+            }
+          } catch {}
+        } else if (data && data.is_pro === false) {
+          // Le serveur dit pas Pro — vérifier si le flag optimiste est encore valide
+          const at = localStorage.getItem("ve_pro_activated_at");
+          const isRecent = at && (Date.now() - parseInt(at)) < 5 * 60 * 1000; // 5 min de grâce
+          if (!isRecent) {
+            // Le flag a expiré et le serveur confirme pas Pro
+            _setGlobal(false);
+            try {
+              localStorage.removeItem("ve_pro_activated");
+              localStorage.removeItem("ve_pro_activated_at");
+            } catch {}
+          }
+          // Sinon on garde l'optimiste 5 min le temps que le PATCH se propage
+        }
+      } catch {
+        // Pas de connexion — on garde l'état localStorage
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [userId]);
 
   return { isPro };
 }
@@ -62,9 +113,8 @@ export function shouldShowProWelcome(): boolean {
     const seen = localStorage.getItem("ve_pro_welcome_seen");
     if (seen) return false;
     const flag = localStorage.getItem("ve_pro_activated");
-    const activatedAt = localStorage.getItem("ve_pro_activated_at");
-    const isRecent =
-      activatedAt && Date.now() - parseInt(activatedAt) < 60 * 60 * 1000;
+    const at = localStorage.getItem("ve_pro_activated_at");
+    const isRecent = at && (Date.now() - parseInt(at)) < 60 * 60 * 1000;
     return flag === "true" && !!isRecent;
   } catch {}
   return false;

@@ -13,49 +13,71 @@ function SuccessContent() {
   const searchParams = useSearchParams();
   const { user, isLoaded } = useUser();
   const [status, setStatus] = useState<"activating" | "ready" | "error">("activating");
+  const [debug, setDebug] = useState("");
 
   useEffect(() => {
     if (!isLoaded || !user) return;
 
     const sessionId = searchParams.get("session_id");
-
     if (!sessionId) {
       setStatus("error");
+      setDebug("session_id absent de l'URL");
       return;
     }
 
     async function activate() {
-      let backendOk = false;
+      const logs: string[] = [];
 
-      // Step 1: Verify session via backend (tries to update Supabase directly)
+      // ── Step 1: Verify Stripe session via backend ────────────────
       try {
+        logs.push("1. Appel verify-session...");
         const res = await fetch(
           `${API_BASE}/api/stripe/verify-session?session_id=${encodeURIComponent(sessionId!)}`
         );
-        if (res.ok) {
-          const data = await res.json();
-          backendOk = data.db_updated === true;
-        }
-      } catch {
-        // Backend might be down — continue to fallback
+        const text = await res.text();
+        logs.push(`   → ${res.status} ${text.slice(0, 200)}`);
+      } catch (e) {
+        logs.push(`   → ERREUR: ${e}`);
       }
 
-      // Step 2: Fallback — also PATCH via Next.js API route (auth-protected, uses Supabase SDK)
-      // This ensures Pro is activated even if backend column name mismatched
+      // ── Step 2: PATCH via Next.js route (Supabase SDK direct) ────
+      let patchOk = false;
       try {
-        await fetch("/api/db/user", {
+        logs.push("2. PATCH /api/db/user {is_pro: true}...");
+        const res = await fetch("/api/db/user", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ is_pro: true }),
         });
-      } catch {
-        // If this also fails, at least the backend might have worked
+        const data = await res.json();
+        patchOk = res.ok;
+        logs.push(`   → ${res.status} ${JSON.stringify(data).slice(0, 200)}`);
+      } catch (e) {
+        logs.push(`   → ERREUR: ${e}`);
       }
 
-      // Set optimistic Pro flag — badge appears instantly everywhere
+      // ── Step 3: Verify the update worked ─────────────────────────
+      try {
+        logs.push("3. GET /api/db/user (vérification)...");
+        const res = await fetch("/api/db/user");
+        const data = await res.json();
+        logs.push(`   → is_pro=${data?.is_pro}, id=${data?.id?.slice(0, 10)}...`);
+        if (data?.is_pro === true) {
+          logs.push("   ✓ CONFIRMÉ: is_pro=true en base");
+        } else {
+          logs.push("   ✗ PROBLÈME: is_pro n'est PAS true en base");
+        }
+      } catch (e) {
+        logs.push(`   → ERREUR: ${e}`);
+      }
+
+      // ── Step 4: Set optimistic flag ──────────────────────────────
       activateProNow();
+      logs.push("4. activateProNow() appelé");
+
+      setDebug(logs.join("\n"));
       setStatus("ready");
-      setTimeout(() => router.push("/dashboard"), 3000);
+      setTimeout(() => router.push("/dashboard"), 3500);
     }
 
     activate();
@@ -80,8 +102,7 @@ function SuccessContent() {
             Bienvenue dans ValuEngine Pro &#10022;
           </h1>
           <p className="text-[#a1a1aa]">
-            Ton abonnement est actif. Tu as maintenant acc&egrave;s aux analyses illimit&eacute;es,
-            au screener, aux alertes et &agrave; toutes les fonctionnalit&eacute;s Pro.
+            Ton abonnement est actif. Tu as maintenant acc&egrave;s aux analyses illimit&eacute;es.
           </p>
           <p className="text-[#C9A84C] text-sm font-medium animate-pulse">
             Redirection vers le dashboard...
@@ -96,10 +117,16 @@ function SuccessContent() {
           </div>
           <h1 className="text-2xl font-bold text-white">Paiement confirm&eacute;</h1>
           <p className="text-[#a1a1aa]">
-            Ton paiement a bien &eacute;t&eacute; re&ccedil;u mais l&apos;activation automatique a &eacute;chou&eacute;.
-            Contacte-nous &agrave; <a href="mailto:support@valuengine.fr" className="text-[#C9A84C] underline">support@valuengine.fr</a> et on active ton compte en quelques minutes.
+            Contacte-nous &agrave; <a href="mailto:support@valuengine.fr" className="text-[#C9A84C] underline">support@valuengine.fr</a>.
           </p>
         </>
+      )}
+
+      {/* Debug log — visible temporairement pour diagnostic */}
+      {debug && (
+        <pre className="mt-6 p-3 bg-zinc-900 border border-zinc-800 rounded-lg text-[10px] text-zinc-400 text-left overflow-auto max-h-48 whitespace-pre-wrap">
+          {debug}
+        </pre>
       )}
 
       <button
