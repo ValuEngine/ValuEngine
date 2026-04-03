@@ -175,7 +175,8 @@ export default function Sidebar() {
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold truncate text-[#e4e4e7]">{firstName}</p>
               {isPro && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[rgba(201,168,76,0.15)] text-[#C9A84C] border border-[rgba(201,168,76,0.25)]">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-[rgba(201,168,76,0.25)] to-[rgba(201,168,76,0.1)] text-[#C9A84C] border border-[rgba(201,168,76,0.35)]">
+                  <span className="w-1 h-1 rounded-full bg-[#C9A84C]" />
                   PRO
                 </span>
               )}

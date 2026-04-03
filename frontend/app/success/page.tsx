@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { CheckCircle2 } from "lucide-react";
-import { invalidateProCache } from "@/hooks/useProStatus";
+import { activateProNow } from "@/hooks/useProStatus";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -52,8 +52,8 @@ function SuccessContent() {
         // If this also fails, at least the backend might have worked
       }
 
-      // Invalidate the cached pro status so useProStatus refetches from server
-      invalidateProCache();
+      // Set optimistic Pro flag — badge appears instantly everywhere
+      activateProNow();
       setStatus("ready");
       setTimeout(() => router.push("/dashboard"), 3000);
     }

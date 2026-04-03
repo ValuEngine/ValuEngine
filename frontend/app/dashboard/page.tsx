@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { ArrowRight, Plus, X, Loader2, ChevronRight } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
+import ProWelcomeModal, { shouldShowProWelcome } from "@/components/ProWelcomeModal";
 import { warmupBackend } from "@/lib/api";
 
 interface RecentEntry {
@@ -59,9 +60,19 @@ export default function DashboardPage() {
   const [marketLoading, setMarketLoading] = useState(true);
   const [onboardingStep, setOnboardingStep] = useState(0); // 0 = hidden
   const [onboardingTicker, setOnboardingTicker] = useState("");
+  const [showProWelcome, setShowProWelcome] = useState(false);
 
   // Warmup backend Railway dès l'arrivée sur le dashboard
   useEffect(() => { warmupBackend(); }, []);
+
+  // Show Pro welcome modal if user just activated Pro
+  useEffect(() => {
+    if (isLoaded && isSignedIn && shouldShowProWelcome()) {
+      // Small delay so the dashboard renders first
+      const t = setTimeout(() => setShowProWelcome(true), 500);
+      return () => clearTimeout(t);
+    }
+  }, [isLoaded, isSignedIn]);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -469,6 +480,9 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Pro Welcome Modal */}
+      <ProWelcomeModal show={showProWelcome} onClose={() => setShowProWelcome(false)} />
 
     </AppLayout>
   );

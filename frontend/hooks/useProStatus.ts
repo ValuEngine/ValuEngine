@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 const CACHE_PREFIX = "ve_pro_";
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const ACTIVATED_KEY = "ve_pro_activated"; // optimistic flag set by success page
 
 interface CachedPro {
   isPro: boolean;
@@ -13,16 +14,33 @@ interface CachedPro {
 
 /**
  * Hook serveur-side pour vérifier le statut Pro.
- * Interroge GET /api/user/pro-status/:userId avec cache 5 min par utilisateur.
+ * Supporte l'activation optimiste : si activateProNow() a été appelé,
+ * le hook retourne isPro=true immédiatement sans attendre le serveur.
  */
 export function useProStatus(userId: string | undefined): { isPro: boolean; loading: boolean } {
-  const [isPro, setIsPro] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [isPro, setIsPro] = useState(() => {
+    // Optimistic: check if just activated (set by success page)
+    if (typeof window === "undefined") return false;
+    try {
+      const activated = localStorage.getItem(ACTIVATED_KEY);
+      if (activated) {
+        const ts = parseInt(activated);
+        // Valid for 1 hour — enough time for server to catch up
+        if (Date.now() - ts < 60 * 60 * 1000) return true;
+        localStorage.removeItem(ACTIVATED_KEY);
+      }
+    } catch {}
+    return false;
+  });
+  const [loading, setLoading] = useState(!isPro); // skip loading if optimistic
 
   useEffect(() => {
     if (!userId) {
-      setIsPro(false);
-      setLoading(false);
+      // Don't override optimistic true if no userId yet (clerk still loading)
+      if (!isPro) {
+        setIsPro(false);
+        setLoading(false);
+      }
       return;
     }
 
@@ -36,7 +54,12 @@ export function useProStatus(userId: string | undefined): { isPro: boolean; load
         if (Date.now() - cached.ts < CACHE_TTL) {
           setIsPro(cached.isPro);
           setLoading(false);
-          return;
+          // If cache says false but optimistic says true, keep true and refetch
+          if (!cached.isPro && isPro) {
+            // Don't return — fall through to server check
+          } else {
+            return;
+          }
         }
       }
     } catch {
@@ -51,16 +74,22 @@ export function useProStatus(userId: string | undefined): { isPro: boolean; load
         if (!res.ok) throw new Error("fetch failed");
         const data = await res.json();
         if (!cancelled) {
-          setIsPro(!!data.is_pro);
+          const serverPro = !!data.is_pro;
+          setIsPro(serverPro);
           setLoading(false);
           localStorage.setItem(cacheKey, JSON.stringify({
-            isPro: !!data.is_pro,
+            isPro: serverPro,
             ts: Date.now(),
           }));
+          // If server confirms pro, we can remove the optimistic flag
+          if (serverPro) {
+            localStorage.removeItem(ACTIVATED_KEY);
+          }
         }
       } catch {
         if (!cancelled) {
-          setIsPro(false);
+          // On error, keep optimistic value if set
+          if (!isPro) setIsPro(false);
           setLoading(false);
         }
       }
@@ -72,12 +101,35 @@ export function useProStatus(userId: string | undefined): { isPro: boolean; load
   return { isPro, loading };
 }
 
-/** Force-refresh the pro status cache (call after payment success). */
+/**
+ * Called by success page after payment confirmation.
+ * Sets an optimistic flag so the badge shows immediately everywhere.
+ */
+export function activateProNow(): void {
+  try {
+    localStorage.setItem(ACTIVATED_KEY, Date.now().toString());
+    // Also clear any cached "false" values
+    const keys = Object.keys(localStorage).filter(k => k.startsWith(CACHE_PREFIX));
+    keys.forEach(k => localStorage.removeItem(k));
+  } catch {}
+}
+
+/** Force-refresh the pro status cache. */
 export function invalidateProCache(): void {
   try {
     const keys = Object.keys(localStorage).filter(k => k.startsWith(CACHE_PREFIX));
     keys.forEach(k => localStorage.removeItem(k));
-  } catch {
-    // ignore
-  }
+  } catch {}
+}
+
+/** Check if Pro was just activated (for showing welcome modal). */
+export function wasProJustActivated(): boolean {
+  try {
+    const activated = localStorage.getItem(ACTIVATED_KEY);
+    if (activated) {
+      const ts = parseInt(activated);
+      return Date.now() - ts < 60 * 60 * 1000;
+    }
+  } catch {}
+  return false;
 }

@@ -40,8 +40,9 @@ function TopHeader() {
       <div className="flex items-center gap-2 sm:gap-3">
         {/* Usage badge */}
         {isPro ? (
-          <span className="hidden md:flex text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(201,168,76,0.12)] text-[#C9A84C] border border-[rgba(201,168,76,0.25)]">
-            PRO ∞
+          <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-[rgba(201,168,76,0.2)] to-[rgba(201,168,76,0.08)] text-[#C9A84C] border border-[rgba(201,168,76,0.35)] shadow-[0_0_12px_rgba(201,168,76,0.15)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#C9A84C] animate-pulse" />
+            PRO
           </span>
         ) : (
           <span className="hidden md:flex text-xs font-medium px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300">
