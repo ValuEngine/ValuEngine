@@ -1,46 +1,74 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 const CACHE_PREFIX = "ve_pro_";
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-const ACTIVATED_KEY = "ve_pro_activated"; // optimistic flag set by success page
+const ACTIVATED_KEY = "ve_pro_activated";
 
-interface CachedPro {
-  isPro: boolean;
-  ts: number;
+// ── Global in-memory store (survives across components, not SSR) ──────
+let _globalIsPro = false;
+let _listeners: Array<() => void> = [];
+
+function _notify() {
+  _listeners.forEach((l) => l());
+}
+
+function _subscribe(listener: () => void) {
+  _listeners.push(listener);
+  return () => {
+    _listeners = _listeners.filter((l) => l !== listener);
+  };
+}
+
+function _getSnapshot() {
+  return _globalIsPro;
+}
+
+function _getServerSnapshot() {
+  return false;
+}
+
+function _setGlobalPro(value: boolean) {
+  if (_globalIsPro !== value) {
+    _globalIsPro = value;
+    _notify();
+  }
 }
 
 /**
- * Hook serveur-side pour vérifier le statut Pro.
- * Supporte l'activation optimiste : si activateProNow() a été appelé,
- * le hook retourne isPro=true immédiatement sans attendre le serveur.
+ * Hook pour vérifier le statut Pro.
+ * Utilise useSyncExternalStore pour un état global partagé entre tous les composants.
+ * Supporte l'activation optimiste via activateProNow().
  */
-export function useProStatus(userId: string | undefined): { isPro: boolean; loading: boolean } {
-  const [isPro, setIsPro] = useState(() => {
-    // Optimistic: check if just activated (set by success page)
-    if (typeof window === "undefined") return false;
+export function useProStatus(userId: string | undefined): {
+  isPro: boolean;
+  loading: boolean;
+} {
+  const isPro = useSyncExternalStore(_subscribe, _getSnapshot, _getServerSnapshot);
+  const [loading, setLoading] = useState(true);
+
+  // On mount (client only): check optimistic activation flag
+  useEffect(() => {
     try {
       const activated = localStorage.getItem(ACTIVATED_KEY);
       if (activated) {
         const ts = parseInt(activated);
-        // Valid for 1 hour — enough time for server to catch up
-        if (Date.now() - ts < 60 * 60 * 1000) return true;
-        localStorage.removeItem(ACTIVATED_KEY);
+        if (Date.now() - ts < 60 * 60 * 1000) {
+          _setGlobalPro(true);
+          setLoading(false);
+        } else {
+          localStorage.removeItem(ACTIVATED_KEY);
+        }
       }
     } catch {}
-    return false;
-  });
-  const [loading, setLoading] = useState(!isPro); // skip loading if optimistic
+  }, []);
 
+  // Fetch from server when userId is available
   useEffect(() => {
     if (!userId) {
-      // Don't override optimistic true if no userId yet (clerk still loading)
-      if (!isPro) {
-        setIsPro(false);
-        setLoading(false);
-      }
+      setLoading(false);
       return;
     }
 
@@ -50,80 +78,89 @@ export function useProStatus(userId: string | undefined): { isPro: boolean; load
     try {
       const raw = localStorage.getItem(cacheKey);
       if (raw) {
-        const cached: CachedPro = JSON.parse(raw);
+        const cached = JSON.parse(raw);
         if (Date.now() - cached.ts < CACHE_TTL) {
-          setIsPro(cached.isPro);
-          setLoading(false);
-          // If cache says false but optimistic says true, keep true and refetch
-          if (!cached.isPro && isPro) {
-            // Don't return — fall through to server check
+          if (cached.isPro) _setGlobalPro(true);
+          // If cache says false but optimistic flag is set, don't override — just refetch
+          if (!cached.isPro && _globalIsPro) {
+            // Fall through to server fetch
           } else {
+            setLoading(false);
             return;
           }
         }
       }
-    } catch {
-      // ignore parse errors
-    }
+    } catch {}
 
     // Fetch from server
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/user/pro-status/${encodeURIComponent(userId)}`);
+        const res = await fetch(
+          `${API_BASE}/api/user/pro-status/${encodeURIComponent(userId)}`
+        );
         if (!res.ok) throw new Error("fetch failed");
         const data = await res.json();
         if (!cancelled) {
           const serverPro = !!data.is_pro;
-          setIsPro(serverPro);
-          setLoading(false);
-          localStorage.setItem(cacheKey, JSON.stringify({
-            isPro: serverPro,
-            ts: Date.now(),
-          }));
-          // If server confirms pro, we can remove the optimistic flag
+          // If server says pro, update global. If server says false but optimistic is set, keep optimistic.
           if (serverPro) {
+            _setGlobalPro(true);
             localStorage.removeItem(ACTIVATED_KEY);
           }
+          // Only set to false if there's no optimistic flag
+          if (!serverPro && !localStorage.getItem(ACTIVATED_KEY)) {
+            _setGlobalPro(false);
+          }
+          setLoading(false);
+          localStorage.setItem(
+            cacheKey,
+            JSON.stringify({ isPro: serverPro, ts: Date.now() })
+          );
         }
       } catch {
-        if (!cancelled) {
-          // On error, keep optimistic value if set
-          if (!isPro) setIsPro(false);
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
   return { isPro, loading };
 }
 
 /**
- * Called by success page after payment confirmation.
- * Sets an optimistic flag so the badge shows immediately everywhere.
+ * Called by success page after payment. Sets optimistic Pro flag
+ * and immediately updates all mounted components.
  */
 export function activateProNow(): void {
   try {
     localStorage.setItem(ACTIVATED_KEY, Date.now().toString());
-    // Also clear any cached "false" values
-    const keys = Object.keys(localStorage).filter(k => k.startsWith(CACHE_PREFIX));
-    keys.forEach(k => localStorage.removeItem(k));
+    // Clear stale caches
+    const keys = Object.keys(localStorage).filter((k) =>
+      k.startsWith(CACHE_PREFIX)
+    );
+    keys.forEach((k) => localStorage.removeItem(k));
   } catch {}
+  // Immediately update all components using the hook
+  _setGlobalPro(true);
 }
 
 /** Force-refresh the pro status cache. */
 export function invalidateProCache(): void {
   try {
-    const keys = Object.keys(localStorage).filter(k => k.startsWith(CACHE_PREFIX));
-    keys.forEach(k => localStorage.removeItem(k));
+    const keys = Object.keys(localStorage).filter((k) =>
+      k.startsWith(CACHE_PREFIX)
+    );
+    keys.forEach((k) => localStorage.removeItem(k));
   } catch {}
 }
 
 /** Check if Pro was just activated (for showing welcome modal). */
 export function wasProJustActivated(): boolean {
+  if (typeof window === "undefined") return false;
   try {
     const activated = localStorage.getItem(ACTIVATED_KEY);
     if (activated) {
