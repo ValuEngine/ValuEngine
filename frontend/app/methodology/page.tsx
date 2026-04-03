@@ -184,7 +184,7 @@ export default function MethodologyPage() {
               données publiques et des modèles statistiques. Elles ne constituent en aucun
               cas une recommandation d&apos;achat, de vente ou de détention de titres financiers.
               Tout investissement comporte des risques, y compris la perte partielle ou totale du capital
-              investi. Consultez un conseiller financier agréé avant toute décision
+              investi. Consulte un conseiller financier agréé avant toute décision
               d&apos;investissement.
             </p>
           </div>

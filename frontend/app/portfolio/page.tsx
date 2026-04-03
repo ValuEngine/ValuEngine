@@ -64,7 +64,7 @@ export default function PortfolioPage() {
     const avgPrice = parseFloat(newAvgPrice);
 
     if (!ticker || isNaN(shares) || shares <= 0 || isNaN(avgPrice) || avgPrice <= 0) {
-      setModalError("Veuillez remplir tous les champs correctement.");
+      setModalError("Remplis tous les champs correctement.");
       return;
     }
 
@@ -142,7 +142,7 @@ export default function PortfolioPage() {
                       <th className="px-5 py-4 text-right text-xs font-bold uppercase tracking-[2px] text-[#4a6070]">Prix achat</th>
                       <th className="px-5 py-4 text-right text-xs font-bold uppercase tracking-[2px] text-[#4a6070]">Prix actuel</th>
                       <th className="px-5 py-4 text-right text-xs font-bold uppercase tracking-[2px] text-[#4a6070]">Valeur</th>
-                      <th className="px-5 py-4 text-right text-xs font-bold uppercase tracking-[2px] text-[#4a6070]">P&amp;L €</th>
+                      <th className="px-5 py-4 text-right text-xs font-bold uppercase tracking-[2px] text-[#4a6070]">P&amp;L $</th>
                       <th className="px-5 py-4 text-right text-xs font-bold uppercase tracking-[2px] text-[#4a6070]">P&amp;L %</th>
                       <th className="px-5 py-4"></th>
                     </tr>
@@ -169,7 +169,7 @@ export default function PortfolioPage() {
                           </td>
                           <td className="px-5 py-4 text-right text-white font-bold text-sm">${value.toFixed(2)}</td>
                           <td className={`px-5 py-4 text-right font-bold text-sm ${pnlClass}`}>
-                            {pnl >= 0 ? "+" : ""}{pnl.toFixed(2)}€
+                            {pnl >= 0 ? "+" : ""}{pnl.toFixed(2)}$
                           </td>
                           <td className={`px-5 py-4 text-right font-bold text-sm ${pnlClass}`}>
                             {pnlPct >= 0 ? "+" : ""}{pnlPct.toFixed(2)}%
@@ -199,7 +199,7 @@ export default function PortfolioPage() {
               <div>
                 <p className="text-xs text-[#4a6070] mb-1 uppercase tracking-wider">P&amp;L total</p>
                 <p className={`text-2xl font-black ${totalPnl >= 0 ? "text-[#00d4aa]" : "text-[#ff4d6d]"}`}>
-                  {totalPnl >= 0 ? "+" : ""}{totalPnl.toFixed(2)}€
+                  {totalPnl >= 0 ? "+" : ""}{totalPnl.toFixed(2)}$
                 </p>
               </div>
               <div>

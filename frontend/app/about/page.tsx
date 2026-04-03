@@ -38,7 +38,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* L'equipe */}
+        {/* Fondateur */}
         <section className="mb-10">
           <h2 className="text-xs font-bold uppercase tracking-widest text-[#C9A84C] mb-4">
             Fondateur
@@ -81,7 +81,7 @@ export default function AboutPage() {
             <div className="rounded-xl bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] p-6">
               <h3 className="text-white font-semibold mb-2">Transparence</h3>
               <p className="text-zinc-400 text-sm leading-relaxed">
-                On publie notre Track Record pour que tu puisses juger nos analyses.
+                On publie notre <Link href="/track-record" className="text-[#C9A84C] hover:underline">Track Record</Link> pour que tu puisses juger nos analyses.
               </p>
             </div>
             <div className="rounded-xl bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] p-6">

@@ -702,7 +702,7 @@ function AnalyzePage() {
             <span>
               Outil éducatif uniquement — pas un conseil en investissement.
               Les analyses DCF sont des estimations mathématiques.
-              Consultez un professionnel avant toute décision financière.
+              Consulte un professionnel avant toute décision financière.
             </span>
           </div>
 
@@ -740,7 +740,7 @@ function AnalyzePage() {
               <div className="w-16 h-16 rounded-2xl bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.18)] flex items-center justify-center mb-6">
                 <Search size={24} className="text-[#C9A84C]" />
               </div>
-              <h2 className="text-xl font-bold mb-2">Entrez un ticker pour commencer</h2>
+              <h2 className="text-xl font-bold mb-2">Entre un ticker pour commencer</h2>
               <p className="text-zinc-400 text-sm max-w-xs">
                 Exemples :{" "}
                 {["AAPL", "MC.PA", "TSLA", "TTE.PA", "NVDA"].map((t, i) => (

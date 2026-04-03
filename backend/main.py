@@ -23,10 +23,11 @@ from services.ai_analyst import get_bull_bear_analysis, get_swot_analysis, get_p
 load_dotenv(Path(__file__).parent / ".env", override=True)
 
 FMP_KEY = os.environ.get("FMP_API_KEY", "")
+USE_FMP = bool(FMP_KEY and FMP_KEY.strip())
 # yfinance is the primary data source (free, unlimited, full financial statements)
 # FMP free plan only supports /quote and /profile — not financial statements
 from services.market_data import get_company_data as _get_data, get_peers_data
-print("[DataSource] yfinance ✓")
+print(f"[DataSource] yfinance ✓ | FMP={'enabled' if USE_FMP else 'disabled'}")
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
 
@@ -120,7 +121,7 @@ app.add_middleware(
     ],
     allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -523,7 +524,10 @@ async def create_alert(req: Request):
     email         = body.get("email", "")
     ticker        = body.get("ticker", "").upper().strip()
     ticker_name   = body.get("ticker_name", ticker)
-    target_price  = float(body.get("target_price", 0))
+    try:
+        target_price = float(body.get("target_price", 0))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="target_price doit être un nombre valide")
     direction     = body.get("direction", "above")
 
     if not clerk_user_id or not ticker or target_price <= 0:
@@ -736,6 +740,9 @@ async def stripe_webhook(request: Request):
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature", "")
     webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+
+    if not webhook_secret:
+        raise HTTPException(status_code=503, detail="Webhook secret non configuré")
 
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)

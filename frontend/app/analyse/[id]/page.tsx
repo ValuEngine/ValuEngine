@@ -20,7 +20,7 @@ function ShareButtons({
   const [copied, setCopied] = useState(false);
 
   const verdictLabels: Record<string, string> = {
-    BUY: "Sous-evalué",
+    BUY: "Sous-évalué",
     SELL: "Surévalué",
     HOLD: "Juste valeur",
   };
@@ -76,7 +76,7 @@ interface AnalysisData {
 function VerdictBadge({ verdict }: { verdict: string }) {
   const config: Record<string, { label: string; color: string; bg: string; border: string }> = {
     BUY: {
-      label: "Sous-evalué",
+      label: "Sous-évalué",
       color: "#10b981",
       bg: "rgba(16,185,129,0.10)",
       border: "rgba(16,185,129,0.25)",

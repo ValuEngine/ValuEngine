@@ -37,7 +37,7 @@ interface ScreenerResult {
 function verdictBadge(verdict: string) {
   if (verdict === "BUY") return (
     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-      <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />Sous-evalué
+      <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />Sous-évalué
     </span>
   );
   if (verdict === "SELL") return (
@@ -158,7 +158,7 @@ export default function ScreenerPage() {
                 className="bg-[#132032] border border-[rgba(201,168,76,0.2)] text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-all"
               >
                 <option value="all">Tous les verdicts</option>
-                <option value="BUY">Sous-evalué</option>
+                <option value="BUY">Sous-évalué</option>
                 <option value="HOLD">Juste valeur</option>
                 <option value="SELL">Surévalué</option>
               </select>

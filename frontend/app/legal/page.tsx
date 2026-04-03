@@ -39,7 +39,7 @@ export default function LegalPage() {
             et sont fournies à titre <strong className="text-white">indicatif uniquement</strong>. ValuEngine ne garantit
             ni leur exactitude, ni leur exhaustivité, ni leur actualité. Les analyses DCF reposent sur des hypothèses
             de croissance et de taux d&apos;actualisation qui peuvent s&apos;avérer inexactes. Les performances passées
-            ne préjugent pas des performances futures. L&apos;utilisateur est seul responsable de ses décisions
+            ne préjugent pas des performances futures. Tu es seul responsable de tes décisions
             financières. ValuEngine décline toute responsabilité en cas de perte ou de préjudice résultant
             de l&apos;utilisation de la plateforme.
           </p>
@@ -51,8 +51,8 @@ export default function LegalPage() {
             L&apos;authentification est assurée par <strong className="text-white">Clerk</strong> (clerk.com), qui gère de manière
             sécurisée les identifiants et sessions utilisateurs. Les données d&apos;utilisation (portefeuille, analyses,
             alertes) sont stockées dans <strong className="text-white">Supabase</strong> (supabase.com), une plateforme
-            hébergée en Europe. Aucune donnée personnelle n&apos;est revendue à des tiers. L&apos;utilisateur
-            peut demander la suppression de ses données à tout moment en contactant{" "}
+            hébergée en Europe. Aucune donnée personnelle n&apos;est revendue à des tiers. Tu peux
+            demander la suppression de tes données à tout moment en contactant{" "}
             <a href="mailto:contact@valuengine.fr" className="text-[#C9A84C] underline hover:opacity-80">
               contact@valuengine.fr
             </a>.

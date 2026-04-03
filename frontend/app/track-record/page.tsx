@@ -47,7 +47,7 @@ export default function TrackRecordPage() {
     fetch("/api/track-record")
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d) setData(d); })
-      .catch(() => {})
+      .catch(() => { /* API down — empty state shown */ })
       .finally(() => setLoading(false));
   }, []);
 
@@ -77,7 +77,7 @@ export default function TrackRecordPage() {
             {
               label: "Win Rate",
               value: loading ? "—" : s ? `${s.win_rate}%` : "—",
-              sub: "BUY/SELL corrects",
+              sub: "Verdicts corrects",
               color: "text-emerald-400",
             },
             {
@@ -166,9 +166,9 @@ export default function TrackRecordPage() {
         {/* CTA for non-logged in users */}
         <div className="mt-10 rounded-xl p-6 border border-[rgba(201,168,76,0.2)] bg-[rgba(201,168,76,0.04)] text-center anim-4">
           <p className="text-sm font-semibold text-zinc-200 mb-1">
-            Accédez aux analyses complètes (DCF, SWOT, PESTLE)
+            Accède aux analyses complètes (DCF, SWOT, PESTLE)
           </p>
-          <p className="text-xs text-zinc-500 mb-4">Créez un compte gratuit pour commencer</p>
+          <p className="text-xs text-zinc-500 mb-4">Crée un compte gratuit pour commencer</p>
           <button
             onClick={() => router.push("/sign-up")}
             className="bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold px-6 py-2.5 rounded-lg text-sm transition-all"

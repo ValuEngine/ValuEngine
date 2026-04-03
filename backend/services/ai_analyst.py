@@ -101,6 +101,12 @@ def get_bull_bear_analysis(company: dict, dcf: dict) -> dict:
 
 def get_swot_analysis(company_data: dict) -> dict:
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return {
+            "strengths": ["Analyse SWOT indisponible (clé API manquante)"],
+            "weaknesses": [], "opportunities": [], "threats": [],
+        }
+
     client = Anthropic(api_key=api_key)
 
     prompt = f"""Tu es un analyste financier expert. Génère une analyse SWOT concise pour {company_data.get('name', '')} ({company_data.get('ticker', '')}).
@@ -108,8 +114,8 @@ def get_swot_analysis(company_data: dict) -> dict:
 Données clés:
 - Secteur: {company_data.get('sector', 'N/A')}
 - CA: ${company_data.get('revenue', 0)/1e9:.1f}B
-- Marge nette: {company_data.get('profit_margin', 0)*100:.1f}%
-- Croissance CA: {company_data.get('revenue_growth', 0)*100:.1f}%
+- Marge nette: {(company_data.get('profit_margin') or 0)*100:.1f}%
+- Croissance CA: {(company_data.get('revenue_growth') or 0)*100:.1f}%
 - FCF: ${company_data.get('free_cash_flow', 0)/1e9:.1f}B
 - P/E: {company_data.get('pe_ratio', 'N/A')}
 - Beta: {company_data.get('beta', 'N/A')}
@@ -119,21 +125,32 @@ Réponds UNIQUEMENT en JSON valide avec ce format exact:
 
 Chaque point: 1 phrase concise en français, ancrée dans les données financières."""
 
-    message = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=600,
-        messages=[{"role": "user", "content": prompt}]
-    )
-    import json, re
-    text = message.content[0].text.strip()
-    # Strip markdown code fences if present
-    text = re.sub(r"^```(?:json)?\s*", "", text)
-    text = re.sub(r"\s*```$", "", text)
-    return json.loads(text)
+    try:
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=600,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        import json, re
+        text = message.content[0].text.strip()
+        text = re.sub(r"^```(?:json)?\s*", "", text)
+        text = re.sub(r"\s*```$", "", text)
+        return json.loads(text)
+    except Exception as e:
+        return {
+            "strengths": [f"Erreur lors de la génération SWOT : {e}"],
+            "weaknesses": [], "opportunities": [], "threats": [],
+        }
 
 
 def get_pestle_analysis(company_data: dict) -> dict:
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return {
+            "political": "Analyse PESTLE indisponible (clé API manquante).",
+            "economic": "", "social": "", "technological": "", "legal": "", "environmental": "",
+        }
+
     client = Anthropic(api_key=api_key)
 
     prompt = f"""Tu es un analyste financier expert. Génère une analyse PESTLE concise pour {company_data.get('name', '')} ({company_data.get('ticker', '')}).
@@ -149,14 +166,19 @@ Réponds UNIQUEMENT en JSON valide avec ce format exact:
 
 En français, factuel, ancré dans le secteur de l'entreprise."""
 
-    message = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=800,
-        messages=[{"role": "user", "content": prompt}]
-    )
-    import json, re
-    text = message.content[0].text.strip()
-    # Strip markdown code fences if present
-    text = re.sub(r"^```(?:json)?\s*", "", text)
-    text = re.sub(r"\s*```$", "", text)
-    return json.loads(text)
+    try:
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=800,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        import json, re
+        text = message.content[0].text.strip()
+        text = re.sub(r"^```(?:json)?\s*", "", text)
+        text = re.sub(r"\s*```$", "", text)
+        return json.loads(text)
+    except Exception as e:
+        return {
+            "political": f"Erreur lors de la génération PESTLE : {e}",
+            "economic": "", "social": "", "technological": "", "legal": "", "environmental": "",
+        }
