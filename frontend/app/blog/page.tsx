@@ -56,7 +56,7 @@ const ARTICLES = [
 export default function BlogPage() {
   return (
     <AppLayout>
-      <div className="p-6 max-w-4xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-4xl mx-auto">
         <h1 className="text-3xl font-black mb-2" style={{ color: "var(--text-primary)" }}>Blog</h1>
         <p className="mb-8" style={{ color: "var(--text-secondary)" }}>Éducation financière &amp; stratégie d&apos;investissement</p>
         <div className="grid gap-6">

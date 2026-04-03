@@ -252,7 +252,7 @@ function SwotSection({ ticker }: { ticker: string }) {
         <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C]">Analyse SWOT</p>
         <button onClick={() => setData(null)} className="text-xs text-zinc-400 hover:text-white transition-colors">Régénérer</button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {quadrants.map(({ key, label, items, border, bg }) => (
           <div key={key} className="rounded-2xl p-5" style={{ background: bg, border: `1px solid ${border}40` }}>
             <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: border }}>{label}</p>
@@ -325,7 +325,7 @@ function PestleSection({ ticker }: { ticker: string }) {
         <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C]">Analyse PESTLE</p>
         <button onClick={() => setData(null)} className="text-xs text-zinc-400 hover:text-white transition-colors">Régénérer</button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {cards.map(({ key, label, icon, text }) => (
           <div key={key} className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-3">
@@ -631,7 +631,7 @@ function AnalyzePage() {
                   onChange={(e) => setInputValue(e.target.value.toUpperCase())}
                   onKeyDown={(e) => e.key === "Enter" && runAnalysis(inputValue)}
                   placeholder="Ticker (AAPL, TSLA...)"
-                  className="w-full bg-[rgba(27,45,69,0.9)] border border-[rgba(201,168,76,0.25)] rounded-xl pl-10 pr-4 py-2.5 text-sm font-semibold text-white placeholder-[#304560] focus:outline-none focus:border-[#C9A84C] transition-all"
+                  className="w-full bg-[rgba(27,45,69,0.9)] border border-[rgba(201,168,76,0.25)] rounded-xl pl-10 pr-4 py-2.5 text-base sm:text-sm font-semibold text-white placeholder-[#304560] focus:outline-none focus:border-[#C9A84C] transition-all"
                 />
               </div>
               <button
@@ -661,7 +661,7 @@ function AnalyzePage() {
           </div>
         </header>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
 
           {/* ── DCF PARAMS PANEL ──────────────────────────────────────── */}
           {data && showAdvanced && (
@@ -794,7 +794,7 @@ function AnalyzePage() {
                         setShareCopied(true);
                         setTimeout(() => setShareCopied(false), 2000);
                       }}
-                      className="ml-3 text-xs text-zinc-400 hover:text-[#C9A84C] transition-colors inline-flex items-center gap-1"
+                      className="ml-3 text-xs text-zinc-400 hover:text-[#C9A84C] transition-colors inline-flex items-center gap-1 w-full sm:w-auto"
                     >
                       <Share2 size={12} /> {shareCopied ? "Lien copié !" : "Partager"}
                     </button>
@@ -984,7 +984,9 @@ function AnalyzePage() {
                         Lignes = Croissance FCF · Colonnes = WACC · Vert = sous-évalué · Rouge = surévalué (vs {currencySymbol(data.company.ticker)}{data.company.price.toFixed(2)})
                       </p>
                       <div className="overflow-x-auto">
-                        <SensitivityHeatmap data={data.sensitivity} currentPrice={data.company.price} />
+                        <div className="min-w-[400px]">
+                          <SensitivityHeatmap data={data.sensitivity} currentPrice={data.company.price} />
+                        </div>
                       </div>
                     </div>
                   </Section>
@@ -1027,7 +1029,9 @@ function AnalyzePage() {
               {activeTab === "comps" && (
                 <div className="animate-fade-in-up">
                   <Section title="Comparaison sectorielle — Trading Comps">
-                    <TradingComps ticker={data.company.ticker} sector={data.company.sector} />
+                    <div className="overflow-x-auto">
+                      <TradingComps ticker={data.company.ticker} sector={data.company.sector} />
+                    </div>
                   </Section>
                 </div>
               )}

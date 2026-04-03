@@ -173,7 +173,7 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen text-white px-6 py-8 md:px-10">
+      <div className="min-h-screen text-white px-4 sm:px-6 md:px-10 py-4 sm:py-8">
 
         {/* Header */}
         <div className="mb-8 anim-1">
@@ -186,19 +186,19 @@ export default function DashboardPage() {
         {/* Quick search */}
         <div className="rounded-xl p-5 mb-8 border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm hover:border-[#3f3f46] transition-colors anim-2">
           <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C] mb-4">Analyser un titre</p>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Ex: AAPL, TSLA, MSFT..."
-              className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-white placeholder-zinc-600 text-sm focus:outline-none focus:border-[rgba(201,168,76,0.5)] transition-all"
+              className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-white placeholder-zinc-600 text-base sm:text-sm focus:outline-none focus:border-[rgba(201,168,76,0.5)] transition-all"
             />
             <button
               onClick={handleSearch}
               disabled={!searchQuery}
-              className="flex items-center gap-2 bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold px-5 py-2.5 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+              className="flex items-center gap-2 bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold px-5 py-2.5 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap w-full sm:w-auto"
             >
               Analyser <ArrowRight size={16} />
             </button>
@@ -252,7 +252,7 @@ export default function DashboardPage() {
               </span>
             )}
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {marketLoading ? (
               [...Array(4)].map((_, i) => (
                 <div key={i} className="skeleton h-20 rounded-xl" />

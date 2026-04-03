@@ -32,23 +32,23 @@ function TopHeader() {
   const pageLabel = BREADCRUMBS[pathname] ?? BREADCRUMBS[Object.keys(BREADCRUMBS).find(k => pathname.startsWith(k)) ?? ""] ?? "App";
 
   return (
-    <header className="h-12 flex items-center justify-between px-5 border-b border-[#27272a] bg-[#09090b]/75 backdrop-blur-md flex-shrink-0 relative z-20 sticky top-0">
+    <header className="h-12 flex items-center justify-between px-3 md:px-5 border-b border-[#27272a] bg-[#09090b]/75 backdrop-blur-md flex-shrink-0 relative z-20 sticky top-0">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 text-xs">
-        <span className="text-zinc-500">ValuEngine</span>
-        <span className="text-zinc-600">/</span>
-        <span className="text-zinc-200 font-medium">{pageLabel}</span>
+      <div className="flex items-center gap-1.5 text-xs ml-10 md:ml-0">
+        <span className="text-zinc-500 hidden sm:inline">ValuEngine</span>
+        <span className="text-zinc-600 hidden sm:inline">/</span>
+        <span className="text-zinc-200 font-medium truncate">{pageLabel}</span>
       </div>
 
       {/* Right controls */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* Usage badge */}
         {isPro ? (
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(201,168,76,0.12)] text-[#C9A84C] border border-[rgba(201,168,76,0.25)]">
+          <span className="hidden md:flex text-xs font-semibold px-2.5 py-1 rounded-full bg-[rgba(201,168,76,0.12)] text-[#C9A84C] border border-[rgba(201,168,76,0.25)]">
             PRO ∞
           </span>
         ) : (
-          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300">
+          <span className="hidden md:flex text-xs font-medium px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300">
             3 analyses / jour
           </span>
         )}
@@ -59,9 +59,7 @@ function TopHeader() {
         </button>
 
         {/* Divider */}
-        <div className="w-px h-4 bg-zinc-800" />
-
-        {/* User avatar handled by Sidebar UserButton — just a placeholder here */}
+        <div className="w-px h-4 bg-zinc-800 hidden sm:block" />
       </div>
     </header>
   );
@@ -77,7 +75,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1">
           {children}
         </main>
-        <footer className="mt-auto px-6 py-3 text-xs text-center text-[#71717a] border-t border-[#27272a] bg-[#09090b]/60 backdrop-blur-sm">
+        <footer className="mt-auto px-3 py-2 md:px-6 md:py-3 text-[10px] md:text-xs text-center text-[#71717a] border-t border-[#27272a] bg-[#09090b]/60 backdrop-blur-sm">
           © 2026 ValuEngine — Outil d&apos;analyse éducatif.{" "}
           Les données et analyses présentées ne constituent pas des conseils en investissement au sens de la directive MIF II.{" "}
           Performances passées ne présagent pas des performances futures.{" "}

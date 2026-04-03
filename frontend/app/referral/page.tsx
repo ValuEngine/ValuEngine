@@ -40,7 +40,7 @@ export default function ReferralPage() {
 
   return (
     <AppLayout>
-      <div className="p-6 max-w-2xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-2xl mx-auto">
         {/* Hero */}
         <div className="text-center mb-10 animate-fade-in-up">
           <div className="w-16 h-16 rounded-2xl bg-[#C9A84C]/10 border border-[#C9A84C]/20 flex items-center justify-center mx-auto mb-4">
@@ -84,7 +84,7 @@ export default function ReferralPage() {
         </div>
 
         {/* Share buttons */}
-        <div className="grid grid-cols-2 gap-4 mb-6 animate-fade-in-up">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 animate-fade-in-up">
           <a
             href={tweetUrl}
             target="_blank"

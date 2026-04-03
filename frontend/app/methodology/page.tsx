@@ -3,7 +3,7 @@ import AppLayout from "@/components/AppLayout";
 export default function MethodologyPage() {
   return (
     <AppLayout>
-      <div className="min-h-screen text-white px-6 py-10 md:px-16 max-w-4xl mx-auto">
+      <div className="min-h-screen text-white px-4 sm:px-6 md:px-16 py-8 sm:py-10 max-w-4xl mx-auto">
         {/* Title */}
         <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-2">
           Notre méthodologie

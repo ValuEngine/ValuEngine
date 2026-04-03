@@ -90,7 +90,7 @@ export default function Sidebar() {
                 key={label}
                 href={href}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative ${
+                className={`flex items-center gap-2.5 px-3 py-2.5 md:py-2 rounded-lg text-sm transition-all duration-150 relative min-h-[44px] md:min-h-0 ${
                   isActive
                     ? "bg-[#18181b] text-[#C9A84C] font-semibold border-l-2 border-[#C9A84C] pl-[10px]"
                     : "text-[#71717a] hover:bg-[#18181b] hover:text-[#e4e4e7]"
@@ -120,7 +120,7 @@ export default function Sidebar() {
                 key={label}
                 href={href}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative ${
+                className={`flex items-center gap-2.5 px-3 py-2.5 md:py-2 rounded-lg text-sm transition-all duration-150 relative min-h-[44px] md:min-h-0 ${
                   isActive
                     ? "bg-[#18181b] text-[#C9A84C] font-semibold border-l-2 border-[#C9A84C] pl-[10px]"
                     : "text-[#71717a] hover:bg-[#18181b] hover:text-[#e4e4e7]"
@@ -150,7 +150,7 @@ export default function Sidebar() {
                 key={label}
                 href={href}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative ${
+                className={`flex items-center gap-2.5 px-3 py-2.5 md:py-2 rounded-lg text-sm transition-all duration-150 relative min-h-[44px] md:min-h-0 ${
                   isActive
                     ? "bg-[#18181b] text-[#C9A84C] font-semibold border-l-2 border-[#C9A84C] pl-[10px]"
                     : "text-[#71717a] hover:bg-[#18181b] hover:text-[#e4e4e7]"
@@ -222,11 +222,11 @@ export default function Sidebar() {
     <>
       {/* Mobile hamburger */}
       <button
-        className="fixed top-3 left-3 z-50 md:hidden bg-[#18181b] border border-[#27272a] rounded-lg p-2 text-[#C9A84C]"
+        className="fixed top-2 left-2 z-50 md:hidden bg-[#18181b] border border-[#27272a] rounded-lg p-2.5 text-[#C9A84C] min-w-[44px] min-h-[44px] flex items-center justify-center"
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label="Toggle menu"
       >
-        {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+        {mobileOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
       {/* Mobile overlay */}
@@ -239,7 +239,7 @@ export default function Sidebar() {
 
       {/* Mobile sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-56 z-50 transition-transform duration-300 md:hidden overflow-visible`}
+        className={`fixed top-0 left-0 h-full w-64 max-w-[85vw] z-50 transition-transform duration-300 md:hidden overflow-visible`}
         style={{ transform: mobileOpen ? "translateX(0)" : "translateX(-100%)" }}
       >
         <SidebarContent />

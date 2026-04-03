@@ -94,7 +94,7 @@ export default function ComparePage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen text-white px-6 py-8 md:px-10">
+      <div className="min-h-screen text-white px-4 sm:px-6 md:px-10 py-4 sm:py-8">
 
         <div className="mb-8">
           <h1 className="text-3xl font-black tracking-tight">Comparer deux titres</h1>
@@ -112,7 +112,7 @@ export default function ComparePage() {
                 onChange={(e) => setTicker1(e.target.value.toUpperCase())}
                 onKeyDown={(e) => e.key === "Enter" && handleCompare()}
                 placeholder="Ex: AAPL"
-                className="w-full bg-[rgba(27,45,69,0.9)] border border-[rgba(201,168,76,0.25)] rounded-xl px-5 py-3 text-white placeholder-[#304560] text-sm font-semibold focus:outline-none focus:border-[#C9A84C] transition-all"
+                className="w-full bg-[rgba(27,45,69,0.9)] border border-[rgba(201,168,76,0.25)] rounded-xl px-5 py-3 text-white placeholder-[#304560] text-base sm:text-sm font-semibold focus:outline-none focus:border-[#C9A84C] transition-all"
               />
             </div>
             <div className="flex-1">
@@ -123,7 +123,7 @@ export default function ComparePage() {
                 onChange={(e) => setTicker2(e.target.value.toUpperCase())}
                 onKeyDown={(e) => e.key === "Enter" && handleCompare()}
                 placeholder="Ex: MSFT"
-                className="w-full bg-[rgba(27,45,69,0.9)] border border-[rgba(201,168,76,0.25)] rounded-xl px-5 py-3 text-white placeholder-[#304560] text-sm font-semibold focus:outline-none focus:border-[#C9A84C] transition-all"
+                className="w-full bg-[rgba(27,45,69,0.9)] border border-[rgba(201,168,76,0.25)] rounded-xl px-5 py-3 text-white placeholder-[#304560] text-base sm:text-sm font-semibold focus:outline-none focus:border-[#C9A84C] transition-all"
               />
             </div>
             <button
@@ -146,7 +146,7 @@ export default function ComparePage() {
 
         {/* Comparison Table */}
         {data1 && data2 && (
-          <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.14)] rounded-2xl overflow-hidden">
+          <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.14)] rounded-2xl overflow-x-auto">
             {/* Header */}
             <div className="grid grid-cols-3 bg-[rgba(201,168,76,0.05)] border-b border-[rgba(201,168,76,0.12)]">
               <div className="px-6 py-4 text-xs font-bold uppercase tracking-[2px] text-[#4a6070]">Métrique</div>

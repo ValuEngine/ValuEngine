@@ -227,7 +227,7 @@ export default function ArticlePage({ params }: { params: { slug: string } }) {
 
   return (
     <AppLayout>
-      <div className="p-6 max-w-3xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-3xl mx-auto">
         <Link href="/blog" className="text-sm mb-6 block transition-colors hover:text-[#C9A84C]" style={{ color: "var(--text-secondary)" }}>
           ← Retour au blog
         </Link>

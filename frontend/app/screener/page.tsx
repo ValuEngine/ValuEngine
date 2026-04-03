@@ -125,7 +125,7 @@ export default function ScreenerPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen text-white px-6 py-8 md:px-10">
+      <div className="min-h-screen text-white px-4 sm:px-6 md:px-10 py-4 sm:py-8">
 
         <div className="mb-8">
           <h1 className="text-3xl font-black tracking-tight">Screener</h1>
@@ -135,7 +135,7 @@ export default function ScreenerPage() {
         </div>
 
         {/* Launch / Relaunch buttons + filters */}
-        <div className="flex flex-wrap items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 mb-8">
           <button
             onClick={handleScreen}
             disabled={isLoading}
@@ -196,7 +196,7 @@ export default function ScreenerPage() {
         {filtered.length > 0 && (
           <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.14)] rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[700px]">
                 <thead>
                   <tr className="border-b border-[rgba(255,255,255,0.06)] bg-[rgba(201,168,76,0.05)]">
                     <th className="px-5 py-4 text-left text-xs font-bold uppercase tracking-[2px] text-[#4a6070]">Ticker</th>

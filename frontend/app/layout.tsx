@@ -1,9 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import AlertsProvider from "@/components/AlertsProvider";
 import PostHogProvider from "@/components/PostHogProvider";
 import CommandPalette from "@/components/CommandPalette";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: "ValuEngine — Analyse boursière IA pour investisseurs français",

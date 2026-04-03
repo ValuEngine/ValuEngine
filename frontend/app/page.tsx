@@ -229,7 +229,7 @@ export default function LandingPage() {
 
       {/* ── NAV ──────────────────────────────────────────────────────── */}
       <nav className="fixed top-[33px] left-0 right-0 z-50 border-b border-[#27272a] bg-[rgba(9,9,11,0.85)] backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-[#09090b] border border-[rgba(201,168,76,0.3)] flex items-center justify-center">
               <span className="text-[#C9A84C] font-black text-sm leading-none">V</span>
@@ -248,7 +248,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <section className="relative z-10 min-h-screen flex items-center justify-center px-6 text-center">
+      <section className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 text-center">
         <div className="max-w-3xl mx-auto">
 
           <div className="inline-flex items-center gap-2 text-xs tracking-[0.2em] text-zinc-500 border border-zinc-800 rounded-full px-4 py-1.5 mb-8">
@@ -256,32 +256,32 @@ export default function LandingPage() {
             1ER OUTIL DE VALORISATION DCF EN FRANÇAIS
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white text-center leading-[1.1] tracking-tight mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center leading-[1.1] tracking-tight mb-6">
             Prends de meilleures<br />décisions d&apos;investissement,{" "}
             <span style={{ background: "linear-gradient(135deg, #C9A84C, #f5d78e)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               plus vite
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg text-zinc-400 text-center max-w-xl mx-auto mb-10">
+          <p className="text-sm sm:text-base md:text-lg text-zinc-400 text-center max-w-xl mx-auto mb-10">
             Valorisation DCF, arguments Bull &amp; Bear par IA, matrice de sensibilité — en 60 secondes, en français, avec un{" "}
             <Link href="/track-record" className="text-[#C9A84C] hover:underline">Track Record vérifié</Link>.
           </p>
 
           {/* Smart Search bar */}
           <div className="max-w-md mx-auto mb-4">
-            <div className="flex items-center gap-3 relative">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 relative">
               <div className="flex-1 relative">
                 <input
                   type="text" value={ticker}
                   onChange={(e) => handleTickerChange(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAnalyze("")}
                   placeholder={`Essaie ${typewriterText}|`}
-                  className={`w-full bg-[rgba(255,255,255,0.04)] border rounded-xl px-5 py-3.5 text-white placeholder-zinc-600 text-sm font-semibold focus:outline-none transition-all ${hasError ? "border-red-500/50 focus:border-red-500" : isValid ? "border-emerald-500/50 focus:border-emerald-500" : "border-zinc-800 focus:border-[rgba(201,168,76,0.5)]"}`}
+                  className={`w-full bg-[rgba(255,255,255,0.04)] border rounded-xl px-5 py-3.5 text-white placeholder-zinc-600 text-base sm:text-sm font-semibold focus:outline-none transition-all ${hasError ? "border-red-500/50 focus:border-red-500" : isValid ? "border-emerald-500/50 focus:border-emerald-500" : "border-zinc-800 focus:border-[rgba(201,168,76,0.5)]"}`}
                 />
                 {searching && <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-t-2 border-[#C9A84C] rounded-full animate-spin" />}
               </div>
-              <button onClick={() => handleAnalyze("")} disabled={!ticker || hasError} className="font-bold px-5 py-3.5 rounded-xl bg-[#C9A84C] hover:bg-[#b8943d] text-black transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap">
+              <button onClick={() => handleAnalyze("")} disabled={!ticker || hasError} className="font-bold px-5 py-3.5 rounded-xl bg-[#C9A84C] hover:bg-[#b8943d] text-black transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap w-full sm:w-auto">
                 Analyser
               </button>
             </div>
@@ -312,7 +312,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
-      <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
+      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Comment ça marche</p>
@@ -333,7 +333,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── TRACK RECORD (moved up — strongest social proof) ──────────── */}
-      <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
+      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 mb-4">
@@ -347,7 +347,7 @@ export default function LandingPage() {
           </div>
 
           {summary && (
-            <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
               {[
                 { label: "Win Rate", value: `${summary.win_rate.toFixed(0)}%` },
                 { label: "Analyses", value: String(summary.total) },
@@ -368,7 +368,7 @@ export default function LandingPage() {
                 const isBuy = entry.verdict === "BUY";
                 const isSell = entry.verdict === "SELL";
                 return (
-                  <Link key={entry.id} href={`/analyse-action/${entry.ticker}`} className="flex items-center justify-between gap-4 bg-[#18181b] border border-[#27272a] hover:border-[#3f3f46] rounded-xl px-5 py-4 transition-colors group">
+                  <Link key={entry.id} href={`/analyse-action/${entry.ticker}`} className="flex items-center justify-between gap-2 sm:gap-4 bg-[#18181b] border border-[#27272a] hover:border-[#3f3f46] rounded-xl px-3 sm:px-5 py-3 sm:py-4 transition-colors group">
                     <div className="flex items-center gap-4 min-w-0">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isBuy ? "bg-emerald-500/10 text-emerald-400" : isSell ? "bg-red-500/10 text-red-400" : "bg-yellow-500/10 text-yellow-400"}`}>
                         {isBuy ? <TrendingUp size={14} /> : isSell ? <TrendingDown size={14} /> : <Minus size={14} />}
@@ -403,7 +403,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FEATURES ─────────────────────────────────────────────────── */}
-      <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
+      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Ce que tu obtiens</p>
@@ -427,7 +427,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── INTERFACE PREVIEW ───────────────────────────────────────── */}
-      <section className="relative z-10 py-24 px-6 border-t border-[#27272a] overflow-hidden">
+      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a] overflow-hidden">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Aperçu</p>
@@ -435,15 +435,15 @@ export default function LandingPage() {
             <p className="text-sm text-zinc-500 max-w-lg mx-auto">Verdict DCF, analyse IA Bull & Bear, et matrice de sensibilité — tout ce dont tu as besoin pour prendre une décision éclairée.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-            <div className="flex justify-center"><MockupVerdict /></div>
-            <div className="flex justify-center"><MockupBullBear /></div>
-            <div className="flex justify-center"><MockupSensitivity /></div>
+            <div className="flex justify-center max-w-full overflow-hidden"><MockupVerdict /></div>
+            <div className="flex justify-center max-w-full overflow-hidden"><MockupBullBear /></div>
+            <div className="flex justify-center max-w-full overflow-hidden"><MockupSensitivity /></div>
           </div>
         </div>
       </section>
 
       {/* ── WHY VALUENGINE ─────────────────────────────────────────────── */}
-      <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
+      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Pourquoi ValuEngine</p>
@@ -476,13 +476,13 @@ export default function LandingPage() {
       </section>
 
       {/* ── TÉMOIGNAGES ─────────────────────────────────────────────── */}
-      <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
+      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Témoignages</p>
             <h2 className="text-3xl font-bold tracking-tight">Ce qu&apos;en pensent nos utilisateurs</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
               {
                 prenom: "Thomas", initiale: "T", profil: "Investisseur particulier — 9 ans d'expérience", ville: "Lyon", note: 5,
@@ -532,7 +532,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── PRICING ──────────────────────────────────────────────────── */}
-      <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
+      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Tarifs</p>
@@ -546,7 +546,7 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Free */}
-            <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-8 hover:border-[#3f3f46] transition-colors">
+            <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 sm:p-8 hover:border-[#3f3f46] transition-colors">
               <p className="text-xs font-bold tracking-widest uppercase text-zinc-500 mb-3">Gratuit</p>
               <p className="text-5xl font-black mb-1">0€</p>
               <p className="text-zinc-500 text-sm mb-8">Pour toujours</p>
@@ -560,7 +560,7 @@ export default function LandingPage() {
               </button>
             </div>
             {/* Pro */}
-            <div className="bg-[#18181b] border-2 border-[#C9A84C] rounded-xl p-8 relative overflow-hidden">
+            <div className="bg-[#18181b] border-2 border-[#C9A84C] rounded-xl p-6 sm:p-8 relative overflow-hidden">
               <div className="absolute top-0 right-0 bg-[#C9A84C] text-black text-xs font-black px-4 py-1.5 rounded-bl-xl tracking-wider">
                 {annual ? "2 MOIS OFFERTS" : "POPULAIRE"}
               </div>
@@ -611,7 +611,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FAQ ───────────────────────────────────────────────────────── */}
-      <section className="relative z-10 py-24 px-6 border-t border-[#27272a]">
+      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Questions fréquentes</p>
@@ -626,7 +626,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── TRUST BAR ────────────────────────────────────────────────── */}
-      <section className="relative z-10 py-12 px-6 border-t border-[#27272a]">
+      <section className="relative z-10 py-8 sm:py-12 px-4 sm:px-6 border-t border-[#27272a]">
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex items-center justify-center gap-6 flex-wrap text-zinc-500 text-xs font-medium">
             <span className="flex items-center gap-1.5"><Shield size={12} className="text-emerald-400" /> Données Financial Modeling Prep</span>
@@ -641,7 +641,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────────────── */}
-      <footer className="relative z-10 py-8 px-6 border-t border-[#27272a]">
+      <footer className="relative z-10 py-6 sm:py-8 px-4 sm:px-6 border-t border-[#27272a]">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-md bg-[#09090b] border border-[rgba(201,168,76,0.3)] flex items-center justify-center">
@@ -650,13 +650,13 @@ export default function LandingPage() {
             <span className="text-sm font-bold">ValuEngine</span>
             <span className="text-zinc-600 text-sm">© 2026</span>
           </div>
-          <div className="flex items-center gap-4 text-zinc-600 text-xs">
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap justify-center text-zinc-600 text-xs">
             <Link href="/legal" className="hover:text-zinc-400 transition-colors">Mentions légales</Link>
-            <span>·</span>
+            <span className="hidden sm:inline">·</span>
             <Link href="/about" className="hover:text-zinc-400 transition-colors">À propos</Link>
-            <span>·</span>
+            <span className="hidden sm:inline">·</span>
             <Link href="/methodology" className="hover:text-zinc-400 transition-colors">Méthodologie</Link>
-            <span>·</span>
+            <span className="hidden sm:inline">·</span>
             <a href="mailto:contact@valuengine.fr" className="hover:text-zinc-400 transition-colors">Contact</a>
           </div>
           <p className="text-zinc-600 text-xs text-center max-w-sm">
@@ -669,7 +669,7 @@ export default function LandingPage() {
       {showSticky && (
         <button
           onClick={() => router.push("/analyze")}
-          className="fixed bottom-6 right-6 z-50 bg-[#C9A84C] hover:bg-[#b8943d] text-[#09090b] font-bold px-5 py-3 rounded-xl shadow-lg shadow-[rgba(201,168,76,0.25)] transition-all hover:scale-105 text-sm"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 bg-[#C9A84C] hover:bg-[#b8943d] text-[#09090b] font-bold px-4 py-2 sm:px-5 sm:py-3 rounded-xl shadow-lg shadow-[rgba(201,168,76,0.25)] transition-all hover:scale-105 text-xs sm:text-sm"
         >
           Analyser une action →
         </button>

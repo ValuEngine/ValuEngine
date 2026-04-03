@@ -121,7 +121,7 @@ export default function TrackRecordPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen text-white px-6 py-8 md:px-10">
+      <div className="min-h-screen text-white px-4 sm:px-6 md:px-10 py-4 sm:py-8">
 
         {/* Header */}
         <div className="mb-8 anim-1">
@@ -270,7 +270,7 @@ export default function TrackRecordPage() {
               </p>
             </div>
           ) : (
-            <div className="rounded-xl border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm overflow-hidden">
+            <div className="rounded-xl border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm overflow-x-auto">
               {/* Table header */}
               <div className="hidden md:grid grid-cols-[80px_1fr_100px_85px_85px_75px_70px_80px] gap-2 px-4 py-3 border-b border-[#27272a] bg-[#27272a]/30">
                 {["Ticker", "Nom", "Verdict", "Entrée", "Actuel", "Perf.", "Durée", "Date"].map((h) => (
