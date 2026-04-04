@@ -15,4 +15,5 @@ jobs:
           curl -s -o /dev/null -w "%{http_code}" \
             -X POST "${{ secrets.BACKEND_URL }}/api/alerts/check" \
             -H "Content-Type: application/json" \
+            -H "X-Internal-Secret: ${{ secrets.ALERTS_CHECK_SECRET }}" \
             --max-time 30

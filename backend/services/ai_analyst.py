@@ -329,7 +329,22 @@ Format JSON attendu:
             max_tokens=3000,
             messages=[{"role": "user", "content": prompt}],
         )
-        return _parse_json_response(msg.content[0].text)
+        result = _parse_json_response(msg.content[0].text)
+
+        # ── Structural validation ──
+        warnings = []
+        for case in ["bull_case", "bear_case"]:
+            if case not in result:
+                warnings.append(f"{case} manquant dans la réponse IA")
+            elif not isinstance(result[case].get("arguments"), list):
+                warnings.append(f"{case}.arguments n'est pas une liste")
+        if "synthese" not in result:
+            warnings.append("synthese manquante")
+        if warnings:
+            result["_data_warnings"] = warnings
+            logger.warning(f"[DeepAnalysis] Validation warnings: {warnings}")
+
+        return result
     except json.JSONDecodeError as e:
         logger.error(f"[DeepAnalysis] JSON parse error: {e}\nRaw text: {msg.content[0].text[:500]}")
         return {"error": f"Erreur de parsing JSON: {e}"}
@@ -617,6 +632,14 @@ Format attendu:
                 "hypotheses": ai_scenario.get("hypotheses", []),
             }
         result["conclusion"] = ai_result.get("conclusion", "")
+
+        # Validate probabilities sum to ~100%
+        total_prob = sum(result[s].get("probabilite", 0) for s in ["bull", "base", "bear"])
+        if total_prob < 90 or total_prob > 110:
+            logger.warning(f"[DCFScenarios] Probabilités somment à {total_prob}%, normalisation")
+            if total_prob > 0:
+                for s in ["bull", "base", "bear"]:
+                    result[s]["probabilite"] = round(result[s]["probabilite"] / total_prob * 100)
 
         return result
 

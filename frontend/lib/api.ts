@@ -127,6 +127,26 @@ export async function analyzeStock(
   return res.json();
 }
 
+/**
+ * Fetch with Clerk auth token in Authorization header.
+ * Use for endpoints that require authentication.
+ */
+export async function authedFetch(
+  url: string,
+  getToken: () => Promise<string | null>,
+  init?: RequestInit,
+): Promise<Response> {
+  const token = await getToken();
+  const headers = new Headers(init?.headers);
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  if (!headers.has("Content-Type") && init?.body) {
+    headers.set("Content-Type", "application/json");
+  }
+  return fetch(url, { ...init, headers });
+}
+
 export function currencySymbol(ticker: string): string {
   return ticker.endsWith(".PA") || ticker.endsWith(".DE") || ticker.endsWith(".AS") || ticker.endsWith(".BR") || ticker.endsWith(".MI") ? "€" : "$";
 }

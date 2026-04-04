@@ -2,13 +2,13 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
 import {
   TrendingUp, TrendingDown, Minus, Search, Settings2,
   ChevronDown, ChevronUp, Loader2, Bell, Trash2, Share2,
 } from "lucide-react";
 import { FreemiumGate } from "@/components/FreemiumWrapper";
-import { analyzeStock, warmupBackend, fmt, pct, currencySymbol, type AnalyzeResponse } from "@/lib/api";
+import { analyzeStock, warmupBackend, fmt, pct, currencySymbol, authedFetch, type AnalyzeResponse } from "@/lib/api";
 import { SensitivityHeatmap } from "@/components/SensitivityHeatmap";
 import { FCFChart } from "@/components/FCFChart";
 import { TradingComps } from "@/components/TradingComps";
@@ -369,6 +369,7 @@ interface AlertItem {
 
 function PriceAlertSection({ ticker, tickerName }: { ticker: string; tickerName: string }) {
   const { isSignedIn, user } = useUser();
+  const { getToken } = useAuth();
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
   const [targetPrice, setTargetPrice] = useState("");
@@ -385,7 +386,7 @@ function PriceAlertSection({ ticker, tickerName }: { ticker: string; tickerName:
   useEffect(() => {
     if (!userId) return;
     setAlertsLoading(true);
-    fetch(`${API_BASE}/api/alerts/${userId}`)
+    authedFetch(`${API_BASE}/api/alerts/${userId}`, getToken)
       .then(r => r.ok ? r.json() : [])
       .then((data: AlertItem[]) => setAlerts(data.filter(a => a.ticker === ticker && a.active)))
       .catch(() => {})
@@ -399,9 +400,8 @@ function PriceAlertSection({ ticker, tickerName }: { ticker: string; tickerName:
     setCreating(true);
     setCreateError("");
     try {
-      const r = await fetch(`${API_BASE}/api/alerts`, {
+      const r = await authedFetch(`${API_BASE}/api/alerts`, getToken, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ clerk_user_id: userId, email, ticker, ticker_name: tickerName, target_price: price, direction }),
       });
       if (!r.ok) {
@@ -420,7 +420,7 @@ function PriceAlertSection({ ticker, tickerName }: { ticker: string; tickerName:
 
   const handleDelete = async (alertId: string) => {
     setAlerts(prev => prev.filter(a => a.id !== alertId));
-    await fetch(`${API_BASE}/api/alerts/${alertId}`, { method: "DELETE" }).catch(() => {});
+    await authedFetch(`${API_BASE}/api/alerts/${alertId}`, getToken, { method: "DELETE" }).catch(() => {});
   };
 
   if (!isSignedIn) return null;

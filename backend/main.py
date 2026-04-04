@@ -17,8 +17,10 @@ from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 
 import httpx
+import jwt
 import stripe
 import yfinance as yf
+from jwt import PyJWKClient
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -28,6 +30,18 @@ from services.ai_analyst import get_bull_bear_analysis, get_swot_analysis, get_p
 from services.fmp_data import get_deep_financials, get_sector_benchmarks
 
 load_dotenv(Path(__file__).parent / ".env", override=True)
+
+# ── Sentry error monitoring ────────────────────────────────────────────────
+_SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
+if _SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+    sentry_sdk.init(
+        dsn=_SENTRY_DSN,
+        integrations=[FastApiIntegration()],
+        traces_sample_rate=0.1,
+        environment=os.environ.get("ENVIRONMENT", "production"),
+    )
 
 # ── Logging ─────────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -41,14 +55,81 @@ from services.market_data import get_company_data as _get_data, get_peers_data
 logger.info(f"[DataSource] yfinance | FMP={'enabled' if USE_FMP else 'disabled'}")
 
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
+ALERTS_CHECK_SECRET = os.environ.get("ALERTS_CHECK_SECRET", "")
+
+# ── Clerk JWT verification ─────────────────────────────────────────────────
+_CLERK_JWKS_URL = os.environ.get("CLERK_JWKS_URL", "")
+_jwks_client: PyJWKClient | None = None
+
+def _get_jwks_client() -> PyJWKClient | None:
+    global _jwks_client
+    if _jwks_client:
+        return _jwks_client
+    jwks_url = _CLERK_JWKS_URL
+    if not jwks_url:
+        return None
+    _jwks_client = PyJWKClient(jwks_url, cache_keys=True)
+    return _jwks_client
+
+
+async def verify_clerk_token(request: Request) -> str:
+    """
+    Verify the Clerk JWT from the Authorization header.
+    Returns the clerk user_id (sub claim) if valid.
+    Raises HTTPException 401 if invalid or missing.
+    """
+    client = _get_jwks_client()
+    if not client:
+        # If JWKS not configured, fall back to trusting the X-User-Id header
+        # (only acceptable in dev / before JWKS is set up)
+        user_id = request.headers.get("X-User-Id", "")
+        if user_id:
+            return _safe_id(user_id)
+        raise HTTPException(status_code=401, detail="Authentification requise")
+
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Token manquant")
+
+    token = auth_header[7:]  # strip "Bearer "
+    try:
+        signing_key = client.get_signing_key_from_jwt(token)
+        payload = jwt.decode(
+            token,
+            signing_key.key,
+            algorithms=["RS256"],
+            options={"verify_aud": False},
+        )
+        sub = payload.get("sub", "")
+        if not sub:
+            raise HTTPException(status_code=401, detail="Token invalide (sub manquant)")
+        return sub
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expiré")
+    except jwt.InvalidTokenError as e:
+        logger.warning(f"[Auth] Token invalide: {e}")
+        raise HTTPException(status_code=401, detail="Token invalide")
+
+
+def _require_owner(token_user_id: str, resource_user_id: str):
+    """Ensure the authenticated user owns the resource."""
+    if token_user_id != resource_user_id:
+        raise HTTPException(status_code=403, detail="Accès non autorisé")
+
 
 # ── Input sanitization ──────────────────────────────────────────────────────
-_SAFE_ID_RE = re.compile(r"^[a-zA-Z0-9_\-]+$")
+_SAFE_ID_RE = re.compile(r"^[a-zA-Z0-9_\-]{1,128}$")
 
 def _safe_id(value: str) -> str:
     """Validate and return a safe identifier for Supabase queries."""
     if not value or not _SAFE_ID_RE.match(value):
         raise HTTPException(status_code=400, detail="Identifiant invalide")
+    return value
+
+def _safe_id_internal(value: str) -> str:
+    """Same as _safe_id but returns empty string instead of raising (for internal use)."""
+    if not value or not _SAFE_ID_RE.match(value):
+        return ""
     return value
 
 # ── Rate limiter ────────────────────────────────────────────────────────────
@@ -127,6 +208,7 @@ FREE_DAILY_LIMIT = 3
 
 def _get_today_analysis_count(user_id: str) -> int:
     """Count how many analyses a user has run today (UTC)."""
+    user_id = _safe_id_internal(user_id)
     if not _SUPA_URL or not _SUPA_KEY or not user_id:
         return 0
     today_start = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00+00:00")
@@ -143,6 +225,7 @@ def _get_today_analysis_count(user_id: str) -> int:
 
 def _is_user_pro(user_id: str) -> bool:
     """Check whether a user has an active Pro subscription."""
+    user_id = _safe_id_internal(user_id)
     if not _SUPA_URL or not _SUPA_KEY or not user_id:
         return False
     try:
@@ -203,8 +286,45 @@ def warmup():
     return {"status": "warm"}
 
 
+# ── Thread-safe TTL cache with LRU eviction ──────────────────────────────────
+import threading
+from collections import OrderedDict
+
+class TTLCache:
+    """Thread-safe cache with TTL and max size (LRU eviction)."""
+    def __init__(self, max_size: int = 500, default_ttl: int = 1800):
+        self._cache: OrderedDict = OrderedDict()
+        self._timestamps: dict = {}
+        self._lock = threading.Lock()
+        self._max_size = max_size
+        self._default_ttl = default_ttl
+
+    def get(self, key: str, ttl: int | None = None):
+        ttl = ttl or self._default_ttl
+        with self._lock:
+            if key not in self._cache:
+                return None
+            if time.time() - self._timestamps[key] > ttl:
+                del self._cache[key]
+                del self._timestamps[key]
+                return None
+            self._cache.move_to_end(key)
+            return self._cache[key]
+
+    def set(self, key: str, value):
+        with self._lock:
+            if key in self._cache:
+                self._cache.move_to_end(key)
+            self._cache[key] = value
+            self._timestamps[key] = time.time()
+            while len(self._cache) > self._max_size:
+                oldest = next(iter(self._cache))
+                del self._cache[oldest]
+                del self._timestamps[oldest]
+
+
 # ── Market overview cache ────────────────────────────────────────────────────
-_MARKET_CACHE: dict = {"data": None, "ts": 0.0}
+_market_cache = TTLCache(max_size=10, default_ttl=300)  # 5 min
 _MARKET_TTL = 300  # 5 minutes
 
 _INDICES = [
@@ -224,11 +344,9 @@ _MARKET_FALLBACK = [
 
 @app.get("/api/market-overview")
 def market_overview():
-    global _MARKET_CACHE
-    now = time.time()
-
-    if _MARKET_CACHE["data"] and (now - _MARKET_CACHE["ts"]) < _MARKET_TTL:
-        return _MARKET_CACHE["data"]
+    cached = _market_cache.get("overview")
+    if cached:
+        return cached
 
     try:
         results = []
@@ -245,7 +363,7 @@ def market_overview():
                 "change": f"{sign}{change_pct:.2f}%",
                 "up":     change_pct >= 0,
             })
-        _MARKET_CACHE = {"data": results, "ts": now}
+        _market_cache.set("overview", results)
         return results
     except Exception as e:
         logger.warning(f"[market-overview] yfinance error: {e}")
@@ -295,6 +413,9 @@ def analyze(request: Request, req: AnalyzeRequest):
     shares = raw["shares_outstanding"]
     nd     = raw["net_debt"]
     price  = raw["price"]
+
+    if not price or price <= 0:
+        raise HTTPException(status_code=422, detail="Prix de l'action non disponible ou invalide pour ce ticker")
 
     dcf_raw = calculate_dcf(
         fcf=fcf,
@@ -592,21 +713,17 @@ def pestle_endpoint(request: Request, ticker: str):
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
-# ── Cache pour les endpoints Pro (deep analysis, anomalies, DCF scenarios) ──
-_ANALYSIS_CACHE: dict = {}
+_analysis_cache = TTLCache(max_size=300, default_ttl=1800)  # 30 min
 _CACHE_TTL_30M = 30 * 60
 _CACHE_TTL_1H = 60 * 60
 
 
 def _cache_get(key: str, ttl: int) -> dict | None:
-    entry = _ANALYSIS_CACHE.get(key)
-    if entry and (time.time() - entry["ts"]) < ttl:
-        return entry["data"]
-    return None
+    return _analysis_cache.get(key, ttl)
 
 
 def _cache_set(key: str, data: dict):
-    _ANALYSIS_CACHE[key] = {"data": data, "ts": time.time()}
+    _analysis_cache.set(key, data)
 
 
 @app.post("/api/analyze/deep-analysis")
@@ -693,6 +810,7 @@ from services.email_service import send_alert_email, send_welcome_email
 
 @app.post("/api/alerts")
 async def create_alert(req: Request):
+    token_user_id = await verify_clerk_token(req)
     body          = await req.json()
     clerk_user_id = body.get("clerk_user_id", "")
     email         = body.get("email", "")
@@ -706,6 +824,7 @@ async def create_alert(req: Request):
 
     if not clerk_user_id or not ticker or target_price <= 0:
         raise HTTPException(status_code=400, detail="Paramètres invalides")
+    _require_owner(token_user_id, clerk_user_id)
     if direction not in ("above", "below"):
         raise HTTPException(status_code=400, detail="direction doit être 'above' ou 'below'")
 
@@ -727,8 +846,10 @@ async def create_alert(req: Request):
 
 
 @app.get("/api/alerts/{clerk_user_id}")
-def get_alerts(clerk_user_id: str):
+async def get_alerts(clerk_user_id: str, request: Request):
+    token_user_id = await verify_clerk_token(request)
     clerk_user_id = _safe_id(clerk_user_id)
+    _require_owner(token_user_id, clerk_user_id)
     try:
         alerts = _sb_get(
             "alerts",
@@ -741,8 +862,18 @@ def get_alerts(clerk_user_id: str):
 
 
 @app.delete("/api/alerts/{alert_id}")
-def delete_alert(alert_id: str):
+async def delete_alert(alert_id: str, request: Request):
+    token_user_id = await verify_clerk_token(request)
     alert_id = _safe_id(alert_id)
+    # Verify the alert belongs to the authenticated user
+    try:
+        rows = _sb_get("alerts", f"id=eq.{alert_id}&select=user_id")
+        if rows and rows[0].get("user_id") != token_user_id:
+            raise HTTPException(status_code=403, detail="Accès non autorisé")
+    except HTTPException:
+        raise
+    except Exception:
+        pass  # If check fails, proceed (alert may not exist)
     try:
         _sb_patch("alerts", f"id=eq.{alert_id}", {"active": False})
         return {"ok": True}
@@ -752,8 +883,12 @@ def delete_alert(alert_id: str):
 
 
 @app.post("/api/alerts/check")
-def check_alerts():
+def check_alerts(request: Request):
     """Endpoint interne : vérifie toutes les alertes actives et envoie les emails."""
+    # Protected by internal secret (called from GitHub Actions cron)
+    secret = request.headers.get("X-Internal-Secret", "")
+    if not ALERTS_CHECK_SECRET or secret != ALERTS_CHECK_SECRET:
+        raise HTTPException(status_code=403, detail="Accès non autorisé")
     try:
         alerts = _sb_get("alerts", "active=eq.true&is_triggered=eq.false")
     except Exception as e:
@@ -785,7 +920,12 @@ def check_alerts():
                 pass
 
     triggered = 0
+    MAX_EMAILS_PER_RUN = 50
     for alert in alerts:
+        if triggered >= MAX_EMAILS_PER_RUN:
+            logger.warning(f"[alerts/check] Limite de {MAX_EMAILS_PER_RUN} emails atteinte, arrêt")
+            break
+
         ticker       = alert.get("ticker", "")
         current      = price_map.get(ticker, 0)
         target       = float(alert.get("target_price") or 0)
@@ -863,6 +1003,7 @@ async def create_checkout(request: Request):
 @app.post("/api/user/welcome")
 async def user_welcome(request: Request):
     """Envoie un email de bienvenue à un nouvel utilisateur."""
+    await verify_clerk_token(request)
     body = await request.json()
     email = body.get("email", "")
     first_name = body.get("first_name", "")
@@ -877,9 +1018,11 @@ async def user_welcome(request: Request):
 
 
 @app.get("/api/referral/{clerk_user_id}")
-def get_referral(clerk_user_id: str):
+async def get_referral(clerk_user_id: str, request: Request):
     """Compte le nombre de filleuls d'un utilisateur."""
+    token_user_id = await verify_clerk_token(request)
     clerk_user_id = _safe_id(clerk_user_id)
+    _require_owner(token_user_id, clerk_user_id)
     try:
         rows = _sb_get("users", f"referred_by=eq.{clerk_user_id}&select=id")
         count = len(rows)
@@ -893,6 +1036,7 @@ def get_referral(clerk_user_id: str):
 @app.get("/api/analyse/{share_id}")
 def get_shared_analysis(share_id: str):
     """Retourne une analyse publique par son share_id (pas d'auth requise)."""
+    share_id = _safe_id(share_id)
     try:
         rows = _sb_get(
             "analyses",
@@ -909,9 +1053,11 @@ def get_shared_analysis(share_id: str):
 
 
 @app.get("/api/usage/{user_id}")
-def get_usage(user_id: str):
+async def get_usage(user_id: str, request: Request):
     """Retourne l'usage quotidien et le statut Pro d'un utilisateur."""
+    token_user_id = await verify_clerk_token(request)
     user_id = _safe_id(user_id)
+    _require_owner(token_user_id, user_id)
     is_pro = _is_user_pro(user_id)
     used = _get_today_analysis_count(user_id)
     return {
@@ -922,9 +1068,11 @@ def get_usage(user_id: str):
 
 
 @app.get("/api/user/pro-status/{user_id}")
-def get_pro_status(user_id: str):
+async def get_pro_status(user_id: str, request: Request):
     """Retourne le statut Pro vérifié côté serveur via Supabase."""
+    token_user_id = await verify_clerk_token(request)
     user_id = _safe_id(user_id)
+    _require_owner(token_user_id, user_id)
     is_pro = _is_user_pro(user_id)
     return {"is_pro": is_pro}
 

@@ -11,3 +11,5 @@ pydantic==2.9.2
 stripe>=11.0.0
 resend>=2.0.0
 slowapi>=0.1.9
+PyJWT[crypto]>=2.8.0
+sentry-sdk[fastapi]>=2.0.0

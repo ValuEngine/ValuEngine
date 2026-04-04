@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
 import { Lock, ChevronRight } from "lucide-react";
+import { authedFetch } from "@/lib/api";
 
 const DAILY_FREE_LIMIT = 3;
 
@@ -11,9 +12,9 @@ const DAILY_FREE_LIMIT = 3;
 
 interface UsageData { used: number; limit: number; is_pro: boolean }
 
-async function fetchUsage(userId: string): Promise<UsageData> {
+async function fetchUsage(userId: string, getToken: () => Promise<string | null>): Promise<UsageData> {
   try {
-    const res = await fetch(`/api/usage/${userId}`, { cache: "no-store" });
+    const res = await authedFetch(`/api/usage/${userId}`, getToken, { cache: "no-store" } as RequestInit);
     if (res.ok) return await res.json();
   } catch { /* fallback below */ }
   return { used: 0, limit: DAILY_FREE_LIMIT, is_pro: false };
@@ -112,15 +113,16 @@ export function FreemiumGate({
   onClosePaywall,
 }: GateProps) {
   const { user, isSignedIn } = useUser();
+  const { getToken } = useAuth();
   const [usageData, setUsageData] = useState<UsageData | null>(null);
 
   // Fetch usage on mount and when user changes
   const refreshUsage = useCallback(async () => {
     if (user?.id) {
-      const data = await fetchUsage(user.id);
+      const data = await fetchUsage(user.id, getToken);
       setUsageData(data);
     }
-  }, [user?.id]);
+  }, [user?.id, getToken]);
 
   useEffect(() => { refreshUsage(); }, [refreshUsage]);
 
@@ -158,7 +160,7 @@ export function FreemiumGate({
     }
 
     // Check server-side usage
-    fetchUsage(user.id).then((data) => {
+    fetchUsage(user.id, getToken).then((data) => {
       setUsageData(data);
       if (data.is_pro) {
         onApproved(pendingTicker);

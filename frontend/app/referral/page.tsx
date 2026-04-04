@@ -1,13 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
 import AppLayout from "../../components/AppLayout";
 import { Gift, Copy, Check, Share2 } from "lucide-react";
+import { authedFetch } from "@/lib/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
 export default function ReferralPage() {
   const { user } = useUser();
+  const { getToken } = useAuth();
   const [copied, setCopied] = useState(false);
   const [referrals, setReferrals] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -18,7 +20,7 @@ export default function ReferralPage() {
   useEffect(() => {
     if (!userId) return;
     setLoading(true);
-    fetch(`${API_BASE}/api/referral/${userId}`)
+    authedFetch(`${API_BASE}/api/referral/${userId}`, getToken)
       .then((r) => (r.ok ? r.json() : { count: 0 }))
       .then((data) => setReferrals(data.count ?? 0))
       .catch(() => setReferrals(0))

@@ -9,22 +9,47 @@ import time
 import requests
 from typing import Optional
 
-# ── Cache en mémoire (TTL 15 min) ────────────────────────────────────────────
-CACHE: dict = {}
-CACHE_TTL = 15 * 60
+# ── Thread-safe cache with TTL and max size ──────────────────────────────────
+import threading
+from collections import OrderedDict
+
+class _FmpCache:
+    def __init__(self, max_size=500, ttl=900):
+        self._data: OrderedDict = OrderedDict()
+        self._ts: dict = {}
+        self._lock = threading.Lock()
+        self._max = max_size
+        self._ttl = ttl
+
+    def get(self, key: str):
+        with self._lock:
+            if key not in self._data:
+                return None
+            if time.time() - self._ts[key] > self._ttl:
+                del self._data[key]; del self._ts[key]
+                return None
+            self._data.move_to_end(key)
+            return self._data[key]
+
+    def set(self, key: str, val):
+        with self._lock:
+            if key in self._data:
+                self._data.move_to_end(key)
+            self._data[key] = val
+            self._ts[key] = time.time()
+            while len(self._data) > self._max:
+                k = next(iter(self._data))
+                del self._data[k]; del self._ts[k]
+
+CACHE = _FmpCache(max_size=500, ttl=900)  # 15 min
 
 
 def _cache_get(ticker: str):
-    entry = CACHE.get(ticker)
-    if entry and (time.time() - entry["ts"]) < CACHE_TTL:
-        print(f"[FMP Cache hit]  {ticker}")
-        return entry["data"]
-    return None
+    return CACHE.get(ticker)
 
 
 def _cache_set(ticker: str, data: dict):
-    CACHE[ticker] = {"data": data, "ts": time.time()}
-    print(f"[FMP Cache miss] {ticker} — données mises en cache")
+    CACHE.set(ticker, data)
 
 
 def _safe_float(val, default: float = 0.0) -> float:
@@ -99,10 +124,11 @@ def get_company_data(ticker: str) -> dict:
 
     total_debt  = _safe_float(bs.get("totalDebt"))
     total_cash  = _safe_float(bs.get("cashAndCashEquivalents"))
-    net_debt    = max(total_debt - total_cash, 0.0)
+    # Net debt can be negative (company has more cash than debt = good)
+    net_debt    = total_debt - total_cash
 
     # Enterprise value (calculé, pas besoin de /key-metrics)
-    ev = market_cap + net_debt
+    ev = market_cap + net_debt  # If net_debt < 0, EV < market cap (correct)
 
     # Ratios (calculés à partir des financial statements, pas besoin de /ratios)
     total_equity = _safe_float(bs.get("totalStockholdersEquity"))
