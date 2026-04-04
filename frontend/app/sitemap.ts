@@ -38,7 +38,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   const tickerPages: MetadataRoute.Sitemap = SEO_TICKERS.map((ticker) => ({
-    url: `${BASE}/analyse-action/${ticker}`,
+    url: `${BASE}/analyse/${ticker}`,
     lastModified: now,
     changeFrequency: "daily" as const,
     priority: 0.9,

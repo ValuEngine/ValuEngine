@@ -69,7 +69,7 @@ export async function generateMetadata(
     openGraph: {
       title,
       description,
-      url: `https://valuengine.fr/analyse-action/${t}`,
+      url: `https://valuengine.fr/analyse/${t}`,
       type: "article",
     },
     twitter: {
@@ -97,7 +97,7 @@ export default async function TickerSEOPage(
       "name": "ValuEngine",
       "url": "https://valuengine.fr",
     },
-    "url": `https://valuengine.fr/analyse-action/${t}`,
+    "url": `https://valuengine.fr/analyse/${t}`,
     ...(profile && {
       "additionalProperty": [
         { "@type": "PropertyValue", "name": "Prix", "value": profile.price?.toFixed(2) || "N/A" },

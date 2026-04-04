@@ -370,7 +370,7 @@ export default function LandingPage() {
                 const isBuy = entry.verdict === "BUY";
                 const isSell = entry.verdict === "SELL";
                 return (
-                  <Link key={entry.id} href={`/analyse-action/${entry.ticker}`} className="flex items-center justify-between gap-2 sm:gap-4 bg-[#18181b] border border-[#27272a] hover:border-[#3f3f46] rounded-xl px-3 sm:px-5 py-3 sm:py-4 transition-colors group">
+                  <Link key={entry.id} href={`/analyse/${entry.ticker}`} className="flex items-center justify-between gap-2 sm:gap-4 bg-[#18181b] border border-[#27272a] hover:border-[#3f3f46] rounded-xl px-3 sm:px-5 py-3 sm:py-4 transition-colors group">
                     <div className="flex items-center gap-4 min-w-0">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isBuy ? "bg-emerald-500/10 text-emerald-400" : isSell ? "bg-red-500/10 text-red-400" : "bg-yellow-500/10 text-yellow-400"}`}>
                         {isBuy ? <TrendingUp size={14} /> : isSell ? <TrendingDown size={14} /> : <Minus size={14} />}

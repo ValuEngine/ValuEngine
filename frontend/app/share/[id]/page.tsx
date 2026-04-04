@@ -26,12 +26,12 @@ function ShareButtons({
   };
   const verdictLabel = verdictLabels[verdict] ?? verdict;
 
-  const tweetText = `J'ai analysé $${ticker} avec @ValuEngine — verdict : ${verdictLabel} avec un upside de ${upside.toFixed(1)}% selon le DCF.\nvaluengine.fr/analyse/${id}`;
+  const tweetText = `J'ai analysé $${ticker} avec @ValuEngine — verdict : ${verdictLabel} avec un upside de ${upside.toFixed(1)}% selon le DCF.\nvaluengine.fr/share/${id}`;
 
   const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(`https://valuengine.fr/analyse/${id}`);
+    navigator.clipboard.writeText(`https://valuengine.fr/share/${id}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
