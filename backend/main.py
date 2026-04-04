@@ -1066,6 +1066,84 @@ async def get_referral(clerk_user_id: str, request: Request):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# PORTFOLIO AI INSIGHT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.post("/api/portfolio/ai-insight")
+@limiter.limit("3/minute")
+async def portfolio_ai_insight(request: Request):
+    """AI-powered portfolio analysis. Pro only."""
+    token_user_id = await verify_clerk_token(request)
+
+    if not _is_user_pro(token_user_id):
+        raise HTTPException(status_code=403, detail="Feature Pro uniquement")
+
+    body = await request.json()
+    positions = body.get("positions", [])
+
+    if not positions or not isinstance(positions, list):
+        raise HTTPException(status_code=400, detail="Positions requises")
+
+    import json as _json
+    from anthropic import Anthropic as _Anthropic
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Cle API Anthropic manquante")
+
+    # Format for prompt
+    total_value = sum(float(p.get("current_value", 0)) for p in positions)
+    total_cost = sum(float(p.get("shares", 0)) * float(p.get("avg_price", 0)) for p in positions)
+    total_pnl = total_value - total_cost
+    total_pnl_pct = (total_pnl / total_cost * 100) if total_cost > 0 else 0
+
+    positions_text = _json.dumps([{
+        "ticker": p.get("ticker"),
+        "shares": p.get("shares"),
+        "avg_price": p.get("avg_price"),
+        "current_price": p.get("current_price"),
+        "current_value": p.get("current_value"),
+        "pnl_pct": p.get("pnl_pct"),
+        "sector": p.get("sector", ""),
+    } for p in positions], ensure_ascii=False)
+
+    prompt = f"""Tu es un conseiller en gestion de portefeuille pour investisseurs francais.
+
+Analyse ce portefeuille et retourne un JSON avec :
+{{
+  "score_diversification": number (0-100),
+  "analyse_globale": "3-4 phrases d'analyse du portefeuille",
+  "concentration_risques": ["risque 1", "risque 2", "risque 3"],
+  "opportunites": ["opportunite 1", "opportunite 2"],
+  "recommandation": "1-2 phrases de recommandation concrete"
+}}
+
+Portefeuille a analyser :
+{positions_text}
+
+Valeur totale: ${total_value:.2f}
+P&L total: ${total_pnl:.2f} ({total_pnl_pct:.1f}%)
+Nombre de positions: {len(positions)}
+
+Retourne UNIQUEMENT du JSON valide, sans texte autour. En francais."""
+
+    try:
+        client = _Anthropic(api_key=api_key)
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=1000,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        from services.ai_analyst import _parse_json_response
+        result = _parse_json_response(msg.content[0].text)
+        return result
+    except Exception as e:
+        logger.error(f"[PortfolioAI] Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # SCREENER IA
 # ═══════════════════════════════════════════════════════════════════════════════
 

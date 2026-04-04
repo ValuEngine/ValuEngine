@@ -63,6 +63,11 @@ class TestSecurity:
         resp = client.post("/api/analyze/export-pdf", json={"ticker": "AAPL"})
         assert resp.status_code == 401
 
+    def test_portfolio_ai_insight_requires_auth(self):
+        """POST /api/portfolio/ai-insight must reject unauthenticated requests."""
+        resp = client.post("/api/portfolio/ai-insight", json={"positions": []})
+        assert resp.status_code == 401
+
     def test_screener_search_requires_auth(self):
         """POST /api/screener/search must reject unauthenticated requests."""
         resp = client.post("/api/screener/search", json={"query": "tech actions sous-evaluees"})
