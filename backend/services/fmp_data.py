@@ -233,10 +233,124 @@ def get_peers_data(ticker: str, sector: str) -> list[dict]:
 
 # ── NIVEAU 1 — Deep Financials (5 ans) ──────────────────────────────────────
 
+def _get_deep_financials_yf(ticker: str) -> dict:
+    """Fallback: extract 5-year financials from yfinance when FMP is unavailable."""
+    import yfinance as yf
+
+    cache_key = f"__deep__{ticker}"
+
+    t = yf.Ticker(ticker)
+    inc = t.financials  # columns = years, rows = line items
+    cf = t.cashflow
+    bs = t.balance_sheet
+
+    def _col_values(df, row_name):
+        """Extract values for a given row across all year columns."""
+        if df is None or df.empty or row_name not in df.index:
+            return []
+        return [float(v) if v == v else 0.0 for v in df.loc[row_name].values[:5]]
+
+    # Revenue & Net Income
+    revenue_5y = _col_values(inc, "Total Revenue")
+    net_income_5y = _col_values(inc, "Net Income")
+    gross_profit_5y = _col_values(inc, "Gross Profit")
+    operating_income_5y = _col_values(inc, "Operating Income")
+    ebitda_5y = _col_values(inc, "EBITDA")
+
+    # FCF
+    op_cf = _col_values(cf, "Operating Cash Flow") or _col_values(cf, "Total Cash From Operating Activities")
+    capex = _col_values(cf, "Capital Expenditure") or _col_values(cf, "Capital Expenditures")
+    fcf_5y = [op_cf[i] + capex[i] if i < len(capex) else op_cf[i] for i in range(len(op_cf))]
+
+    # Balance sheet
+    total_debt_5y = _col_values(bs, "Total Debt") or _col_values(bs, "Long Term Debt")
+    total_equity_5y = _col_values(bs, "Stockholders Equity") or _col_values(bs, "Total Stockholder Equity")
+
+    n = max(len(revenue_5y), 1)
+
+    # Growth rates
+    revenue_growth_5y = []
+    for i in range(len(revenue_5y) - 1):
+        prev = revenue_5y[i + 1]
+        curr = revenue_5y[i]
+        revenue_growth_5y.append(round((curr - prev) / prev * 100, 2) if prev else None)
+    revenue_growth_5y.append(None)
+
+    # Margins
+    def _margin(num_list, denom_list):
+        result = []
+        for i in range(min(len(num_list), len(denom_list))):
+            d = denom_list[i]
+            result.append(round(num_list[i] / d * 100, 2) if d else None)
+        return result
+
+    gross_margin_5y = _margin(gross_profit_5y, revenue_5y)
+    operating_margin_5y = _margin(operating_income_5y, revenue_5y)
+    net_margin_5y = _margin(net_income_5y, revenue_5y)
+    fcf_margin_5y = _margin(fcf_5y, revenue_5y)
+
+    # Debt/EBITDA
+    debt_to_ebitda_5y = []
+    for i in range(min(len(total_debt_5y), len(ebitda_5y))):
+        eb = ebitda_5y[i]
+        debt_to_ebitda_5y.append(round(total_debt_5y[i] / eb, 2) if eb else None)
+
+    # ROIC approximation (Operating Income / (Debt + Equity))
+    roic_5y = []
+    for i in range(min(len(operating_income_5y), len(total_debt_5y), len(total_equity_5y))):
+        ic = total_debt_5y[i] + total_equity_5y[i]
+        roic_5y.append(round(operating_income_5y[i] / ic * 100, 2) if ic else None)
+
+    # EPS
+    eps_5y = _col_values(inc, "Diluted EPS") or _col_values(inc, "Basic EPS")
+    eps_growth_5y = []
+    for i in range(len(eps_5y) - 1):
+        prev = eps_5y[i + 1]
+        curr = eps_5y[i]
+        eps_growth_5y.append(round((curr - prev) / abs(prev) * 100, 2) if prev else None)
+    eps_growth_5y.append(None)
+
+    # CapEx intensity
+    capex_intensity = _margin([abs(c) for c in capex], revenue_5y) if capex else []
+
+    # Cash conversion
+    cash_conversion = []
+    for i in range(min(len(fcf_5y), len(net_income_5y))):
+        ni = net_income_5y[i]
+        cash_conversion.append(round(fcf_5y[i] / ni, 2) if ni else None)
+
+    # Years
+    years = []
+    if inc is not None and not inc.empty:
+        for col in inc.columns[:5]:
+            try:
+                years.append(col.year if hasattr(col, "year") else int(str(col)[:4]))
+            except Exception:
+                years.append(None)
+
+    result = {
+        "revenue_5y": revenue_5y,
+        "revenue_growth_5y": revenue_growth_5y,
+        "gross_margin_5y": gross_margin_5y,
+        "operating_margin_5y": operating_margin_5y,
+        "net_margin_5y": net_margin_5y,
+        "fcf_5y": fcf_5y,
+        "fcf_margin_5y": fcf_margin_5y,
+        "roic_5y": roic_5y,
+        "debt_to_ebitda_5y": debt_to_ebitda_5y,
+        "eps_5y": eps_5y,
+        "eps_growth_5y": eps_growth_5y,
+        "capex_intensity": capex_intensity,
+        "cash_conversion": cash_conversion,
+        "years": years,
+    }
+    _cache_set(cache_key, result)
+    return result
+
 def get_deep_financials(ticker: str) -> dict:
     """
     Fetch 5 years of income statement, cash flow, balance sheet, key metrics
-    and financial ratios from FMP. Returns a structured dict for AI analysis.
+    and financial ratios. Tries FMP first, falls back to yfinance if FMP fails.
     """
     ticker = ticker.upper().strip()
 
@@ -246,12 +360,16 @@ def get_deep_financials(ticker: str) -> dict:
     if cached:
         return cached
 
-    # Fetch all 5 endpoints
-    income = _fmp_get(f"/income-statement/{ticker}", {"limit": 5})
-    cashflow = _fmp_get(f"/cash-flow-statement/{ticker}", {"limit": 5})
-    balance = _fmp_get(f"/balance-sheet-statement/{ticker}", {"limit": 5})
-    metrics = _fmp_get(f"/key-metrics/{ticker}", {"limit": 5})
-    ratios = _fmp_get(f"/financial-ratios/{ticker}", {"limit": 5})
+    # Try FMP first, fallback to yfinance
+    try:
+        income = _fmp_get(f"/income-statement/{ticker}", {"limit": 5})
+        cashflow = _fmp_get(f"/cash-flow-statement/{ticker}", {"limit": 5})
+        balance = _fmp_get(f"/balance-sheet-statement/{ticker}", {"limit": 5})
+        metrics = _fmp_get(f"/key-metrics/{ticker}", {"limit": 5})
+        ratios = _fmp_get(f"/financial-ratios/{ticker}", {"limit": 5})
+    except Exception:
+        # FMP failed (403/rate limit) — use yfinance fallback
+        return _get_deep_financials_yf(ticker)
 
     # Normalize to lists
     if not isinstance(income, list): income = []
@@ -387,7 +505,10 @@ def get_sector_benchmarks(ticker: str, sector: str) -> dict:
         screener = []
 
     if not isinstance(screener, list) or len(screener) < 3:
-        return {}
+        # Return empty benchmarks — anomaly detection will skip comparisons
+        result = {"peer_count": 0, "sector": sector}
+        _cache_set(cache_key, result)
+        return result
 
     # Collect metrics from screener results
     pe_list, pb_list, ps_list = [], [], []
