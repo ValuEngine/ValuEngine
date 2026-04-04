@@ -24,9 +24,16 @@ from jwt import PyJWKClient
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from models import AnalyzeRequest, AnalyzeResponse, CompanyData, DCFResult, SensitivityMatrix, BullBearAnalysis
+import traceback
+from models import (
+    AnalyzeRequest, AnalyzeResponse, CompanyData, DCFResult, SensitivityMatrix, BullBearAnalysis,
+    ExportPDFRequest, ScreenerSearchRequest, PortfolioAIRequest,
+    TickerRequest, CheckoutRequest, WelcomeRequest, AlertRequest,
+)
 from services.dcf import calculate_dcf, sensitivity_analysis
-from services.ai_analyst import get_bull_bear_analysis, get_swot_analysis, get_pestle_analysis, get_deep_analysis, detect_anomalies, get_dcf_scenarios, ai_screen_stocks
+from services.ai_analyst import get_bull_bear_analysis, get_swot_analysis, get_pestle_analysis, get_deep_analysis, detect_anomalies, get_dcf_scenarios, ai_screen_stocks, _parse_json_response
+import json as _json
+from anthropic import Anthropic as _Anthropic
 from services.fmp_data import get_deep_financials, get_sector_benchmarks, test_fmp_endpoints, get_fmp_call_count, get_screener_universe
 from services.pdf_generator import generate_analysis_pdf
 
@@ -81,11 +88,12 @@ async def verify_clerk_token(request: Request) -> str:
     """
     client = _get_jwks_client()
     if not client:
-        # If JWKS not configured, fall back to trusting the X-User-Id header
-        # (only acceptable in dev / before JWKS is set up)
-        user_id = request.headers.get("X-User-Id", "")
-        if user_id:
-            return _safe_id(user_id)
+        # X-User-Id fallback ONLY in development (never in production)
+        if os.environ.get("ENVIRONMENT", "production") == "development":
+            user_id = request.headers.get("X-User-Id", "")
+            if user_id:
+                logger.warning(f"[Auth] DEV ONLY: X-User-Id fallback used for {user_id}")
+                return _safe_id(user_id)
         raise HTTPException(status_code=401, detail="Authentification requise")
 
     auth_header = request.headers.get("Authorization", "")
@@ -224,25 +232,40 @@ def _get_today_analysis_count(user_id: str) -> int:
         return 0
 
 
+_pro_cache = None  # initialized after TTLCache definition
+
 def _is_user_pro(user_id: str) -> bool:
-    """Check whether a user has an active Pro subscription."""
+    """Check whether a user has an active Pro subscription (cached 60s)."""
+    global _pro_cache
     user_id = _safe_id_internal(user_id)
     if not _SUPA_URL or not _SUPA_KEY or not user_id:
         return False
+
+    # Lazy init after TTLCache is defined
+    if _pro_cache is None:
+        _pro_cache = TTLCache(max_size=200, default_ttl=60)
+
+    # Check cache first (use sentinel to distinguish False from cache-miss)
+    cached = _pro_cache.get(f"pro:{user_id}")
+    if cached is not None:
+        return cached
+
     try:
         # Try id= first (frontend stores clerk_user_id as "id"), fallback to clerk_user_id=
         rows = _sb_get("users", f"id=eq.{user_id}&select=is_pro,pro_until")
         if not rows:
             rows = _sb_get("users", f"clerk_user_id=eq.{user_id}&select=is_pro,pro_until")
         if not rows:
+            _pro_cache.set(f"pro:{user_id}", False)
             return False
         user = rows[0]
+        is_pro = False
         if user.get("is_pro"):
-            return True
-        pro_until = user.get("pro_until")
-        if pro_until:
-            return datetime.fromisoformat(pro_until.replace("Z", "+00:00")) > datetime.now(timezone.utc)
-        return False
+            is_pro = True
+        elif user.get("pro_until"):
+            is_pro = datetime.fromisoformat(user["pro_until"].replace("Z", "+00:00")) > datetime.now(timezone.utc)
+        _pro_cache.set(f"pro:{user_id}", is_pro)
+        return is_pro
     except Exception as e:
         logger.error(f"[Freemium] Error checking pro status: {e}")
         return False
@@ -384,9 +407,25 @@ def analyze(request: Request, req: AnalyzeRequest):
     ticker = req.ticker.upper().strip()
 
     # ── 0. Freemium enforcement ─────────────────────────────────────────
-    if req.user_id:
-        if not _is_user_pro(req.user_id):
-            used = _get_today_analysis_count(req.user_id)
+    # Derive user_id from auth token (not user-supplied) to prevent quota spoofing
+    user_id = None
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        try:
+            client = _get_jwks_client()
+            if client:
+                token = auth_header[7:]
+                signing_key = client.get_signing_key_from_jwt(token)
+                decoded = jwt.decode(token, signing_key.key, algorithms=["RS256"], options={"verify_aud": False})
+                user_id = decoded.get("sub")
+        except Exception:
+            pass  # Non-blocking — anonymous analysis is allowed
+    elif os.environ.get("ENVIRONMENT", "production") == "development":
+        user_id = request.headers.get("X-User-Id") or req.user_id
+
+    if user_id:
+        if not _is_user_pro(user_id):
+            used = _get_today_analysis_count(user_id)
             if used >= FREE_DAILY_LIMIT:
                 return JSONResponse(
                     status_code=429,
@@ -401,8 +440,8 @@ def analyze(request: Request, req: AnalyzeRequest):
     # ── 1. Données de marché ────────────────────────────────────────────
     try:
         raw = _get_data(ticker)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"Ticker '{ticker}' introuvable")
     except Exception as e:
         logger.error(f"Data fetch error for {ticker}: {e}")
         raise HTTPException(status_code=500, detail="Erreur lors de la récupération des données")
@@ -477,8 +516,8 @@ def analyze(request: Request, req: AnalyzeRequest):
         "upside_pct": dcf.upside_pct,
         "share_id": share_id,
     }
-    if req.user_id:
-        analysis_record["user_id"] = req.user_id
+    if user_id:
+        analysis_record["user_id"] = user_id
     try:
         _sb_post("analyses", analysis_record)
     except Exception as e:
@@ -553,8 +592,8 @@ def search(ticker: str):
             "sector": raw["sector"],
             "price":  raw["price"],
         }
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"Ticker introuvable")
     except Exception as e:
         logger.error(f"Internal error: {e}")
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
@@ -627,7 +666,8 @@ def quote(ticker: str):
             change_pct = round(((price - prev) / prev * 100), 2) if prev else 0
             return {"ticker": t, "name": t, "price": round(price, 2), "change_pct": change_pct}
         except Exception as e:
-            raise HTTPException(status_code=404, detail=str(e))
+            logger.warning(f"[Quote] Error for {t}: {e}")
+            raise HTTPException(status_code=404, detail=f"Ticker '{t}' introuvable")
 
 
 @app.get("/api/profile/{ticker}")
@@ -692,11 +732,14 @@ def profile(ticker: str):
 
 @app.get("/api/ai/swot/{ticker}")
 @limiter.limit("5/minute")
-def swot_endpoint(request: Request, ticker: str):
+async def swot_endpoint(request: Request, ticker: str):
+    await verify_clerk_token(request)
     try:
         raw = _get_data(ticker.upper())
         result = get_swot_analysis(raw)
         return result
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Internal error: {e}")
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
@@ -704,11 +747,14 @@ def swot_endpoint(request: Request, ticker: str):
 
 @app.get("/api/ai/pestle/{ticker}")
 @limiter.limit("5/minute")
-def pestle_endpoint(request: Request, ticker: str):
+async def pestle_endpoint(request: Request, ticker: str):
+    await verify_clerk_token(request)
     try:
         raw = _get_data(ticker.upper())
         result = get_pestle_analysis(raw)
         return result
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Internal error: {e}")
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
@@ -730,11 +776,14 @@ def _cache_set(key: str, data: dict):
 @app.post("/api/analyze/deep-analysis")
 @limiter.limit("5/minute")
 async def deep_analysis_endpoint(request: Request):
-    """Analyse approfondie IA avec données financières 5 ans (Pro only)."""
-    body = await request.json()
-    ticker = body.get("ticker", "").upper().strip()
-    if not ticker:
-        raise HTTPException(status_code=400, detail="ticker requis")
+    """Analyse approfondie IA avec données financières 5 ans."""
+    await verify_clerk_token(request)
+    try:
+        body = await request.json()
+        req = TickerRequest(**body)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ticker requis (max 10 caracteres)")
+    ticker = req.ticker.upper().strip()
 
     # Check cache
     cache_key = f"deep_{ticker}"
@@ -750,17 +799,20 @@ async def deep_analysis_endpoint(request: Request):
         return result
     except Exception as e:
         logger.error(f"[DeepAnalysis] Error for {ticker}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 @app.post("/api/analyze/anomalies")
 @limiter.limit("10/minute")
 async def anomalies_endpoint(request: Request):
     """Détection d'anomalies financières vs benchmarks sectoriels."""
-    body = await request.json()
-    ticker = body.get("ticker", "").upper().strip()
-    if not ticker:
-        raise HTTPException(status_code=400, detail="ticker requis")
+    await verify_clerk_token(request)
+    try:
+        body = await request.json()
+        req = TickerRequest(**body)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ticker requis (max 10 caracteres)")
+    ticker = req.ticker.upper().strip()
 
     cache_key = f"anomalies_{ticker}"
     cached = _cache_get(cache_key, _CACHE_TTL_1H)
@@ -778,17 +830,20 @@ async def anomalies_endpoint(request: Request):
         return result
     except Exception as e:
         logger.error(f"[Anomalies] Error for {ticker}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 @app.post("/api/analyze/dcf-scenarios")
 @limiter.limit("5/minute")
 async def dcf_scenarios_endpoint(request: Request):
     """3 scénarios DCF (bull/base/bear) avec narratif IA."""
-    body = await request.json()
-    ticker = body.get("ticker", "").upper().strip()
-    if not ticker:
-        raise HTTPException(status_code=400, detail="ticker requis")
+    await verify_clerk_token(request)
+    try:
+        body = await request.json()
+        req = TickerRequest(**body)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ticker requis (max 10 caracteres)")
+    ticker = req.ticker.upper().strip()
 
     cache_key = f"dcf_scenarios_{ticker}"
     cached = _cache_get(cache_key, _CACHE_TTL_30M)
@@ -803,7 +858,7 @@ async def dcf_scenarios_endpoint(request: Request):
         return result
     except Exception as e:
         logger.error(f"[DCFScenarios] Error for {ticker}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -819,8 +874,13 @@ async def export_pdf(request: Request):
     if not _is_user_pro(token_user_id):
         raise HTTPException(status_code=403, detail="Feature Pro uniquement")
 
-    body = await request.json()
-    ticker = body.get("ticker", "ANALYSE").upper().strip()
+    try:
+        body = await request.json()
+        pdf_request = ExportPDFRequest(**body)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Donnees invalides pour le PDF")
+
+    ticker = pdf_request.ticker.upper().strip()
 
     try:
         pdf_bytes = generate_analysis_pdf(body)
@@ -842,33 +902,20 @@ from services.email_service import send_alert_email, send_welcome_email
 
 
 @app.post("/api/alerts")
-async def create_alert(req: Request):
-    token_user_id = await verify_clerk_token(req)
-    body          = await req.json()
-    clerk_user_id = body.get("clerk_user_id", "")
-    email         = body.get("email", "")
-    ticker        = body.get("ticker", "").upper().strip()
-    ticker_name   = body.get("ticker_name", ticker)
-    try:
-        target_price = float(body.get("target_price", 0))
-    except (TypeError, ValueError):
-        raise HTTPException(status_code=400, detail="target_price doit être un nombre valide")
-    direction     = body.get("direction", "above")
+@limiter.limit("10/minute")
+async def create_alert(request: Request, body: AlertRequest):
+    token_user_id = await verify_clerk_token(request)
+    _require_owner(token_user_id, body.clerk_user_id)
 
-    if not clerk_user_id or not ticker or target_price <= 0:
-        raise HTTPException(status_code=400, detail="Paramètres invalides")
-    _require_owner(token_user_id, clerk_user_id)
-    if direction not in ("above", "below"):
-        raise HTTPException(status_code=400, detail="direction doit être 'above' ou 'below'")
-
+    ticker = body.ticker.upper().strip()
     try:
         record = _sb_post("alerts", {
-            "user_id":      clerk_user_id,
-            "email":        email,
+            "user_id":      body.clerk_user_id,
+            "email":        body.email,
             "ticker":       ticker,
-            "ticker_name":  ticker_name,
-            "target_price": target_price,
-            "condition":    direction,
+            "ticker_name":  body.ticker_name or ticker,
+            "target_price": body.target_price,
+            "condition":    body.direction,
             "active":       True,
             "is_triggered": False,
         })
@@ -998,10 +1045,14 @@ def check_alerts(request: Request):
 @app.post("/api/stripe/create-checkout")
 @limiter.limit("3/minute")
 async def create_checkout(request: Request):
-    body = await request.json()
-    user_id = body.get("userId", "")
-    user_email = body.get("userEmail", "")
-    plan = body.get("plan", "monthly")  # "monthly" ou "yearly"
+    try:
+        body = await request.json()
+        checkout_req = CheckoutRequest(**body)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Donnees de checkout invalides")
+    user_id = checkout_req.userId
+    user_email = checkout_req.userEmail
+    plan = checkout_req.plan
 
     if not stripe.api_key or stripe.api_key == "sk_test_REMPLACE":
         raise HTTPException(status_code=503, detail="Stripe non configuré")
@@ -1034,15 +1085,17 @@ async def create_checkout(request: Request):
 
 
 @app.post("/api/user/welcome")
+@limiter.limit("5/minute")
 async def user_welcome(request: Request):
     """Envoie un email de bienvenue à un nouvel utilisateur."""
     await verify_clerk_token(request)
-    body = await request.json()
-    email = body.get("email", "")
-    first_name = body.get("first_name", "")
-
-    if not email or not first_name:
+    try:
+        body = await request.json()
+        welcome_req = WelcomeRequest(**body)
+    except Exception:
         raise HTTPException(status_code=400, detail="email et first_name requis")
+    email = welcome_req.email
+    first_name = welcome_req.first_name
 
     ok = send_welcome_email(to=email, first_name=first_name)
     if not ok:
@@ -1078,34 +1131,25 @@ async def portfolio_ai_insight(request: Request):
     if not _is_user_pro(token_user_id):
         raise HTTPException(status_code=403, detail="Feature Pro uniquement")
 
-    body = await request.json()
-    positions = body.get("positions", [])
-
-    if not positions or not isinstance(positions, list):
-        raise HTTPException(status_code=400, detail="Positions requises")
-
-    import json as _json
-    from anthropic import Anthropic as _Anthropic
+    try:
+        body = await request.json()
+        ai_req = PortfolioAIRequest(**body)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Donnees de portefeuille invalides (1-50 positions requises)")
 
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key:
-        raise HTTPException(status_code=500, detail="Cle API Anthropic manquante")
+        logger.error("[PortfolioAI] ANTHROPIC_API_KEY not configured")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
     # Format for prompt
-    total_value = sum(float(p.get("current_value", 0)) for p in positions)
-    total_cost = sum(float(p.get("shares", 0)) * float(p.get("avg_price", 0)) for p in positions)
+    positions = [p.model_dump() for p in ai_req.positions]
+    total_value = sum(p["current_value"] for p in positions)
+    total_cost = sum(p["shares"] * p["avg_price"] for p in positions)
     total_pnl = total_value - total_cost
     total_pnl_pct = (total_pnl / total_cost * 100) if total_cost > 0 else 0
 
-    positions_text = _json.dumps([{
-        "ticker": p.get("ticker"),
-        "shares": p.get("shares"),
-        "avg_price": p.get("avg_price"),
-        "current_price": p.get("current_price"),
-        "current_value": p.get("current_value"),
-        "pnl_pct": p.get("pnl_pct"),
-        "sector": p.get("sector", ""),
-    } for p in positions], ensure_ascii=False)
+    positions_text = _json.dumps(positions, ensure_ascii=False)
 
     prompt = f"""Tu es un conseiller en gestion de portefeuille pour investisseurs francais.
 
@@ -1135,12 +1179,11 @@ Retourne UNIQUEMENT du JSON valide, sans texte autour. En francais."""
             messages=[{"role": "user", "content": prompt}],
         )
 
-        from services.ai_analyst import _parse_json_response
         result = _parse_json_response(msg.content[0].text)
         return result
     except Exception as e:
         logger.error(f"[PortfolioAI] Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1171,18 +1214,19 @@ async def screener_search(request: Request):
     if not _is_user_pro(token_user_id):
         raise HTTPException(status_code=403, detail="Feature Pro uniquement")
 
-    body = await request.json()
-    query = body.get("query", "").strip()
-    if not query or len(query) < 10:
-        raise HTTPException(status_code=400, detail="Requete trop courte (10 caracteres minimum)")
+    try:
+        body = await request.json()
+        screener_req = ScreenerSearchRequest(**body)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Requete invalide (10-500 caracteres)")
 
     try:
         universe = get_screener_universe()
-        results = ai_screen_stocks(query, universe)
+        results = ai_screen_stocks(screener_req.query, universe)
         return results
     except Exception as e:
         logger.error(f"[Screener] Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1227,7 +1271,24 @@ def get_shared_analysis(share_id: str):
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
+# ── Email sequence scheduler (called by GitHub Actions cron) ───────────────
+@app.post("/api/email/trigger-sequence")
+async def trigger_email_sequence(request: Request):
+    """Endpoint interne : envoie les emails D+3, D+7, D+30 aux utilisateurs éligibles."""
+    secret = request.headers.get("X-Internal-Secret", "")
+    if not ALERTS_CHECK_SECRET or secret != ALERTS_CHECK_SECRET:
+        raise HTTPException(status_code=403, detail="Accès non autorisé")
+    try:
+        from services.email_scheduler import run_email_sequences
+        results = run_email_sequences()
+        return {"status": "ok", "results": results}
+    except Exception as e:
+        logger.error(f"[EmailScheduler] Error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors de l'envoi des emails")
+
+
 @app.get("/api/usage/{user_id}")
+@limiter.limit("15/minute")
 async def get_usage(user_id: str, request: Request):
     """Retourne l'usage quotidien et le statut Pro d'un utilisateur."""
     token_user_id = await verify_clerk_token(request)
@@ -1243,6 +1304,7 @@ async def get_usage(user_id: str, request: Request):
 
 
 @app.get("/api/user/pro-status/{user_id}")
+@limiter.limit("15/minute")
 async def get_pro_status(user_id: str, request: Request):
     """Retourne le statut Pro vérifié côté serveur via Supabase."""
     token_user_id = await verify_clerk_token(request)
@@ -1253,7 +1315,8 @@ async def get_pro_status(user_id: str, request: Request):
 
 
 @app.get("/api/stripe/verify-session")
-async def verify_stripe_session(session_id: str):
+@limiter.limit("5/minute")
+async def verify_stripe_session(request: Request, session_id: str):
     """Vérifie une session Stripe Checkout et active le Pro si valide."""
     logger.info(f"[verify-session] Début — session_id={session_id[:20]}...")
 
@@ -1312,8 +1375,6 @@ async def stripe_webhook(request: Request):
     Webhook Stripe — TOUJOURS retourner 200 pour éviter les retries infinis.
     Les erreurs sont loggées mais ne crashent jamais le handler.
     """
-    import traceback
-
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
     webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "")

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { CheckCircle2 } from "lucide-react";
 import { activateProNow } from "@/hooks/useProStatus";
+import { gtmEvents } from "@/lib/analytics";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -41,14 +42,17 @@ function SuccessContent() {
           body: JSON.stringify({ is_pro: true }),
         });
         if (!res.ok) {
-          console.error("[Success] PATCH failed:", res.status);
+          // PATCH failed — non-blocking, webhook will retry
         }
-      } catch (e) {
-        console.error("[Success] PATCH error:", e);
+      } catch {
+        // Network error — non-blocking, webhook will retry
       }
 
       // Step 3: Set optimistic flag for immediate UI update
       activateProNow();
+
+      // Track conversion
+      gtmEvents.checkoutCompleted("pro", 0);
 
       setStatus("ready");
       setTimeout(() => router.push("/dashboard"), 3000);

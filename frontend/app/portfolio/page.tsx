@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import { useUser, useAuth } from "@clerk/nextjs";
 import { Trash2, Plus, X, Loader2, Sparkles } from "lucide-react";
 import { searchTicker, authedFetch } from "@/lib/api";
+import { gtmEvents } from "@/lib/analytics";
 import { useProStatus } from "@/hooks/useProStatus";
 import AppLayout from "@/components/AppLayout";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+
+const MAX_POSITIONS = 50;
 
 interface Position {
   id?: string;
@@ -52,12 +55,18 @@ export default function PortfolioPage() {
   // AI Insight
   const [aiInsight, setAiInsight] = useState<AIInsight | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
+  const [addingPosition, setAddingPosition] = useState(false);
+
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Load from Supabase
   useEffect(() => {
     fetch("/api/db/portfolio")
-      .then((r) => r.json())
-      .then((rows: Array<{ id: string; ticker: string; shares: number; avg_price: number }>) => {
+      .then((r) => {
+        if (!r.ok) throw new Error("Erreur chargement");
+        return r.json();
+      })
+      .then((rows: Array<{ id: string; ticker: string; shares: number; avg_price: number; sector?: string }>) => {
         if (Array.isArray(rows)) {
           setPositions(
             rows.map((r) => ({
@@ -65,28 +74,60 @@ export default function PortfolioPage() {
               ticker: r.ticker,
               shares: r.shares,
               avgPrice: r.avg_price,
+              sector: r.sector || undefined,
             }))
           );
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setLoadError("Impossible de charger le portefeuille. Rechargez la page.");
+      });
   }, []);
 
   const fetchPrices = useCallback(async (pos: Position[]) => {
     if (pos.length === 0) return;
     setLoadingPrices(true);
     const prices: Record<string, number> = {};
+    const sectorUpdates: Record<string, string> = {};
     await Promise.allSettled(
       pos.map(async (p) => {
         try {
           const data = await searchTicker(p.ticker);
           prices[p.ticker] = data.price;
+          // Backfill sector if missing
+          if (!p.sector && data.sector) {
+            sectorUpdates[p.ticker] = data.sector;
+          }
         } catch {
           /* keep previous price */
         }
       })
     );
     setCurrentPrices((prev) => ({ ...prev, ...prices }));
+    // Backfill sectors for positions that were missing them + persist to DB
+    if (Object.keys(sectorUpdates).length > 0) {
+      setPositions((prev) => {
+        const updated = prev.map((p) =>
+          sectorUpdates[p.ticker] ? { ...p, sector: sectorUpdates[p.ticker] } : p
+        );
+        // Persist sector updates to Supabase in background
+        updated.forEach((p) => {
+          if (sectorUpdates[p.ticker]) {
+            fetch("/api/db/portfolio", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                ticker: p.ticker,
+                shares: p.shares,
+                avg_price: p.avgPrice,
+                sector: sectorUpdates[p.ticker],
+              }),
+            }).catch(() => {});
+          }
+        });
+        return updated;
+      });
+    }
     setLoadingPrices(false);
   }, []);
 
@@ -94,7 +135,7 @@ export default function PortfolioPage() {
     fetchPrices(positions);
   }, [positions, fetchPrices]);
 
-  const handleAddPosition = () => {
+  const handleAddPosition = async () => {
     const ticker = newTicker.trim().toUpperCase();
     const shares = parseFloat(newShares);
     const avgPrice = parseFloat(newAvgPrice);
@@ -104,39 +145,75 @@ export default function PortfolioPage() {
       return;
     }
 
-    fetch("/api/db/portfolio", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ticker, shares, avg_price: avgPrice }),
-    })
-      .then((r) => r.json())
-      .then((row) => {
-        const updated = [
-          ...positions.filter((p) => p.ticker !== ticker),
-          { id: row.id, ticker, shares, avgPrice },
-        ];
-        setPositions(updated);
-      })
-      .catch(() => {
-        setPositions((prev) => [
-          ...prev.filter((p) => p.ticker !== ticker),
-          { ticker, shares, avgPrice },
-        ]);
+    // Check max positions limit
+    const isUpdate = positions.some((p) => p.ticker === ticker);
+    if (!isUpdate && positions.length >= MAX_POSITIONS) {
+      setModalError(`Maximum ${MAX_POSITIONS} positions atteint.`);
+      return;
+    }
+
+    setAddingPosition(true);
+    setModalError(null);
+
+    // Validate ticker exists and fetch sector
+    let sector: string | undefined;
+    try {
+      const data = await searchTicker(ticker);
+      if (!data || !data.price) {
+        setModalError(`Ticker "${ticker}" introuvable. Verifie le symbole.`);
+        setAddingPosition(false);
+        return;
+      }
+      sector = data.sector || undefined;
+    } catch {
+      setModalError(`Ticker "${ticker}" introuvable. Verifie le symbole (ex: AAPL, MSFT).`);
+      setAddingPosition(false);
+      return;
+    }
+
+    try {
+      const resp = await fetch("/api/db/portfolio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticker, shares, avg_price: avgPrice, sector: sector || null }),
       });
+      const row = await resp.json();
+      const updated = [
+        ...positions.filter((p) => p.ticker !== ticker),
+        { id: row.id, ticker, shares, avgPrice, sector },
+      ];
+      setPositions(updated);
+      gtmEvents.portfolioPositionAdded(ticker);
+    } catch {
+      setPositions((prev) => [
+        ...prev.filter((p) => p.ticker !== ticker),
+        { ticker, shares, avgPrice, sector },
+      ]);
+    }
+
     setShowModal(false);
     setNewTicker("");
     setNewShares("");
     setNewAvgPrice("");
     setModalError(null);
+    setAddingPosition(false);
   };
 
-  const handleDelete = (ticker: string) => {
-    fetch("/api/db/portfolio", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ticker }),
-    }).catch(() => {});
+  const handleDelete = async (ticker: string) => {
+    const previousPositions = [...positions];
+    // Optimistic update
     setPositions((prev) => prev.filter((p) => p.ticker !== ticker));
+    try {
+      const resp = await fetch("/api/db/portfolio", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticker }),
+      });
+      if (!resp.ok) throw new Error("Delete failed");
+    } catch {
+      // Rollback on failure
+      setPositions(previousPositions);
+    }
   };
 
   const handleAIInsight = async () => {
@@ -222,6 +299,13 @@ export default function PortfolioPage() {
           </button>
         </div>
 
+        {/* ── LOAD ERROR ───────────────────────────────────────────── */}
+        {loadError && (
+          <div className="bg-[#ff4d6d]/10 border border-[#ff4d6d]/30 rounded-xl p-4 mb-6">
+            <p className="text-[#ff4d6d] text-sm">{loadError}</p>
+          </div>
+        )}
+
         {/* ── KPI CARDS ─��──────────────────────────────────────────────── */}
         {positions.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
@@ -287,9 +371,10 @@ export default function PortfolioPage() {
               />
               <button
                 onClick={handleAddPosition}
-                className="bg-[#C9A84C] text-black font-bold rounded-xl px-4 py-2.5 hover:bg-[#e8c55a] transition-colors text-sm"
+                disabled={addingPosition}
+                className="bg-[#C9A84C] text-black font-bold rounded-xl px-4 py-2.5 hover:bg-[#e8c55a] transition-colors text-sm disabled:opacity-50"
               >
-                Ajouter +
+                {addingPosition ? <Loader2 size={14} className="animate-spin inline" /> : "Ajouter +"}
               </button>
             </div>
             {modalError && (
@@ -419,7 +504,7 @@ export default function PortfolioPage() {
             </div>
 
             {/* ── SECTOR DISTRIBUTION ────────────────────────────────────── */}
-            {Object.keys(sectorMap).length >= 2 && (
+            {Object.keys(sectorMap).length >= 1 && !Object.keys(sectorMap).every(k => k === "Autre") && (
               <div className="bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-2xl p-6 mb-8">
                 <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-4">
                   Repartition sectorielle
@@ -676,9 +761,10 @@ export default function PortfolioPage() {
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={handleAddPosition}
-                  className="flex-1 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold py-3 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all"
+                  disabled={addingPosition}
+                  className="flex-1 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold py-3 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all disabled:opacity-50"
                 >
-                  Ajouter
+                  {addingPosition ? <><Loader2 size={14} className="animate-spin inline mr-2" />Verification...</> : "Ajouter"}
                 </button>
                 <button
                   onClick={() => setShowModal(false)}

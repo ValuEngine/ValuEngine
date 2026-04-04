@@ -9,6 +9,7 @@ import { NavAuth } from "@/components/NavAuth";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import { MockupVerdict, MockupBullBear, MockupSensitivity } from "@/components/MockupScreenshots";
 import { searchTicker, type SearchResult } from "@/lib/api";
+import { gtmEvents } from "@/lib/analytics";
 
 /* ── Features ────────────────────────────────────────────────────────── */
 const FEATURES: { title: string; desc: string; pro?: boolean; icon: React.ReactNode }[] = [
@@ -163,6 +164,7 @@ export default function LandingPage() {
 
   /* ── Pricing toggle ── */
   const [annual, setAnnual] = useState(true);
+  const [checkoutErr, setCheckoutErr] = useState("");
 
   const handleAnalyze = (t: string) => {
     const value = (t || ticker).trim().toUpperCase();
@@ -281,7 +283,7 @@ export default function LandingPage() {
                 />
                 {searching && <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-t-2 border-[#C9A84C] rounded-full animate-spin" />}
               </div>
-              <button onClick={() => handleAnalyze("")} disabled={!ticker || hasError} className="font-bold px-5 py-3.5 rounded-xl bg-[#C9A84C] hover:bg-[#b8943d] text-black transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap w-full sm:w-auto">
+              <button onClick={() => { gtmEvents.ctaClicked('hero_analyze'); handleAnalyze(""); }} disabled={!ticker || hasError} className="font-bold px-5 py-3.5 rounded-xl bg-[#C9A84C] hover:bg-[#b8943d] text-black transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap w-full sm:w-auto">
                 Analyser
               </button>
             </div>
@@ -587,8 +589,10 @@ export default function LandingPage() {
               <button
                 onClick={async () => {
                   if (!isSignedIn) { router.push("/sign-up"); return; }
+                  setCheckoutErr("");
+                  gtmEvents.checkoutStarted(annual ? "yearly" : "monthly");
                   try {
-                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://peaceful-acceptance-production-2e1d.up.railway.app";
+                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
                     const res = await fetch(`${apiUrl}/api/stripe/create-checkout`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
@@ -600,13 +604,14 @@ export default function LandingPage() {
                     });
                     const data = await res.json();
                     if (data.url) window.location.href = data.url;
-                    else alert(data.detail || "Erreur lors de la création du paiement.");
-                  } catch { alert("Impossible de contacter le serveur de paiement."); }
+                    else setCheckoutErr(data.detail || "Erreur lors de la création du paiement.");
+                  } catch { setCheckoutErr("Impossible de contacter le serveur de paiement."); }
                 }}
                 className="w-full bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
               >
                 Passer Pro <ChevronRight size={16} />
               </button>
+              {checkoutErr && <p className="text-[#ff4d6d] text-xs text-center mt-2">{checkoutErr}</p>}
               <p className="text-center text-zinc-400 text-sm mt-3">✓ Sans engagement · Annulable à tout moment</p>
             </div>
           </div>
@@ -671,7 +676,7 @@ export default function LandingPage() {
       {/* ── STICKY CTA ───────────────────────────────────────────────── */}
       {showSticky && (
         <button
-          onClick={() => router.push("/analyze")}
+          onClick={() => { gtmEvents.ctaClicked('sticky_analyze'); router.push("/analyze"); }}
           className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 bg-[#C9A84C] hover:bg-[#b8943d] text-[#09090b] font-bold px-4 py-2 sm:px-5 sm:py-3 rounded-xl shadow-lg shadow-[rgba(201,168,76,0.25)] transition-all hover:scale-105 text-xs sm:text-sm"
         >
           Analyser une action →

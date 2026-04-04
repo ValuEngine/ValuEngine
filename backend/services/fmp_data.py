@@ -76,7 +76,10 @@ def _safe_float(val, default: float = 0.0) -> float:
     try:
         if val is None:
             return default
-        return float(val)
+        f = float(val)
+        if f != f:  # NaN check
+            return default
+        return f
     except (TypeError, ValueError):
         return default
 
@@ -274,7 +277,7 @@ def get_peers_data(ticker: str, sector: str) -> list[dict]:
                 "price": peer_price,
                 "market_cap": peer_mcap,
                 "pe_ratio": (peer_price / (peer_ni / peer_shares)) if (peer_ni and peer_shares and peer_ni > 0) else None,
-                "ev_ebitda": (peer_mcap / peer_ebitda) if peer_ebitda and peer_ebitda > 0 else None,
+                "ev_ebitda": ((peer_mcap + _safe_float(pr.get("totalDebt")) - _safe_float(pr.get("cash") or pr.get("cashAndEquivalents"))) / peer_ebitda) if peer_ebitda and peer_ebitda > 0 and peer_mcap else None,
                 "revenue_growth": None,
                 "profit_margin": (peer_ni / peer_rev) if peer_rev and peer_rev > 0 else None,
             })
@@ -716,39 +719,116 @@ def get_screener_universe() -> list:
 
 
 def _get_fallback_universe() -> list:
-    """Fallback universe when FMP screener is unavailable."""
+    """Fallback universe when FMP screener is unavailable.
+    Enriches with real-time data from FMP batch-quote and profile endpoints."""
     TICKERS = [
+        # ── Technology (25) ──
         ("AAPL", "Apple Inc.", "Technology"), ("MSFT", "Microsoft Corp", "Technology"),
-        ("GOOGL", "Alphabet Inc.", "Communication Services"), ("AMZN", "Amazon.com Inc.", "Consumer Cyclical"),
-        ("NVDA", "NVIDIA Corp", "Technology"), ("META", "Meta Platforms", "Communication Services"),
-        ("TSLA", "Tesla Inc.", "Consumer Cyclical"), ("BRK-B", "Berkshire Hathaway", "Financial Services"),
-        ("JPM", "JPMorgan Chase", "Financial Services"), ("JNJ", "Johnson & Johnson", "Healthcare"),
-        ("V", "Visa Inc.", "Financial Services"), ("UNH", "UnitedHealth Group", "Healthcare"),
-        ("HD", "Home Depot", "Consumer Cyclical"), ("PG", "Procter & Gamble", "Consumer Defensive"),
-        ("MA", "Mastercard", "Financial Services"), ("ABBV", "AbbVie Inc.", "Healthcare"),
-        ("KO", "Coca-Cola Co.", "Consumer Defensive"), ("PEP", "PepsiCo Inc.", "Consumer Defensive"),
-        ("COST", "Costco Wholesale", "Consumer Defensive"), ("MRK", "Merck & Co.", "Healthcare"),
-        ("AVGO", "Broadcom Inc.", "Technology"), ("CRM", "Salesforce Inc.", "Technology"),
-        ("ADBE", "Adobe Inc.", "Technology"), ("AMD", "AMD Inc.", "Technology"),
-        ("NFLX", "Netflix Inc.", "Communication Services"), ("DIS", "Walt Disney Co.", "Communication Services"),
-        ("XOM", "Exxon Mobil", "Energy"), ("CVX", "Chevron Corp", "Energy"),
-        ("WMT", "Walmart Inc.", "Consumer Defensive"), ("BAC", "Bank of America", "Financial Services"),
-        ("LLY", "Eli Lilly", "Healthcare"), ("TMO", "Thermo Fisher", "Healthcare"),
-        ("GS", "Goldman Sachs", "Financial Services"), ("CAT", "Caterpillar Inc.", "Industrials"),
-        ("BA", "Boeing Co.", "Industrials"), ("NEE", "NextEra Energy", "Utilities"),
-        ("GE", "GE Aerospace", "Industrials"), ("RTX", "RTX Corp", "Industrials"),
+        ("NVDA", "NVIDIA Corp", "Technology"), ("AVGO", "Broadcom Inc.", "Technology"),
+        ("CRM", "Salesforce Inc.", "Technology"), ("ADBE", "Adobe Inc.", "Technology"),
+        ("AMD", "AMD Inc.", "Technology"), ("INTC", "Intel Corp", "Technology"),
         ("UBER", "Uber Technologies", "Technology"), ("SQ", "Block Inc.", "Technology"),
-        ("SHOP", "Shopify Inc.", "Technology"), ("SPOT", "Spotify Technology", "Communication Services"),
-        ("NET", "Cloudflare Inc.", "Technology"), ("CRWD", "CrowdStrike", "Technology"),
-        ("SNOW", "Snowflake Inc.", "Technology"), ("DDOG", "Datadog Inc.", "Technology"),
-        ("ZS", "Zscaler Inc.", "Technology"), ("PANW", "Palo Alto Networks", "Technology"),
-        ("PLTR", "Palantir Technologies", "Technology"), ("COIN", "Coinbase Global", "Financial Services"),
+        ("SHOP", "Shopify Inc.", "Technology"), ("NET", "Cloudflare Inc.", "Technology"),
+        ("CRWD", "CrowdStrike", "Technology"), ("SNOW", "Snowflake Inc.", "Technology"),
+        ("DDOG", "Datadog Inc.", "Technology"), ("ZS", "Zscaler Inc.", "Technology"),
+        ("PANW", "Palo Alto Networks", "Technology"), ("PLTR", "Palantir Technologies", "Technology"),
+        ("NOW", "ServiceNow Inc.", "Technology"), ("ORCL", "Oracle Corp", "Technology"),
+        ("INTU", "Intuit Inc.", "Technology"), ("MU", "Micron Technology", "Technology"),
+        ("ANET", "Arista Networks", "Technology"), ("FTNT", "Fortinet Inc.", "Technology"),
+        ("TEAM", "Atlassian Corp", "Technology"),
+        # ── Communication Services (8) ──
+        ("GOOGL", "Alphabet Inc.", "Communication Services"), ("META", "Meta Platforms", "Communication Services"),
+        ("NFLX", "Netflix Inc.", "Communication Services"), ("DIS", "Walt Disney Co.", "Communication Services"),
+        ("SPOT", "Spotify Technology", "Communication Services"), ("TTWO", "Take-Two Interactive", "Communication Services"),
+        ("RBLX", "Roblox Corp", "Communication Services"), ("PINS", "Pinterest Inc.", "Communication Services"),
+        # ── Consumer Cyclical (12) ──
+        ("AMZN", "Amazon.com Inc.", "Consumer Cyclical"), ("TSLA", "Tesla Inc.", "Consumer Cyclical"),
+        ("HD", "Home Depot", "Consumer Cyclical"), ("NKE", "Nike Inc.", "Consumer Cyclical"),
+        ("SBUX", "Starbucks Corp", "Consumer Cyclical"), ("MCD", "McDonald's Corp", "Consumer Cyclical"),
+        ("LOW", "Lowe's Companies", "Consumer Cyclical"), ("TJX", "TJX Companies", "Consumer Cyclical"),
+        ("BKNG", "Booking Holdings", "Consumer Cyclical"), ("ABNB", "Airbnb Inc.", "Consumer Cyclical"),
+        ("LULU", "Lululemon Athletica", "Consumer Cyclical"), ("CMG", "Chipotle Mexican Grill", "Consumer Cyclical"),
+        # ── Consumer Defensive (8) ──
+        ("PG", "Procter & Gamble", "Consumer Defensive"), ("KO", "Coca-Cola Co.", "Consumer Defensive"),
+        ("PEP", "PepsiCo Inc.", "Consumer Defensive"), ("COST", "Costco Wholesale", "Consumer Defensive"),
+        ("WMT", "Walmart Inc.", "Consumer Defensive"), ("CL", "Colgate-Palmolive", "Consumer Defensive"),
+        ("MDLZ", "Mondelez International", "Consumer Defensive"), ("KHC", "Kraft Heinz Co.", "Consumer Defensive"),
+        # ── Healthcare (15) ──
+        ("JNJ", "Johnson & Johnson", "Healthcare"), ("UNH", "UnitedHealth Group", "Healthcare"),
+        ("ABBV", "AbbVie Inc.", "Healthcare"), ("MRK", "Merck & Co.", "Healthcare"),
+        ("LLY", "Eli Lilly", "Healthcare"), ("TMO", "Thermo Fisher", "Healthcare"),
+        ("PFE", "Pfizer Inc.", "Healthcare"), ("ABT", "Abbott Laboratories", "Healthcare"),
+        ("AMGN", "Amgen Inc.", "Healthcare"), ("GILD", "Gilead Sciences", "Healthcare"),
+        ("ISRG", "Intuitive Surgical", "Healthcare"), ("VRTX", "Vertex Pharmaceuticals", "Healthcare"),
+        ("REGN", "Regeneron Pharma", "Healthcare"), ("DXCM", "DexCom Inc.", "Healthcare"),
+        ("MRNA", "Moderna Inc.", "Healthcare"),
+        # ── Financial Services (12) ──
+        ("BRK-B", "Berkshire Hathaway", "Financial Services"), ("JPM", "JPMorgan Chase", "Financial Services"),
+        ("V", "Visa Inc.", "Financial Services"), ("MA", "Mastercard", "Financial Services"),
+        ("BAC", "Bank of America", "Financial Services"), ("GS", "Goldman Sachs", "Financial Services"),
+        ("MS", "Morgan Stanley", "Financial Services"), ("BLK", "BlackRock Inc.", "Financial Services"),
+        ("COIN", "Coinbase Global", "Financial Services"), ("SCHW", "Charles Schwab", "Financial Services"),
+        ("AXP", "American Express", "Financial Services"), ("C", "Citigroup Inc.", "Financial Services"),
+        # ── Energy (8) ──
+        ("XOM", "Exxon Mobil", "Energy"), ("CVX", "Chevron Corp", "Energy"),
+        ("COP", "ConocoPhillips", "Energy"), ("SLB", "Schlumberger Ltd.", "Energy"),
+        ("EOG", "EOG Resources", "Energy"), ("OXY", "Occidental Petroleum", "Energy"),
+        ("ENPH", "Enphase Energy", "Energy"), ("FSLR", "First Solar Inc.", "Energy"),
+        # ── Industrials (12) ──
+        ("CAT", "Caterpillar Inc.", "Industrials"), ("BA", "Boeing Co.", "Industrials"),
+        ("GE", "GE Aerospace", "Industrials"), ("RTX", "RTX Corp", "Industrials"),
+        ("HON", "Honeywell International", "Industrials"), ("UNP", "Union Pacific", "Industrials"),
+        ("DE", "Deere & Co.", "Industrials"), ("LMT", "Lockheed Martin", "Industrials"),
+        ("UPS", "United Parcel Service", "Industrials"), ("WM", "Waste Management", "Industrials"),
+        ("ETN", "Eaton Corp", "Industrials"), ("ITW", "Illinois Tool Works", "Industrials"),
+        # ── Utilities (4) ──
+        ("NEE", "NextEra Energy", "Utilities"), ("DUK", "Duke Energy", "Utilities"),
+        ("SO", "Southern Company", "Utilities"), ("AEP", "American Electric Power", "Utilities"),
+        # ── Real Estate (4) ──
+        ("PLD", "Prologis Inc.", "Real Estate"), ("AMT", "American Tower", "Real Estate"),
+        ("CCI", "Crown Castle", "Real Estate"), ("O", "Realty Income", "Real Estate"),
+        # ── Materials (4) ──
+        ("LIN", "Linde plc", "Materials"), ("APD", "Air Products", "Materials"),
+        ("NEM", "Newmont Corp", "Materials"), ("FCX", "Freeport-McMoRan", "Materials"),
     ]
-    return [
-        {"symbol": t[0], "name": t[1], "sector": t[2], "industry": "", "marketCap": 0,
-         "country": "US", "beta": None, "pe": None, "price": 0}
+
+    base_universe = {
+        t[0]: {"symbol": t[0], "name": t[1], "sector": t[2], "industry": "", "marketCap": 0,
+               "country": "US", "beta": None, "pe": None, "price": 0}
         for t in TICKERS
-    ]
+    }
+
+    # Enrich with live data from FMP batch-quote (real prices + market caps)
+    api_key = os.environ.get("FMP_API_KEY", "")
+    if api_key:
+        try:
+            symbols = list(base_universe.keys())
+            # FMP batch-quote supports comma-separated symbols
+            batch_size = 50
+            for i in range(0, len(symbols), batch_size):
+                batch = symbols[i:i + batch_size]
+                joined = ",".join(batch)
+                url = f"{FMP_BASE}/batch-quote?symbol={joined}&apikey={api_key}"
+                r = requests.get(url, timeout=10)
+                if r.status_code == 200:
+                    for q in r.json():
+                        sym = q.get("symbol", "")
+                        if sym in base_universe:
+                            base_universe[sym]["price"] = _safe_float(q.get("price"))
+                            base_universe[sym]["marketCap"] = _safe_float(q.get("marketCap") or q.get("mktCap"))
+                            base_universe[sym]["pe"] = _safe_float(q.get("pe")) or None
+                            base_universe[sym]["beta"] = _safe_float(q.get("beta")) or None
+                            # changesPercentage gives us a quick signal
+                            change = _safe_float(q.get("changesPercentage"))
+                            if change:
+                                base_universe[sym]["change_pct"] = round(change, 2)
+            logger.info(f"[Screener] Enriched {len(base_universe)} stocks with live FMP data")
+        except Exception as e:
+            logger.warning(f"[Screener] Batch-quote enrichment failed: {e}")
+
+    result = list(base_universe.values())
+    CACHE.set("screener_universe", result)
+    return result
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

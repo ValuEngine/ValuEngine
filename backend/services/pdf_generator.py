@@ -4,17 +4,22 @@ Generates branded analysis reports using ReportLab.
 """
 
 import io
+import html
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import mm, cm
 from reportlab.lib.colors import Color, HexColor, white, black
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    PageBreak, Frame, PageTemplate, BaseDocTemplate
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak,
 )
-from reportlab.pdfgen import canvas
+
+
+def _esc(val) -> str:
+    """Escape HTML/XML special characters for safe ReportLab Paragraph rendering."""
+    if val is None:
+        return "N/A"
+    return html.escape(str(val))
 
 
 # ── Color Palette ────────────────────────────────────────────────────────────
@@ -197,9 +202,9 @@ def generate_analysis_pdf(analysis_data: dict) -> bytes:
 
     story = []
 
-    ticker       = analysis_data.get("ticker", "N/A")
-    company_name = analysis_data.get("company_name", ticker)
-    verdict      = analysis_data.get("verdict", "HOLD")
+    ticker       = _esc(analysis_data.get("ticker", "N/A"))
+    company_name = _esc(analysis_data.get("company_name", analysis_data.get("ticker", "N/A")))
+    verdict      = _esc(analysis_data.get("verdict", "HOLD"))
     price        = analysis_data.get("price", 0)
     intrinsic    = analysis_data.get("intrinsic_price", 0)
     kpis         = analysis_data.get("kpis", {})
@@ -377,12 +382,12 @@ def generate_analysis_pdf(analysis_data: dict) -> bytes:
 
         bull = deep.get("bull_case", {})
         bear = deep.get("bear_case", {})
-        synthese = deep.get("synthese", "")
+        synthese = _esc(deep.get("synthese", ""))
 
-        # ── Bull Case ──
-        bull_title = bull.get("titre", "Bull Case") if isinstance(bull, dict) else "Bull Case"
+        # ── Bull Case ─��
+        bull_title = _esc(bull.get("titre", "Bull Case")) if isinstance(bull, dict) else "Bull Case"
         bull_conf  = bull.get("score_confiance", "") if isinstance(bull, dict) else ""
-        conf_str   = f" — Confiance : {bull_conf}%" if bull_conf else ""
+        conf_str   = f" — Confiance : {_esc(bull_conf)}%" if bull_conf else ""
 
         story.append(Paragraph(
             f'<font color="#166534"><b>BULL CASE{conf_str}</b></font>',
@@ -394,9 +399,9 @@ def generate_analysis_pdf(analysis_data: dict) -> bytes:
         if isinstance(bull, dict):
             for arg in bull.get("arguments", []):
                 if isinstance(arg, dict):
-                    titre_arg = arg.get("titre", "")
-                    detail = arg.get("detail", "")
-                    chiffre = arg.get("chiffre_cle", "")
+                    titre_arg = _esc(arg.get("titre", ""))
+                    detail = _esc(arg.get("detail", ""))
+                    chiffre = _esc(arg.get("chiffre_cle", ""))
                     story.append(Paragraph(
                         f'<b>{titre_arg}</b> — {detail}',
                         styles["Bull_VE"]
@@ -408,14 +413,14 @@ def generate_analysis_pdf(analysis_data: dict) -> bytes:
                         ))
                     story.append(Spacer(1, 4))
         elif isinstance(bull, str):
-            story.append(Paragraph(bull, styles["Bull_VE"]))
+            story.append(Paragraph(_esc(bull), styles["Bull_VE"]))
 
         story.append(Spacer(1, 12))
 
         # ── Bear Case ──
-        bear_title = bear.get("titre", "Bear Case") if isinstance(bear, dict) else "Bear Case"
+        bear_title = _esc(bear.get("titre", "Bear Case")) if isinstance(bear, dict) else "Bear Case"
         bear_conf  = bear.get("score_confiance", "") if isinstance(bear, dict) else ""
-        bconf_str  = f" — Confiance : {bear_conf}%" if bear_conf else ""
+        bconf_str  = f" — Confiance : {_esc(bear_conf)}%" if bear_conf else ""
 
         story.append(Paragraph(
             f'<font color="#991b1b"><b>BEAR CASE{bconf_str}</b></font>',
@@ -427,9 +432,9 @@ def generate_analysis_pdf(analysis_data: dict) -> bytes:
         if isinstance(bear, dict):
             for arg in bear.get("arguments", []):
                 if isinstance(arg, dict):
-                    titre_arg = arg.get("titre", "")
-                    detail = arg.get("detail", "")
-                    chiffre = arg.get("chiffre_cle", "")
+                    titre_arg = _esc(arg.get("titre", ""))
+                    detail = _esc(arg.get("detail", ""))
+                    chiffre = _esc(arg.get("chiffre_cle", ""))
                     story.append(Paragraph(
                         f'<b>{titre_arg}</b> — {detail}',
                         styles["Bear_VE"]
@@ -441,7 +446,7 @@ def generate_analysis_pdf(analysis_data: dict) -> bytes:
                         ))
                     story.append(Spacer(1, 4))
         elif isinstance(bear, str):
-            story.append(Paragraph(bear, styles["Bear_VE"]))
+            story.append(Paragraph(_esc(bear), styles["Bear_VE"]))
 
         story.append(Spacer(1, 12))
 
@@ -491,7 +496,7 @@ def generate_analysis_pdf(analysis_data: dict) -> bytes:
             prix = sc.get("prix_cible", 0)
             upside_sc = sc.get("upside_pct", 0)
             prob = sc.get("probabilite", "")
-            narratif = sc.get("narratif", "")
+            narratif = _esc(sc.get("narratif", ""))
             # Truncate narrative to ~120 chars
             if len(narratif) > 120:
                 narratif = narratif[:117] + "..."
@@ -549,7 +554,7 @@ def generate_analysis_pdf(analysis_data: dict) -> bytes:
         story.append(sc_table)
 
         # Conclusion
-        conclusion = dcf_sc.get("conclusion", "")
+        conclusion = _esc(dcf_sc.get("conclusion", ""))
         if conclusion:
             story.append(Spacer(1, 12))
             story.append(Paragraph(f"<b>Conclusion :</b> {conclusion}", styles["Body_VE"]))

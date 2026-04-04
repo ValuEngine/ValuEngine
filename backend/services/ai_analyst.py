@@ -139,9 +139,10 @@ def get_bull_bear_analysis(company: dict, dcf: dict) -> dict:
         return {"bull_case": bull, "bear_case": bear}
 
     except Exception as e:
+        logger.error(f"[BullBear] Error: {e}")
         return {
-            "bull_case": f"Erreur lors de la génération de l'analyse : {e}",
-            "bear_case": "Vérifiez votre clé API Anthropic.",
+            "bull_case": "Analyse temporairement indisponible.",
+            "bear_case": "Veuillez réessayer dans quelques instants.",
         }
 
 
@@ -177,14 +178,11 @@ Chaque point: 1 phrase concise en français, ancrée dans les données financiè
             max_tokens=600,
             messages=[{"role": "user", "content": prompt}]
         )
-        import json, re
-        text = message.content[0].text.strip()
-        text = re.sub(r"^```(?:json)?\s*", "", text)
-        text = re.sub(r"\s*```$", "", text)
-        return json.loads(text)
+        return _parse_json_response(message.content[0].text)
     except Exception as e:
+        logger.warning(f"[SWOT] Error: {e}")
         return {
-            "strengths": [f"Erreur lors de la génération SWOT : {e}"],
+            "strengths": ["Analyse SWOT temporairement indisponible"],
             "weaknesses": [], "opportunities": [], "threats": [],
         }
 
@@ -218,17 +216,17 @@ En français, factuel, ancré dans le secteur de l'entreprise."""
             max_tokens=800,
             messages=[{"role": "user", "content": prompt}]
         )
-        text = message.content[0].text.strip()
-        return _parse_json_response(text)
+        return _parse_json_response(message.content[0].text)
     except Exception as e:
+        logger.warning(f"[PESTLE] Error: {e}")
         return {
-            "political": f"Erreur lors de la génération PESTLE : {e}",
+            "political": "Analyse PESTLE temporairement indisponible.",
             "economic": "", "social": "", "technological": "", "legal": "", "environmental": "",
         }
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# NIVEAU 1 — Analyse contextuelle profonde (claude-sonnet-4-6)
+# NIVEAU 1 — Analyse contextuelle profonde (Claude Haiku)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def get_deep_analysis(ticker: str, company_info: dict, financials: dict, deep_financials: dict) -> dict:
@@ -376,10 +374,10 @@ Format JSON attendu:
         return result
     except json.JSONDecodeError as e:
         logger.error(f"[DeepAnalysis] JSON parse error: {e}\nRaw text: {msg.content[0].text[:500]}")
-        return {"error": f"Erreur de parsing JSON: {e}"}
+        return {"error": "Erreur lors de l'analyse. Veuillez réessayer."}
     except Exception as e:
         logger.error(f"[DeepAnalysis] Error: {e}")
-        return {"error": str(e)}
+        return {"error": "Analyse temporairement indisponible."}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -686,7 +684,7 @@ Format attendu:
         }
     except Exception as e:
         logger.error(f"[DCFScenarios] Error: {e}")
-        return {"error": str(e)}
+        return {"error": "Scénarios DCF temporairement indisponibles."}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -704,19 +702,22 @@ def ai_screen_stocks(user_query: str, universe: list) -> dict:
 
     client = Anthropic(api_key=api_key)
 
-    # Compact universe data for the prompt
+    # Compact universe data for the prompt — include real financial data
     universe_compact = json.dumps([
         {"s": s.get("symbol"), "n": s.get("name"), "sec": s.get("sector", ""),
          "ind": s.get("industry", ""), "mc": s.get("marketCap", 0),
-         "pe": s.get("pe"), "beta": s.get("beta"), "co": s.get("country", "")}
+         "pe": s.get("pe"), "beta": s.get("beta"), "co": s.get("country", ""),
+         "px": s.get("price", 0), "chg": s.get("change_pct")}
         for s in universe[:200]
     ], ensure_ascii=False)
+
+    actual_count = len(universe)
 
     prompt = f"""Tu es un analyste financier expert specialise dans le stock screening.
 
 L'utilisateur cherche : "{user_query}"
 
-Voici l'univers de {len(universe)} actions disponibles (format compact) :
+Voici l'univers de {actual_count} actions disponibles avec leurs donnees financieres reelles (format compact : s=symbol, n=nom, sec=secteur, mc=market cap, pe=P/E ratio, beta=beta, px=prix actuel, chg=variation %) :
 {universe_compact}
 
 CONSIGNES :
@@ -741,7 +742,7 @@ Format JSON attendu :
     }}
   ],
   "interpretation_requete": "Comment tu as compris la recherche de l'utilisateur",
-  "nb_actions_analysees": {len(universe)}
+  "nb_actions_analysees": {actual_count}
 }}
 
 Classe les resultats par score_match decroissant."""
@@ -770,7 +771,7 @@ Classe les resultats par score_match decroissant."""
 
     except json.JSONDecodeError as e:
         logger.error(f"[AIScreener] JSON parse error: {e}")
-        return {"error": f"Erreur de parsing JSON: {e}", "resultats": []}
+        return {"error": "Erreur lors de l'analyse. Veuillez réessayer.", "resultats": []}
     except Exception as e:
         logger.error(f"[AIScreener] Error: {e}")
-        return {"error": str(e), "resultats": []}
+        return {"error": "Screener temporairement indisponible.", "resultats": []}

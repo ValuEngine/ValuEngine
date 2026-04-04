@@ -6,6 +6,7 @@ import { useUser, useAuth } from "@clerk/nextjs";
 import { Loader2, Search, Sparkles } from "lucide-react";
 import { useProStatus } from "@/hooks/useProStatus";
 import { authedFetch } from "@/lib/api";
+import { gtmEvents } from "@/lib/analytics";
 import AppLayout from "@/components/AppLayout";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
@@ -54,8 +55,13 @@ export default function ScreenerPage() {
       return;
     }
 
-    if (!isPro) return;
+    if (!isPro) {
+      gtmEvents.proGateSeen('screener');
+      setError("Fonctionnalite reservee aux membres Pro. Passez Pro pour acceder au Screener IA.");
+      return;
+    }
 
+    gtmEvents.screenerUsed(query.trim().length);
     setLoading(true);
     setError(null);
     setResults(null);

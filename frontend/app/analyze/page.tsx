@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { FreemiumGate } from "@/components/FreemiumWrapper";
 import { analyzeStock, warmupBackend, fmt, pct, currencySymbol, authedFetch, type AnalyzeResponse } from "@/lib/api";
+import { gtmEvents } from "@/lib/analytics";
 import { SensitivityHeatmap } from "@/components/SensitivityHeatmap";
 import { FCFChart } from "@/components/FCFChart";
 import { TradingComps } from "@/components/TradingComps";
@@ -209,6 +210,7 @@ function SwotSection({ ticker }: { ticker: string }) {
   const [data, setData] = useState<SwotData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { getToken } = useAuth();
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -216,7 +218,7 @@ function SwotSection({ ticker }: { ticker: string }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/ai/swot/${ticker}`);
+      const res = await authedFetch(`${API_BASE}/api/ai/swot/${ticker}`, getToken);
       if (!res.ok) throw new Error(`Erreur ${res.status}`);
       const json: SwotData = await res.json();
       setData(json);
@@ -280,6 +282,7 @@ function PestleSection({ ticker }: { ticker: string }) {
   const [data, setData] = useState<PestleData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { getToken } = useAuth();
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -287,7 +290,7 @@ function PestleSection({ ticker }: { ticker: string }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/ai/pestle/${ticker}`);
+      const res = await authedFetch(`${API_BASE}/api/ai/pestle/${ticker}`, getToken);
       if (!res.ok) throw new Error(`Erreur ${res.status}`);
       const json: PestleData = await res.json();
       setData(json);
@@ -392,6 +395,7 @@ function PriceAlertSection({ ticker, tickerName }: { ticker: string; tickerName:
       .then((data: AlertItem[]) => setAlerts(data.filter(a => a.ticker === ticker && a.active)))
       .catch(() => {})
       .finally(() => setAlertsLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, ticker, API_BASE]);
 
   const handleCreate = async () => {
@@ -420,8 +424,14 @@ function PriceAlertSection({ ticker, tickerName }: { ticker: string; tickerName:
   };
 
   const handleDelete = async (alertId: string) => {
+    const previousAlerts = [...alerts];
     setAlerts(prev => prev.filter(a => a.id !== alertId));
-    await authedFetch(`${API_BASE}/api/alerts/${alertId}`, getToken, { method: "DELETE" }).catch(() => {});
+    try {
+      const resp = await authedFetch(`${API_BASE}/api/alerts/${alertId}`, getToken, { method: "DELETE" });
+      if (!resp.ok) throw new Error("Delete failed");
+    } catch {
+      setAlerts(previousAlerts);
+    }
   };
 
   if (!isSignedIn) return null;
@@ -574,11 +584,12 @@ function AnalyzePage() {
 
   const handleExportPDF = async () => {
     if (!isPro) {
+      gtmEvents.proGateSeen('pdf_export');
       setShowPaywall(true);
       return;
     }
     if (!data) return;
-
+    gtmEvents.pdfExported(data.company.ticker);
     setExportingPDF(true);
     try {
       const token = await getToken();
@@ -618,14 +629,18 @@ function AnalyzePage() {
       if (!response.ok) throw new Error("Erreur generation PDF");
 
       const blob = await response.blob();
+      // Validate response is actually a PDF
+      if (!blob.type.includes("pdf") && blob.size < 500) {
+        throw new Error("Reponse invalide du serveur");
+      }
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `ValuEngine_${data.company.ticker}_${new Date().toISOString().split("T")[0]}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Export PDF failed:", error);
+    } catch {
+      setError("Erreur lors de l'export PDF. Veuillez réessayer.");
     } finally {
       setExportingPDF(false);
     }
@@ -637,6 +652,7 @@ function AnalyzePage() {
     setError(null);
     setRetryInfo(null);
     setData(null);
+    gtmEvents.firstAnalysisStarted(symbol);
     try {
       const result = await analyzeStock(
         {
@@ -650,6 +666,7 @@ function AnalyzePage() {
       );
       setData(result);
       saveRecent(result);
+      gtmEvents.firstAnalysisCompleted(symbol, result.verdict);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Erreur inconnue";
       setError(

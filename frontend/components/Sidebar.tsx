@@ -57,6 +57,7 @@ export default function Sidebar() {
   const router = useRouter();
   const { isSignedIn, user } = useUser();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
 
   const { isPro, loading: proLoading } = useProStatus(user?.id);
 
@@ -189,34 +190,40 @@ export default function Sidebar() {
           </div>
         )}
         {isSignedIn && !isPro && !proLoading && (
-          <button
-            onClick={async () => {
-              if (!user) { router.push("/sign-up"); return; }
-              try {
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://peaceful-acceptance-production-2e1d.up.railway.app";
-                const res = await fetch(`${apiUrl}/api/stripe/create-checkout`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    userId: user.id,
-                    userEmail: user.emailAddresses?.[0]?.emailAddress,
-                    plan: "monthly",
-                  }),
-                });
-                const data = await res.json();
-                if (data.url) {
-                  window.location.href = data.url;
-                } else {
-                  alert(data.detail || "Erreur lors de la création du paiement. Réessaie.");
+          <>
+            <button
+              onClick={async () => {
+                if (!user) { router.push("/sign-up"); return; }
+                setCheckoutError("");
+                try {
+                  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+                  const res = await fetch(`${apiUrl}/api/stripe/create-checkout`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      userId: user.id,
+                      userEmail: user.emailAddresses?.[0]?.emailAddress,
+                      plan: "monthly",
+                    }),
+                  });
+                  const data = await res.json();
+                  if (data.url) {
+                    window.location.href = data.url;
+                  } else {
+                    setCheckoutError(data.detail || "Erreur lors de la création du paiement.");
+                  }
+                } catch {
+                  setCheckoutError("Impossible de contacter le serveur de paiement.");
                 }
-              } catch (e) {
-                alert("Impossible de contacter le serveur de paiement. Réessaie dans quelques secondes.");
-              }
-            }}
-            className="w-full text-sm font-bold text-[#09090b] bg-[#C9A84C] hover:bg-[#b8943d] py-2.5 rounded-lg transition-all shadow-md shadow-[#C9A84C]/20 hover:shadow-lg hover:shadow-[#C9A84C]/30 mb-1"
-          >
-            Passer Pro ✦
-          </button>
+              }}
+              className="w-full text-sm font-bold text-[#09090b] bg-[#C9A84C] hover:bg-[#b8943d] py-2.5 rounded-lg transition-all shadow-md shadow-[#C9A84C]/20 hover:shadow-lg hover:shadow-[#C9A84C]/30 mb-1"
+            >
+              Passer Pro ✦
+            </button>
+            {checkoutError && (
+              <p className="text-[#ff4d6d] text-[11px] px-1 mt-1">{checkoutError}</p>
+            )}
+          </>
         )}
       </div>
     </div>

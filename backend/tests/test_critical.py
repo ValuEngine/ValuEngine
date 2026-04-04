@@ -79,6 +79,31 @@ class TestSecurity:
         assert resp.status_code == 200
         assert len(resp.json()["suggestions"]) >= 3
 
+    def test_deep_analysis_requires_auth(self):
+        """POST /api/analyze/deep-analysis must reject unauthenticated requests."""
+        resp = client.post("/api/analyze/deep-analysis", json={"ticker": "AAPL"})
+        assert resp.status_code == 401
+
+    def test_anomalies_requires_auth(self):
+        """POST /api/analyze/anomalies must reject unauthenticated requests."""
+        resp = client.post("/api/analyze/anomalies", json={"ticker": "AAPL"})
+        assert resp.status_code == 401
+
+    def test_dcf_scenarios_requires_auth(self):
+        """POST /api/analyze/dcf-scenarios must reject unauthenticated requests."""
+        resp = client.post("/api/analyze/dcf-scenarios", json={"ticker": "AAPL"})
+        assert resp.status_code == 401
+
+    def test_swot_requires_auth(self):
+        """GET /api/ai/swot/{ticker} must reject unauthenticated requests."""
+        resp = client.get("/api/ai/swot/AAPL")
+        assert resp.status_code == 401
+
+    def test_pestle_requires_auth(self):
+        """GET /api/ai/pestle/{ticker} must reject unauthenticated requests."""
+        resp = client.get("/api/ai/pestle/AAPL")
+        assert resp.status_code == 401
+
     def test_admin_fmp_status_requires_secret(self):
         """GET /api/admin/fmp-endpoints-status must reject without secret."""
         resp = client.get("/api/admin/fmp-endpoints-status")
@@ -156,6 +181,123 @@ class TestFinancials:
         result_negative = calculate_dcf(1e9, 0.08, 0.10, 0.025, 5, 1e9, -1e9)
         assert result_negative["equity_value"] > result_positive["equity_value"]
         assert result_negative["intrinsic_value"] > result_positive["intrinsic_value"]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PYDANTIC MODEL VALIDATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestModels:
+    def test_analyze_request_rejects_extreme_wacc(self):
+        """WACC must be between 2% and 30%."""
+        from models import AnalyzeRequest
+        import pytest
+        with pytest.raises(Exception):
+            AnalyzeRequest(ticker="AAPL", wacc=5.0)  # 500%
+        with pytest.raises(Exception):
+            AnalyzeRequest(ticker="AAPL", wacc=0.001)  # 0.1%
+
+    def test_analyze_request_rejects_extreme_growth(self):
+        """Growth rate must be between -50% and +50%."""
+        from models import AnalyzeRequest
+        import pytest
+        with pytest.raises(Exception):
+            AnalyzeRequest(ticker="AAPL", growth_rate=1.5)  # 150%
+
+    def test_analyze_request_terminal_less_than_wacc(self):
+        """terminal_growth must be < wacc (auto-corrected by validator)."""
+        from models import AnalyzeRequest
+        # terminal_growth=0.08, wacc=0.08 → validator should correct to 0.075
+        req = AnalyzeRequest(ticker="AAPL", wacc=0.08, terminal_growth=0.08)
+        assert req.terminal_growth < req.wacc
+        # Also test that terminal_growth > 0.08 is rejected by Field constraint
+        import pytest
+        with pytest.raises(Exception):
+            AnalyzeRequest(ticker="AAPL", wacc=0.10, terminal_growth=0.10)
+
+    def test_analyze_request_horizon_bounds(self):
+        """Horizon must be between 3 and 10."""
+        from models import AnalyzeRequest
+        import pytest
+        with pytest.raises(Exception):
+            AnalyzeRequest(ticker="AAPL", horizon=1)
+        with pytest.raises(Exception):
+            AnalyzeRequest(ticker="AAPL", horizon=20)
+
+    def test_ticker_request_rejects_injection(self):
+        """TickerRequest must reject injection characters."""
+        from models import TickerRequest
+        import pytest
+        with pytest.raises(Exception):
+            TickerRequest(ticker="AAPL; DROP TABLE")
+        # Valid ticker should work
+        req = TickerRequest(ticker="AAPL")
+        assert req.ticker == "AAPL"
+
+    def test_analyze_request_ticker_rejects_injection(self):
+        """AnalyzeRequest.ticker must reject injection characters."""
+        from models import AnalyzeRequest
+        import pytest
+        with pytest.raises(Exception):
+            AnalyzeRequest(ticker="AAPL; DROP TABLE")
+        with pytest.raises(Exception):
+            AnalyzeRequest(ticker="A" * 20)  # too long
+        # Valid tickers should work
+        req = AnalyzeRequest(ticker="AAPL")
+        assert req.ticker == "AAPL"
+        req2 = AnalyzeRequest(ticker="BRK-B")
+        assert req2.ticker == "BRK-B"
+
+    def test_alert_request_validation(self):
+        """AlertRequest must validate all fields properly."""
+        from models import AlertRequest
+        import pytest
+        # Valid alert
+        req = AlertRequest(
+            clerk_user_id="user_abc123",
+            email="test@test.com",
+            ticker="AAPL",
+            target_price=200.0,
+            direction="above",
+        )
+        assert req.ticker == "AAPL"
+        assert req.direction == "above"
+        # Reject invalid direction
+        with pytest.raises(Exception):
+            AlertRequest(clerk_user_id="u1", email="a@b.com", ticker="AAPL", target_price=100, direction="hacked")
+        # Reject negative target_price
+        with pytest.raises(Exception):
+            AlertRequest(clerk_user_id="u1", email="a@b.com", ticker="AAPL", target_price=-10, direction="above")
+        # Reject injection in ticker
+        with pytest.raises(Exception):
+            AlertRequest(clerk_user_id="u1", email="a@b.com", ticker="AAPL; DROP", target_price=100, direction="above")
+
+    def test_export_pdf_request_ticker_pattern(self):
+        """ExportPDFRequest.ticker must reject injection characters."""
+        from models import ExportPDFRequest
+        import pytest
+        with pytest.raises(Exception):
+            ExportPDFRequest(ticker="AAPL; DROP")
+        req = ExportPDFRequest(ticker="MSFT")
+        assert req.ticker == "MSFT"
+
+    def test_checkout_request_plan_validation(self):
+        """CheckoutRequest plan must be monthly or yearly."""
+        from models import CheckoutRequest
+        import pytest
+        with pytest.raises(Exception):
+            CheckoutRequest(userId="user1", plan="hacked")
+        req = CheckoutRequest(userId="user1", plan="yearly")
+        assert req.plan == "yearly"
+
+    def test_screener_universe_size(self):
+        """Screener universe must have 100+ stocks for Pro quality."""
+        from services.fmp_data import _get_fallback_universe
+        universe = _get_fallback_universe()
+        assert len(universe) >= 100, f"Universe too small: {len(universe)} stocks"
+        # Must have multiple sectors
+        sectors = set(s["sector"] for s in universe)
+        assert len(sectors) >= 8, f"Not enough sectors: {sectors}"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

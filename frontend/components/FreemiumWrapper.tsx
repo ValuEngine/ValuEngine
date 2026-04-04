@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useUser, useAuth } from "@clerk/nextjs";
 import { Lock, ChevronRight } from "lucide-react";
 import { authedFetch } from "@/lib/api";
+import { gtmEvents } from "@/lib/analytics";
 
 const DAILY_FREE_LIMIT = 3;
 
@@ -26,10 +27,12 @@ function PaywallModal({
   used,
   onClose,
   onUpgrade,
+  error,
 }: {
   used: number;
   onClose: () => void;
   onUpgrade: () => void;
+  error?: string;
 }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -79,6 +82,7 @@ function PaywallModal({
           >
             Passer Pro — 12€/mois <ChevronRight size={18} />
           </button>
+          {error && <p className="text-[#ff4d6d] text-xs mb-2">{error}</p>}
           <p className="text-zinc-400 text-sm mb-4">✓ Sans engagement · Annulable à tout moment</p>
           <button
             onClick={onClose}
@@ -115,6 +119,7 @@ export function FreemiumGate({
   const { user, isSignedIn } = useUser();
   const { getToken } = useAuth();
   const [usageData, setUsageData] = useState<UsageData | null>(null);
+  const [checkoutError, setCheckoutError] = useState("");
 
   // Fetch usage on mount and when user changes
   const refreshUsage = useCallback(async () => {
@@ -128,8 +133,10 @@ export function FreemiumGate({
 
   const handleUpgrade = async () => {
     if (!user) return;
+    gtmEvents.upgradeClicked('pro_gate');
+    setCheckoutError("");
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://peaceful-acceptance-production-2e1d.up.railway.app";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
       const res = await fetch(`${apiUrl}/api/stripe/create-checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -143,10 +150,10 @@ export function FreemiumGate({
       if (data.url) {
         window.location.href = data.url;
       } else {
-        alert(data.detail || "Erreur lors de la création du paiement. Réessaie.");
+        setCheckoutError(data.detail || "Erreur lors de la création du paiement.");
       }
-    } catch (err) {
-      alert("Impossible de contacter le serveur de paiement. Réessaie dans quelques secondes.");
+    } catch {
+      setCheckoutError("Impossible de contacter le serveur de paiement.");
     }
   };
 
@@ -177,6 +184,7 @@ export function FreemiumGate({
       used={usageData?.used ?? DAILY_FREE_LIMIT}
       onClose={onClosePaywall}
       onUpgrade={handleUpgrade}
+      error={checkoutError}
     />
   ) : null;
 }

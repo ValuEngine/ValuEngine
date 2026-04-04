@@ -1,0 +1,23 @@
+name: Email Onboarding Sequences
+
+on:
+  schedule:
+    # Daily at 6:00 UTC = 8:00 Paris (CET) / 8:00 Paris (CEST = 7:00 UTC, but close enough)
+    - cron: "0 6 * * *"
+  workflow_dispatch: # allow manual trigger from GitHub UI
+
+jobs:
+  send-emails:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger email sequences (D+3, D+7, D+30)
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "${{ secrets.BACKEND_URL }}/api/email/trigger-sequence" \
+            -H "Content-Type: application/json" \
+            -H "X-Internal-Secret: ${{ secrets.ALERTS_CHECK_SECRET }}" \
+            --max-time 60)
+          echo "HTTP status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "::warning::Email sequence trigger returned HTTP $STATUS"
+          fi

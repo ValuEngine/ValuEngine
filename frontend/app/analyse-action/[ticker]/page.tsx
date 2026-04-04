@@ -4,9 +4,9 @@ import Link from "next/link";
 export const revalidate = 3600; // ISR — revalidate every hour
 
 const SEO_TICKERS = [
-  "MC.PA", "TTE.PA", "BNP.PA", "AIR.PA", "OR.PA", "SAN.PA",
-  "AAPL", "MSFT", "NVDA", "TSLA", "GOOGL", "AMZN", "META", "ASML", "NESN",
-  "LVMH", "JPM", "V", "JNJ",
+  "MC.PA", "TTE.PA", "BNP.PA", "AIR.PA", "OR.PA", "SAN.PA", "SU.PA", "DG.PA",
+  "AAPL", "MSFT", "NVDA", "TSLA", "GOOGL", "AMZN", "META", "ASML.AS", "SAP.DE",
+  "NESN", "LVMH", "JPM", "V", "JNJ", "NOVO-B.CO",
 ];
 
 interface CompanyProfile {
@@ -87,8 +87,34 @@ export default async function TickerSEOPage(
   const t       = ticker.toUpperCase();
   const profile = await getProfile(t);
 
+  const schemaOrg = {
+    "@context": "https://schema.org",
+    "@type": "FinancialProduct",
+    "name": `Analyse ${profile?.name || t}`,
+    "description": `Analyse financière DCF et verdict IA de ${profile?.name || t} (${t}) par ValuEngine.`,
+    "provider": {
+      "@type": "Organization",
+      "name": "ValuEngine",
+      "url": "https://valuengine.fr",
+    },
+    "url": `https://valuengine.fr/analyse-action/${t}`,
+    ...(profile && {
+      "additionalProperty": [
+        { "@type": "PropertyValue", "name": "Prix", "value": profile.price?.toFixed(2) || "N/A" },
+        { "@type": "PropertyValue", "name": "P/E Ratio", "value": profile.pe_ratio?.toFixed(1) || "N/A" },
+        { "@type": "PropertyValue", "name": "Secteur", "value": profile.sector || "N/A" },
+      ],
+    }),
+  };
+
   return (
     <main className="min-h-screen bg-[#09090b] text-white">
+
+      {/* Schema.org JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrg) }}
+      />
 
       {/* Header */}
       <header className="border-b border-[#27272a] bg-[#09090b]/95 sticky top-0 z-10 backdrop-blur-md">
