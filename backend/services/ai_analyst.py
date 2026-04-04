@@ -319,7 +319,7 @@ Format JSON attendu:
 
     try:
         msg = client.messages.create(
-            model="claude-sonnet-4-5-20241022",
+            model="claude-haiku-4-5-20251001",
             max_tokens=2000,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -592,7 +592,7 @@ Format attendu:
 
     try:
         msg = client.messages.create(
-            model="claude-sonnet-4-5-20241022",
+            model="claude-haiku-4-5-20251001",
             max_tokens=1500,
             messages=[{"role": "user", "content": prompt}],
         )
