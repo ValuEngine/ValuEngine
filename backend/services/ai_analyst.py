@@ -38,6 +38,32 @@ def _parse_json_response(text: str) -> dict:
     return json.loads(text)
 
 
+def _format_analyst_targets(targets: dict | None) -> str:
+    """Format analyst targets section for prompts."""
+    if not targets:
+        return ""
+    return (
+        f"═══ CONSENSUS ANALYSTES ═══\n"
+        f"Prix cible consensus: ${targets.get('target_consensus', 0):.2f}\n"
+        f"Fourchette: ${targets.get('target_low', 0):.2f} — ${targets.get('target_high', 0):.2f} "
+        f"(médiane: ${targets.get('target_median', 0):.2f})\n"
+        f"Nombre d'analystes: {targets.get('num_analysts', 'N/A')}\n"
+        f"Moyenne dernier trimestre: ${targets.get('last_quarter_avg', 0):.2f}"
+    )
+
+
+def _format_revenue_segments(products: dict | None, geography: dict | None) -> str:
+    """Format revenue segments section for prompts."""
+    parts = []
+    if products and products.get("segments"):
+        lines = [f"  • {name}: {data.get('pct', 0):.1f}%" for name, data in products["segments"].items()]
+        parts.append(f"═══ RÉPARTITION REVENUS PAR PRODUIT ({products.get('year', '')}) ═══\n" + "\n".join(lines))
+    if geography and geography.get("regions"):
+        lines = [f"  • {name}: {data.get('pct', 0):.1f}%" for name, data in geography["regions"].items()]
+        parts.append(f"═══ RÉPARTITION GÉOGRAPHIQUE ({geography.get('year', '')}) ═══\n" + "\n".join(lines))
+    return "\n\n".join(parts)
+
+
 def get_bull_bear_analysis(company: dict, dcf: dict) -> dict:
     """
     Génère une analyse Bull Case / Bear Case via Claude Haiku.
@@ -267,6 +293,9 @@ Prix: ${company_info.get('price', 0):.2f}
 Market Cap: {_fmt_b(company_info.get('market_cap', 0))}
 P/E: {company_info.get('pe_ratio', 'N/A')}
 EV/EBITDA: {company_info.get('ev_ebitda', 'N/A')}
+
+{_format_analyst_targets(df.get('analyst_targets'))}
+{_format_revenue_segments(df.get('revenue_segments'), df.get('geographic_segments'))}
 
 ═══ CONSIGNES ═══
 1. Chaque argument DOIT citer des CHIFFRES RÉELS tirés des données ci-dessus
@@ -581,6 +610,8 @@ Revenus 5 ans: {_fmt_money_list(df.get('revenue_5y', []))}
 Marges nettes: {' → '.join(str(v) + '%' if v else 'N/A' for v in df.get('net_margin_5y', []))}
 ROIC: {' → '.join(str(v) + '%' if v else 'N/A' for v in df.get('roic_5y', []))}
 Secteur: {company_info.get('sector', 'N/A')}
+
+{_format_analyst_targets(df.get('analyst_targets'))}
 
 ═══ CONSIGNES ═══
 1. Les probabilités bull + base + bear doivent sommer à 100%

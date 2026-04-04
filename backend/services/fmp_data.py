@@ -1,31 +1,36 @@
 """
-ValuEngine — Market Data Service
-Source : Financial Modeling Prep (FMP) API — stable endpoints
+ValuEngine — FMP Data Service
+Source: Financial Modeling Prep — /stable/ API (post-Aug 2025)
 Retourne exactement le même contrat de données que market_data.py (yfinance).
 """
 
 import os
 import time
+import logging
 import requests
 from typing import Optional
+
+logger = logging.getLogger("valuengine")
 
 # ── Thread-safe cache with TTL and max size ──────────────────────────────────
 import threading
 from collections import OrderedDict
 
+
 class _FmpCache:
-    def __init__(self, max_size=500, ttl=900):
+    def __init__(self, max_size=1000, default_ttl=900):
         self._data: OrderedDict = OrderedDict()
         self._ts: dict = {}
         self._lock = threading.Lock()
         self._max = max_size
-        self._ttl = ttl
+        self._default_ttl = default_ttl
 
-    def get(self, key: str):
+    def get(self, key: str, ttl: int | None = None):
+        ttl = ttl or self._default_ttl
         with self._lock:
             if key not in self._data:
                 return None
-            if time.time() - self._ts[key] > self._ttl:
+            if time.time() - self._ts[key] > ttl:
                 del self._data[key]; del self._ts[key]
                 return None
             self._data.move_to_end(key)
@@ -41,15 +46,30 @@ class _FmpCache:
                 k = next(iter(self._data))
                 del self._data[k]; del self._ts[k]
 
-CACHE = _FmpCache(max_size=500, ttl=900)  # 15 min
+
+# Tiered TTL caches
+CACHE = _FmpCache(max_size=1000, default_ttl=900)
+
+# TTL constants (seconds)
+TTL_QUOTE = 5 * 60          # 5 minutes — prix temps réel
+TTL_COMPANY = 6 * 3600      # 6 heures — profil, données de base
+TTL_ANNUAL = 24 * 3600       # 24 heures — financial statements annuels
+TTL_ANALYST = 24 * 3600      # 24 heures — consensus analystes
+TTL_SEGMENTS = 24 * 3600     # 24 heures — revenue segments
+TTL_DEEP = 24 * 3600         # 24 heures — deep financials
+
+# FMP call counter for monitoring
+_fmp_calls = {"count": 0, "reset_at": time.time() + 86400}
+_fmp_lock = threading.Lock()
 
 
-def _cache_get(ticker: str):
-    return CACHE.get(ticker)
-
-
-def _cache_set(ticker: str, data: dict):
-    CACHE.set(ticker, data)
+def get_fmp_call_count() -> dict:
+    """Return current FMP API call stats."""
+    with _fmp_lock:
+        if time.time() > _fmp_calls["reset_at"]:
+            _fmp_calls["count"] = 0
+            _fmp_calls["reset_at"] = time.time() + 86400
+        return {"calls_today": _fmp_calls["count"], "daily_limit": 10_000}
 
 
 def _safe_float(val, default: float = 0.0) -> float:
@@ -61,291 +81,252 @@ def _safe_float(val, default: float = 0.0) -> float:
         return default
 
 
-def _fmp_get(path: str, params: dict = {}) -> dict | list:
-    """Appel HTTP vers l'API FMP (stable endpoints) avec gestion d'erreur."""
-    api_key = os.environ.get("FMP_API_KEY", "")
-    base = "https://financialmodelingprep.com/api/v3"
-    url = f"{base}{path}"
-    params = {**params, "apikey": api_key}
-    try:
-        r = requests.get(url, params=params, timeout=10)
-        r.raise_for_status()
-        return r.json()
-    except requests.exceptions.Timeout:
-        raise RuntimeError(f"FMP timeout sur {path}")
-    except requests.exceptions.HTTPError as e:
-        raise RuntimeError(f"FMP HTTP error {e.response.status_code} sur {path}")
-    except Exception as e:
-        raise RuntimeError(f"FMP erreur réseau : {e}")
+# ── FMP /stable/ API helper ──────────────────────────────────────────────────
 
+FMP_BASE = "https://financialmodelingprep.com/stable"
+
+
+def _fmp_get(endpoint: str, params: dict | None = None) -> dict | list:
+    """
+    Call FMP /stable/ API. Symbol goes in params, not URL path.
+    Example: _fmp_get("/income-statement", {"symbol": "AAPL", "limit": 5})
+    """
+    api_key = os.environ.get("FMP_API_KEY", "")
+    if not api_key:
+        raise RuntimeError("FMP_API_KEY not configured")
+
+    url = f"{FMP_BASE}{endpoint}"
+    all_params = {**(params or {}), "apikey": api_key}
+
+    with _fmp_lock:
+        _fmp_calls["count"] += 1
+        if _fmp_calls["count"] > 8000:
+            logger.warning(f"⚠️ FMP: {_fmp_calls['count']} calls today — approaching limit")
+
+    try:
+        r = requests.get(url, params=all_params, timeout=12)
+        r.raise_for_status()
+        data = r.json()
+        # FMP returns error messages as dicts sometimes
+        if isinstance(data, dict) and ("Error Message" in data or "Upgrade" in str(data.get("message", ""))):
+            raise RuntimeError(f"FMP error on {endpoint}: {data}")
+        return data
+    except requests.exceptions.Timeout:
+        raise RuntimeError(f"FMP timeout on {endpoint}")
+    except requests.exceptions.HTTPError as e:
+        raise RuntimeError(f"FMP HTTP {e.response.status_code} on {endpoint}")
+    except RuntimeError:
+        raise
+    except Exception as e:
+        raise RuntimeError(f"FMP network error: {e}")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Company Data (main analysis endpoint)
+# ═══════════════════════════════════════════════════════════════════════════════
 
 def get_company_data(ticker: str) -> dict:
     """
-    Récupère toutes les données financières d'une entreprise via FMP.
-    Retourne un dict identique au contrat de market_data.py.
+    Fetch all financial data for a company via FMP /stable/ API.
+    Returns a dict matching the market_data.py contract.
     """
     ticker = ticker.upper().strip()
 
-    cached = _cache_get(ticker)
+    cached = CACHE.get(f"company:{ticker}", TTL_COMPANY)
     if cached:
         return cached
 
-    # ── 1. Profil entreprise ─────────────────────────────────────────────────
-    profile_raw = _fmp_get(f"/profile/{ticker}", {})
+    # ── 1. Profile ──
+    profile_raw = _fmp_get("/profile", {"symbol": ticker})
     if not profile_raw or not isinstance(profile_raw, list) or not profile_raw[0]:
         raise ValueError(f"Ticker '{ticker}' introuvable sur FMP.")
-
     p = profile_raw[0]
 
-    # ── 2. Income statement (dernière année) ─────────────────────────────────
-    income_raw = _fmp_get(f"/income-statement/{ticker}", {"limit": 1})
+    # ── 2. Income statement ──
+    income_raw = _fmp_get("/income-statement", {"symbol": ticker, "limit": 2})
     inc = income_raw[0] if isinstance(income_raw, list) and income_raw else {}
 
-    # ── 3. Cash flow statement ───────────────────────────────────────────────
-    cf_raw = _fmp_get(f"/cash-flow-statement/{ticker}", {"limit": 1})
+    # ── 3. Cash flow statement ──
+    cf_raw = _fmp_get("/cash-flow-statement", {"symbol": ticker, "limit": 1})
     cf = cf_raw[0] if isinstance(cf_raw, list) and cf_raw else {}
 
-    # ── 4. Balance sheet ─────────────────────────────────────────────────────
-    bs_raw = _fmp_get(f"/balance-sheet-statement/{ticker}", {"limit": 1})
+    # ── 4. Balance sheet ──
+    bs_raw = _fmp_get("/balance-sheet-statement", {"symbol": ticker, "limit": 1})
     bs = bs_raw[0] if isinstance(bs_raw, list) and bs_raw else {}
 
-    # ── Calculs ───────────────────────────────────────────────────────────────
+    # ── Calculations ──
     price       = _safe_float(p.get("price"))
-    market_cap  = _safe_float(p.get("marketCap"))
+    market_cap  = _safe_float(p.get("marketCap") or p.get("mktCap"))
     shares      = _safe_float(inc.get("weightedAverageShsOutDil") or inc.get("weightedAverageShsOut"), default=1.0)
     revenue     = _safe_float(inc.get("revenue"))
     ebitda      = _safe_float(inc.get("ebitda"))
     net_income  = _safe_float(inc.get("netIncome"))
     fcf         = _safe_float(cf.get("freeCashFlow"))
 
-    # Si FCF absent, proxy via operating CF
     if fcf == 0.0:
         fcf = _safe_float(cf.get("operatingCashFlow")) * 0.85
 
     total_debt  = _safe_float(bs.get("totalDebt"))
-    total_cash  = _safe_float(bs.get("cashAndCashEquivalents"))
-    # Net debt can be negative (company has more cash than debt = good)
+    total_cash  = _safe_float(bs.get("cashAndCashEquivalents") or bs.get("cashAndShortTermInvestments"))
     net_debt    = total_debt - total_cash
+    ev          = market_cap + net_debt
 
-    # Enterprise value (calculé, pas besoin de /key-metrics)
-    ev = market_cap + net_debt  # If net_debt < 0, EV < market cap (correct)
-
-    # Ratios (calculés à partir des financial statements, pas besoin de /ratios)
     total_equity = _safe_float(bs.get("totalStockholdersEquity"))
     pe_ratio      = (price / (net_income / shares)) if (net_income and shares and net_income > 0) else None
-    forward_pe    = None
+    forward_pe    = _safe_float(p.get("forwardPE")) or None
     ev_ebitda     = (ev / ebitda) if ebitda and ebitda > 0 else None
     pb_ratio      = (market_cap / total_equity) if total_equity and total_equity > 0 else None
     roe           = (net_income / total_equity) if total_equity and total_equity > 0 else None
     profit_margin = (net_income / revenue) if revenue and revenue > 0 else None
     beta          = _safe_float(p.get("beta")) or None
     eps           = _safe_float(inc.get("epsDiluted") or inc.get("eps")) or None
-    last_div      = _safe_float(p.get("lastDividend"))
+    last_div      = _safe_float(p.get("lastDividend") or p.get("lastDiv"))
     dividend_yield = (last_div / price) if (price and last_div) else None
 
-    # Croissance CA : comparaison avec l'année précédente
+    # Revenue growth (vs prior year)
     revenue_growth: Optional[float] = None
-    income_2y = _fmp_get(f"/income-statement/{ticker}", {"limit": 2})
-    if isinstance(income_2y, list) and len(income_2y) >= 2:
-        rev_curr = _safe_float(income_2y[0].get("revenue"))
-        rev_prev = _safe_float(income_2y[1].get("revenue"))
+    if isinstance(income_raw, list) and len(income_raw) >= 2:
+        rev_curr = _safe_float(income_raw[0].get("revenue"))
+        rev_prev = _safe_float(income_raw[1].get("revenue"))
         if rev_prev > 0:
             revenue_growth = (rev_curr - rev_prev) / rev_prev
 
     result = {
-        "ticker":             ticker,
-        "name":               p.get("companyName") or ticker,
-        "sector":             p.get("sector") or "N/A",
-        "industry":           p.get("industry") or "N/A",
-        "description":        p.get("description") or "",
-        "price":              price,
-        "currency":           p.get("currency") or "USD",
-        "exchange":           p.get("exchange") or "",
-        "market_cap":         market_cap,
-        "enterprise_value":   ev,
+        "ticker": ticker,
+        "name": p.get("companyName") or p.get("company_name") or ticker,
+        "sector": p.get("sector") or "N/A",
+        "industry": p.get("industry") or "N/A",
+        "description": p.get("description") or "",
+        "price": price,
+        "currency": p.get("currency") or "USD",
+        "exchange": p.get("exchange") or p.get("exchangeShortName") or "",
+        "market_cap": market_cap,
+        "enterprise_value": ev,
         "shares_outstanding": shares,
-        "revenue":            revenue,
-        "ebitda":             ebitda,
-        "net_income":         net_income,
-        "free_cash_flow":     fcf,
-        "total_debt":         total_debt,
-        "total_cash":         total_cash,
-        "net_debt":           net_debt,
-        "pe_ratio":           pe_ratio,
-        "forward_pe":         forward_pe,
-        "ev_ebitda":          ev_ebitda,
-        "pb_ratio":           pb_ratio,
-        "roe":                roe,
-        "profit_margin":      profit_margin,
-        "revenue_growth":     revenue_growth,
-        "beta":               beta,
-        "eps":                eps,
-        "dividend_yield":     dividend_yield,
+        "revenue": revenue,
+        "ebitda": ebitda,
+        "net_income": net_income,
+        "free_cash_flow": fcf,
+        "total_debt": total_debt,
+        "total_cash": total_cash,
+        "net_debt": net_debt,
+        "pe_ratio": pe_ratio,
+        "forward_pe": forward_pe,
+        "ev_ebitda": ev_ebitda,
+        "pb_ratio": pb_ratio,
+        "roe": roe,
+        "profit_margin": profit_margin,
+        "revenue_growth": revenue_growth,
+        "beta": beta,
+        "eps": eps,
+        "dividend_yield": dividend_yield,
     }
-    _cache_set(ticker, result)
+    CACHE.set(f"company:{ticker}", result)
     return result
 
 
-def get_peers_data(ticker: str, sector: str) -> list[dict]:
-    """
-    Récupère les données des entreprises comparables via FMP.
-    Utilise les peer companies de FMP ou un fallback sectoriel.
-    """
-    peers_raw = _fmp_get(f"/stock_peers_bulk", {"symbol": ticker})
-    peers: list[str] = []
-    if isinstance(peers_raw, list) and peers_raw:
-        # v3 format: [{"symbol": "AAPL", "peersList": ["MSFT", "GOOGL", ...]}]
-        first = peers_raw[0] if peers_raw else {}
-        peer_list = first.get("peersList", [])
-        if peer_list:
-            peers = [p for p in peer_list[:6] if p != ticker]
-        else:
-            peers = [p["symbol"] for p in peers_raw[:6] if p.get("symbol") and p.get("symbol") != ticker]
+# ═══════════════════════════════════════════════════════════════════════════════
+# Peers Data
+# ═══════════════════════════════════════════════════════════════════════════════
 
-    # Fallback sectoriel si FMP ne retourne rien
-    if not peers:
-        SECTOR_PEERS: dict[str, list[str]] = {
-            "Technology":      ["AAPL", "MSFT", "GOOGL", "META", "NVDA"],
-            "Consumer Cyclical": ["AMZN", "TSLA", "HD", "NKE", "SBUX"],
-            "Healthcare":      ["JNJ", "PFE", "UNH", "ABT", "MRK"],
-            "Financial Services": ["JPM", "BAC", "GS", "MS", "WFC"],
-            "Communication Services": ["GOOGL", "META", "NFLX", "DIS", "T"],
-            "Industrials":     ["BA", "CAT", "GE", "MMM", "UPS"],
-            "Energy":          ["XOM", "CVX", "COP", "SLB", "EOG"],
-            "Consumer Defensive": ["KO", "PEP", "PG", "WMT", "COST"],
-            "Real Estate":     ["AMT", "PLD", "CCI", "EQIX", "SPG"],
-            "Utilities":       ["NEE", "DUK", "SO", "D", "AEP"],
-            "Basic Materials": ["LIN", "APD", "ECL", "DD", "NEM"],
-        }
-        peers = [t for t in SECTOR_PEERS.get(sector, ["AAPL", "MSFT", "GOOGL", "AMZN", "META"])
-                 if t != ticker][:5]
+def get_peers_data(ticker: str, sector: str) -> list[dict]:
+    """Fetch comparable companies data."""
+    cached = CACHE.get(f"peers:{ticker}", TTL_ANNUAL)
+    if cached:
+        return cached
+
+    SECTOR_PEERS: dict[str, list[str]] = {
+        "Technology":      ["AAPL", "MSFT", "GOOGL", "META", "NVDA"],
+        "Consumer Cyclical": ["AMZN", "TSLA", "HD", "NKE", "SBUX"],
+        "Healthcare":      ["JNJ", "PFE", "UNH", "ABT", "MRK"],
+        "Financial Services": ["JPM", "BAC", "GS", "MS", "WFC"],
+        "Communication Services": ["GOOGL", "META", "NFLX", "DIS", "T"],
+        "Industrials":     ["BA", "CAT", "GE", "MMM", "UPS"],
+        "Energy":          ["XOM", "CVX", "COP", "SLB", "EOG"],
+        "Consumer Defensive": ["KO", "PEP", "PG", "WMT", "COST"],
+        "Real Estate":     ["AMT", "PLD", "CCI", "EQIX", "SPG"],
+        "Utilities":       ["NEE", "DUK", "SO", "D", "AEP"],
+        "Basic Materials": ["LIN", "APD", "ECL", "DD", "NEM"],
+    }
+    peers = [t for t in SECTOR_PEERS.get(sector, ["AAPL", "MSFT", "GOOGL", "AMZN", "META"])
+             if t != ticker][:5]
 
     results = []
     for peer in peers:
-        if peer == ticker:
-            continue
         try:
-            profile = _fmp_get(f"/profile/{peer}", {})
+            profile = _fmp_get("/profile", {"symbol": peer})
             if not isinstance(profile, list) or not profile:
                 continue
             pr = profile[0]
-
-            # Income statement pour calculer les ratios (évite /key-metrics et /ratios qui sont payants)
-            peer_income = _fmp_get(f"/income-statement/{peer}", {"limit": 1})
+            peer_income = _fmp_get("/income-statement", {"symbol": peer, "limit": 1})
             pi = peer_income[0] if isinstance(peer_income, list) and peer_income else {}
 
             peer_price = _safe_float(pr.get("price"))
-            peer_mcap = _safe_float(pr.get("marketCap"))
+            peer_mcap = _safe_float(pr.get("marketCap") or pr.get("mktCap"))
             peer_ni = _safe_float(pi.get("netIncome"))
             peer_rev = _safe_float(pi.get("revenue"))
             peer_ebitda = _safe_float(pi.get("ebitda"))
             peer_shares = _safe_float(pi.get("weightedAverageShsOutDil") or pi.get("weightedAverageShsOut"), default=1.0)
 
             results.append({
-                "ticker":         peer,
-                "name":           pr.get("companyName") or peer,
-                "price":          peer_price,
-                "market_cap":     peer_mcap,
-                "pe_ratio":       (peer_price / (peer_ni / peer_shares)) if (peer_ni and peer_shares and peer_ni > 0) else None,
-                "ev_ebitda":      (peer_mcap / peer_ebitda) if peer_ebitda and peer_ebitda > 0 else None,
+                "ticker": peer,
+                "name": pr.get("companyName") or peer,
+                "price": peer_price,
+                "market_cap": peer_mcap,
+                "pe_ratio": (peer_price / (peer_ni / peer_shares)) if (peer_ni and peer_shares and peer_ni > 0) else None,
+                "ev_ebitda": (peer_mcap / peer_ebitda) if peer_ebitda and peer_ebitda > 0 else None,
                 "revenue_growth": None,
-                "profit_margin":  (peer_ni / peer_rev) if peer_rev and peer_rev > 0 else None,
+                "profit_margin": (peer_ni / peer_rev) if peer_rev and peer_rev > 0 else None,
             })
         except Exception:
             continue
 
+    CACHE.set(f"peers:{ticker}", results)
     return results
 
 
-# ── NIVEAU 1 — Deep Financials (5 ans) ──────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# Deep Financials — 5 years + analyst targets + revenue segments
+# ═══════════════════════════════════════════════════════════════════════════════
 
 def _get_deep_financials_yf(ticker: str) -> dict:
     """Fallback: extract 5-year financials from yfinance when FMP is unavailable."""
     import yfinance as yf
 
-    cache_key = f"__deep__{ticker}"
-
     t = yf.Ticker(ticker)
-    inc = t.financials  # columns = years, rows = line items
+    inc = t.financials
     cf = t.cashflow
     bs = t.balance_sheet
 
     def _col_values(df, row_name):
-        """Extract values for a given row across all year columns."""
         if df is None or df.empty or row_name not in df.index:
             return []
         return [float(v) if v == v else 0.0 for v in df.loc[row_name].values[:5]]
 
-    # Revenue & Net Income
     revenue_5y = _col_values(inc, "Total Revenue")
     net_income_5y = _col_values(inc, "Net Income")
     gross_profit_5y = _col_values(inc, "Gross Profit")
     operating_income_5y = _col_values(inc, "Operating Income")
     ebitda_5y = _col_values(inc, "EBITDA")
 
-    # FCF
     op_cf = _col_values(cf, "Operating Cash Flow") or _col_values(cf, "Total Cash From Operating Activities")
     capex = _col_values(cf, "Capital Expenditure") or _col_values(cf, "Capital Expenditures")
     fcf_5y = [op_cf[i] + capex[i] if i < len(capex) else op_cf[i] for i in range(len(op_cf))]
 
-    # Balance sheet
     total_debt_5y = _col_values(bs, "Total Debt") or _col_values(bs, "Long Term Debt")
     total_equity_5y = _col_values(bs, "Stockholders Equity") or _col_values(bs, "Total Stockholder Equity")
 
-    n = max(len(revenue_5y), 1)
+    def _growth(lst):
+        g = []
+        for i in range(len(lst) - 1):
+            prev, curr = lst[i + 1], lst[i]
+            g.append(round((curr - prev) / prev * 100, 2) if prev else None)
+        g.append(None)
+        return g
 
-    # Growth rates
-    revenue_growth_5y = []
-    for i in range(len(revenue_5y) - 1):
-        prev = revenue_5y[i + 1]
-        curr = revenue_5y[i]
-        revenue_growth_5y.append(round((curr - prev) / prev * 100, 2) if prev else None)
-    revenue_growth_5y.append(None)
+    def _margin(num, denom):
+        return [round(num[i] / denom[i] * 100, 2) if i < len(denom) and denom[i] else None for i in range(len(num))]
 
-    # Margins
-    def _margin(num_list, denom_list):
-        result = []
-        for i in range(min(len(num_list), len(denom_list))):
-            d = denom_list[i]
-            result.append(round(num_list[i] / d * 100, 2) if d else None)
-        return result
-
-    gross_margin_5y = _margin(gross_profit_5y, revenue_5y)
-    operating_margin_5y = _margin(operating_income_5y, revenue_5y)
-    net_margin_5y = _margin(net_income_5y, revenue_5y)
-    fcf_margin_5y = _margin(fcf_5y, revenue_5y)
-
-    # Debt/EBITDA
-    debt_to_ebitda_5y = []
-    for i in range(min(len(total_debt_5y), len(ebitda_5y))):
-        eb = ebitda_5y[i]
-        debt_to_ebitda_5y.append(round(total_debt_5y[i] / eb, 2) if eb else None)
-
-    # ROIC approximation (Operating Income / (Debt + Equity))
-    roic_5y = []
-    for i in range(min(len(operating_income_5y), len(total_debt_5y), len(total_equity_5y))):
-        ic = total_debt_5y[i] + total_equity_5y[i]
-        roic_5y.append(round(operating_income_5y[i] / ic * 100, 2) if ic else None)
-
-    # EPS
-    eps_5y = _col_values(inc, "Diluted EPS") or _col_values(inc, "Basic EPS")
-    eps_growth_5y = []
-    for i in range(len(eps_5y) - 1):
-        prev = eps_5y[i + 1]
-        curr = eps_5y[i]
-        eps_growth_5y.append(round((curr - prev) / abs(prev) * 100, 2) if prev else None)
-    eps_growth_5y.append(None)
-
-    # CapEx intensity
-    capex_intensity = _margin([abs(c) for c in capex], revenue_5y) if capex else []
-
-    # Cash conversion
-    cash_conversion = []
-    for i in range(min(len(fcf_5y), len(net_income_5y))):
-        ni = net_income_5y[i]
-        cash_conversion.append(round(fcf_5y[i] / ni, 2) if ni else None)
-
-    # Years
     years = []
     if inc is not None and not inc.empty:
         for col in inc.columns[:5]:
@@ -354,50 +335,165 @@ def _get_deep_financials_yf(ticker: str) -> dict:
             except Exception:
                 years.append(None)
 
+    eps_5y = _col_values(inc, "Diluted EPS") or _col_values(inc, "Basic EPS")
+
     result = {
         "revenue_5y": revenue_5y,
-        "revenue_growth_5y": revenue_growth_5y,
-        "gross_margin_5y": gross_margin_5y,
-        "operating_margin_5y": operating_margin_5y,
-        "net_margin_5y": net_margin_5y,
+        "revenue_growth_5y": _growth(revenue_5y),
+        "gross_margin_5y": _margin(gross_profit_5y, revenue_5y),
+        "operating_margin_5y": _margin(operating_income_5y, revenue_5y),
+        "net_margin_5y": _margin(net_income_5y, revenue_5y),
         "fcf_5y": fcf_5y,
-        "fcf_margin_5y": fcf_margin_5y,
-        "roic_5y": roic_5y,
-        "debt_to_ebitda_5y": debt_to_ebitda_5y,
+        "fcf_margin_5y": _margin(fcf_5y, revenue_5y),
+        "roic_5y": [round(operating_income_5y[i] / (total_debt_5y[i] + total_equity_5y[i]) * 100, 2)
+                    if i < len(total_debt_5y) and i < len(total_equity_5y)
+                    and (total_debt_5y[i] + total_equity_5y[i]) else None
+                    for i in range(len(operating_income_5y))],
+        "debt_to_ebitda_5y": [round(total_debt_5y[i] / ebitda_5y[i], 2)
+                              if i < len(ebitda_5y) and ebitda_5y[i] else None
+                              for i in range(len(total_debt_5y))],
         "eps_5y": eps_5y,
-        "eps_growth_5y": eps_growth_5y,
-        "capex_intensity": capex_intensity,
-        "cash_conversion": cash_conversion,
+        "eps_growth_5y": _growth(eps_5y),
+        "capex_intensity": _margin([abs(c) for c in capex], revenue_5y) if capex else [],
+        "cash_conversion": [round(fcf_5y[i] / net_income_5y[i], 2)
+                           if i < len(net_income_5y) and net_income_5y[i] else None
+                           for i in range(len(fcf_5y))],
         "years": years,
+        # Premium data not available from yfinance
+        "analyst_targets": None,
+        "revenue_segments": None,
+        "geographic_segments": None,
     }
-    _cache_set(cache_key, result)
+    CACHE.set(f"deep:{ticker}", result)
     return result
 
-def get_deep_financials(ticker: str) -> dict:
-    """
-    Fetch 5 years of income statement, cash flow, balance sheet, key metrics
-    and financial ratios. Tries FMP first, falls back to yfinance if FMP fails.
-    """
-    ticker = ticker.upper().strip()
 
-    # Check cache (separate key)
-    cache_key = f"__deep__{ticker}"
-    cached = _cache_get(cache_key)
+def _fetch_analyst_targets(ticker: str) -> dict | None:
+    """Fetch analyst price target consensus from FMP."""
+    cached = CACHE.get(f"analyst:{ticker}", TTL_ANALYST)
     if cached:
         return cached
 
-    # Try FMP first, fallback to yfinance
     try:
-        income = _fmp_get(f"/income-statement/{ticker}", {"limit": 5})
-        cashflow = _fmp_get(f"/cash-flow-statement/{ticker}", {"limit": 5})
-        balance = _fmp_get(f"/balance-sheet-statement/{ticker}", {"limit": 5})
-        metrics = _fmp_get(f"/key-metrics/{ticker}", {"limit": 5})
-        ratios = _fmp_get(f"/financial-ratios/{ticker}", {"limit": 5})
-    except Exception:
-        # FMP failed (403/rate limit) — use yfinance fallback
+        # Price target consensus
+        consensus = _fmp_get("/price-target-consensus", {"symbol": ticker})
+        if not isinstance(consensus, list) or not consensus:
+            return None
+        c = consensus[0]
+
+        # Price target summary (more detail)
+        summary = _fmp_get("/price-target-summary", {"symbol": ticker})
+        s = summary[0] if isinstance(summary, list) and summary else {}
+
+        result = {
+            "target_consensus": _safe_float(c.get("targetConsensus")),
+            "target_high": _safe_float(c.get("targetHigh")),
+            "target_low": _safe_float(c.get("targetLow")),
+            "target_median": _safe_float(c.get("targetMedian")),
+            "num_analysts": int(s.get("lastQuarterCount") or s.get("lastMonthCount") or 0),
+            "last_quarter_avg": _safe_float(s.get("lastQuarterAvgPriceTarget")),
+            "last_year_avg": _safe_float(s.get("lastYearAvgPriceTarget")),
+            "all_time_avg": _safe_float(s.get("allTimeAvgPriceTarget")),
+        }
+        CACHE.set(f"analyst:{ticker}", result)
+        return result
+    except Exception as e:
+        logger.warning(f"[FMP] Analyst targets unavailable for {ticker}: {e}")
+        return None
+
+
+def _fetch_revenue_segments(ticker: str) -> dict | None:
+    """Fetch revenue breakdown by product and geography."""
+    cached = CACHE.get(f"segments:{ticker}", TTL_SEGMENTS)
+    if cached:
+        return cached
+
+    result = {}
+
+    # Product segmentation
+    try:
+        prod = _fmp_get("/revenue-product-segmentation", {
+            "symbol": ticker, "period": "annual", "structure": "flat"
+        })
+        if isinstance(prod, list) and prod:
+            # Group by fiscal year, take most recent
+            latest = prod[0] if prod else {}
+            year = latest.get("fiscalYear") or latest.get("date", "")
+            segments = {}
+            for item in prod:
+                if (item.get("fiscalYear") or item.get("date", "")[:4]) == str(year)[:4]:
+                    name = item.get("name") or item.get("segment") or "Other"
+                    value = _safe_float(item.get("revenue") or item.get("value"))
+                    if value > 0:
+                        segments[name] = value
+            if segments:
+                total = sum(segments.values())
+                result["products"] = {
+                    "year": str(year)[:4],
+                    "segments": {k: {"revenue": v, "pct": round(v / total * 100, 1)} for k, v in
+                                sorted(segments.items(), key=lambda x: -x[1])},
+                }
+    except Exception as e:
+        logger.warning(f"[FMP] Product segments unavailable for {ticker}: {e}")
+
+    # Geographic segmentation
+    try:
+        geo = _fmp_get("/revenue-geographic-segmentation", {
+            "symbol": ticker, "period": "annual", "structure": "flat"
+        })
+        if isinstance(geo, list) and geo:
+            latest = geo[0]
+            year = latest.get("fiscalYear") or latest.get("date", "")
+            regions = {}
+            for item in geo:
+                if (item.get("fiscalYear") or item.get("date", "")[:4]) == str(year)[:4]:
+                    name = item.get("name") or item.get("region") or "Other"
+                    value = _safe_float(item.get("revenue") or item.get("value"))
+                    if value > 0:
+                        regions[name] = value
+            if regions:
+                total = sum(regions.values())
+                result["geography"] = {
+                    "year": str(year)[:4],
+                    "regions": {k: {"revenue": v, "pct": round(v / total * 100, 1)} for k, v in
+                               sorted(regions.items(), key=lambda x: -x[1])},
+                }
+    except Exception as e:
+        logger.warning(f"[FMP] Geographic segments unavailable for {ticker}: {e}")
+
+    if result:
+        CACHE.set(f"segments:{ticker}", result)
+        return result
+    return None
+
+
+def get_deep_financials(ticker: str) -> dict:
+    """
+    Fetch 5-year financials + analyst targets + revenue segments.
+    Tries FMP /stable/ first, falls back to yfinance.
+    """
+    ticker = ticker.upper().strip()
+
+    cached = CACHE.get(f"deep:{ticker}", TTL_DEEP)
+    if cached:
+        return cached
+
+    # Try FMP /stable/ API
+    try:
+        income = _fmp_get("/income-statement", {"symbol": ticker, "limit": 5})
+        cashflow = _fmp_get("/cash-flow-statement", {"symbol": ticker, "limit": 5})
+        balance = _fmp_get("/balance-sheet-statement", {"symbol": ticker, "limit": 5})
+        metrics = _fmp_get("/key-metrics", {"symbol": ticker, "limit": 5})
+        ratios = _fmp_get("/ratios", {"symbol": ticker, "limit": 5})
+    except Exception as e:
+        logger.info(f"[FMP] Deep financials failed for {ticker}, falling back to yfinance: {e}")
         return _get_deep_financials_yf(ticker)
 
-    # Normalize to lists
+    # Normalize
+    for var_name in ['income', 'cashflow', 'balance', 'metrics', 'ratios']:
+        v = locals()[var_name]
+        if not isinstance(v, list):
+            locals()[var_name] = []
     if not isinstance(income, list): income = []
     if not isinstance(cashflow, list): cashflow = []
     if not isinstance(balance, list): balance = []
@@ -406,80 +502,68 @@ def get_deep_financials(ticker: str) -> dict:
 
     n = max(len(income), 1)
 
-    # Helper to safely extract a list of floats
     def _extract(source: list, key: str) -> list:
         return [_safe_float(row.get(key)) if row else 0.0 for row in source[:n]]
 
-    # ── Revenue & Growth ──
+    # Revenue & Growth
     revenue_5y = _extract(income, "revenue")
     revenue_growth_5y = []
     for i in range(len(revenue_5y) - 1):
-        prev = revenue_5y[i + 1]
-        curr = revenue_5y[i]
+        prev, curr = revenue_5y[i + 1], revenue_5y[i]
         revenue_growth_5y.append(round((curr - prev) / prev * 100, 2) if prev else None)
-    revenue_growth_5y.append(None)  # oldest year has no prior
+    revenue_growth_5y.append(None)
 
-    # ── Margins ──
-    gross_margin_5y = []
-    for row in income[:n]:
-        rev = _safe_float(row.get("revenue"))
-        gp = _safe_float(row.get("grossProfit"))
-        gross_margin_5y.append(round(gp / rev * 100, 2) if rev else None)
+    # Margins
+    def _margin_from_rows(rows, num_key, denom_key="revenue"):
+        result = []
+        for row in rows[:n]:
+            rev = _safe_float(row.get(denom_key))
+            val = _safe_float(row.get(num_key))
+            result.append(round(val / rev * 100, 2) if rev else None)
+        return result
 
-    operating_margin_5y = []
-    for row in income[:n]:
-        rev = _safe_float(row.get("revenue"))
-        oi = _safe_float(row.get("operatingIncome"))
-        operating_margin_5y.append(round(oi / rev * 100, 2) if rev else None)
+    gross_margin_5y = _margin_from_rows(income, "grossProfit")
+    operating_margin_5y = _margin_from_rows(income, "operatingIncome")
+    net_margin_5y = _margin_from_rows(income, "netIncome")
 
-    net_margin_5y = []
-    for row in income[:n]:
-        rev = _safe_float(row.get("revenue"))
-        ni = _safe_float(row.get("netIncome"))
-        net_margin_5y.append(round(ni / rev * 100, 2) if rev else None)
-
-    # ── FCF ──
+    # FCF
     fcf_5y = _extract(cashflow, "freeCashFlow")
-    fcf_margin_5y = []
-    for i in range(min(len(fcf_5y), len(revenue_5y))):
-        rev = revenue_5y[i]
-        fcf_margin_5y.append(round(fcf_5y[i] / rev * 100, 2) if rev else None)
+    fcf_margin_5y = [round(fcf_5y[i] / revenue_5y[i] * 100, 2)
+                     if i < len(revenue_5y) and revenue_5y[i] else None
+                     for i in range(len(fcf_5y))]
 
-    # ── ROIC ──
+    # ROIC from ratios
     roic_5y = _extract(ratios, "returnOnCapitalEmployed")
-    roic_5y = [round(v * 100, 2) if v else None for v in roic_5y]
+    roic_5y = [round(v * 100, 2) if v and abs(v) < 10 else (v if v else None) for v in roic_5y]
 
-    # ── Debt/EBITDA ──
+    # Debt/EBITDA
     debt_to_ebitda_5y = []
     for i in range(min(len(balance), len(income))):
         debt = _safe_float(balance[i].get("totalDebt")) if i < len(balance) else 0
-        ebitda = _safe_float(income[i].get("ebitda")) if i < len(income) else 0
-        debt_to_ebitda_5y.append(round(debt / ebitda, 2) if ebitda else None)
+        ebitda_val = _safe_float(income[i].get("ebitda")) if i < len(income) else 0
+        debt_to_ebitda_5y.append(round(debt / ebitda_val, 2) if ebitda_val else None)
 
-    # ── EPS ──
+    # EPS
     eps_5y = _extract(income, "epsDiluted")
     eps_growth_5y = []
     for i in range(len(eps_5y) - 1):
-        prev = eps_5y[i + 1]
-        curr = eps_5y[i]
+        prev, curr = eps_5y[i + 1], eps_5y[i]
         eps_growth_5y.append(round((curr - prev) / abs(prev) * 100, 2) if prev else None)
     eps_growth_5y.append(None)
 
-    # ── CapEx intensity ──
+    # CapEx intensity
     capex_values = _extract(cashflow, "capitalExpenditure")
-    capex_intensity = []
-    for i in range(min(len(capex_values), len(revenue_5y))):
-        rev = revenue_5y[i]
-        capex_intensity.append(round(abs(capex_values[i]) / rev * 100, 2) if rev else None)
+    capex_intensity = [round(abs(capex_values[i]) / revenue_5y[i] * 100, 2)
+                       if i < len(revenue_5y) and revenue_5y[i] else None
+                       for i in range(len(capex_values))]
 
-    # ── Cash conversion (FCF / Net Income) ──
+    # Cash conversion
     net_income_5y = _extract(income, "netIncome")
-    cash_conversion = []
-    for i in range(min(len(fcf_5y), len(net_income_5y))):
-        ni = net_income_5y[i]
-        cash_conversion.append(round(fcf_5y[i] / ni, 2) if ni else None)
+    cash_conversion = [round(fcf_5y[i] / net_income_5y[i], 2)
+                       if i < len(net_income_5y) and net_income_5y[i] else None
+                       for i in range(len(fcf_5y))]
 
-    # ── Years ──
+    # Years
     years = []
     for row in income[:n]:
         date_str = row.get("calendarYear") or row.get("date", "")
@@ -487,6 +571,10 @@ def get_deep_financials(ticker: str) -> dict:
             years.append(int(str(date_str)[:4]))
         except (ValueError, TypeError):
             years.append(None)
+
+    # ── Premium data (new with Starter plan) ──
+    analyst_targets = _fetch_analyst_targets(ticker)
+    revenue_segments = _fetch_revenue_segments(ticker)
 
     result = {
         "revenue_5y": revenue_5y,
@@ -503,102 +591,124 @@ def get_deep_financials(ticker: str) -> dict:
         "capex_intensity": capex_intensity,
         "cash_conversion": cash_conversion,
         "years": years,
+        # Premium
+        "analyst_targets": analyst_targets,
+        "revenue_segments": revenue_segments.get("products") if revenue_segments else None,
+        "geographic_segments": revenue_segments.get("geography") if revenue_segments else None,
     }
 
-    _cache_set(cache_key, result)
+    CACHE.set(f"deep:{ticker}", result)
     return result
 
 
-# ── NIVEAU 2 — Sector Benchmarks ────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# Sector Benchmarks
+# ═══════════════════════════════════════════════════════════════════════════════
 
 def get_sector_benchmarks(ticker: str, sector: str) -> dict:
-    """
-    Fetch sector peers via FMP screener and compute median benchmarks.
-    """
-    cache_key = f"__bench__{ticker}_{sector}"
-    cached = _cache_get(cache_key)
+    """Compute sector median benchmarks from peer ratios."""
+    cache_key = f"bench:{ticker}:{sector}"
+    cached = CACHE.get(cache_key, TTL_ANNUAL)
     if cached:
         return cached
 
-    # Use stock screener for the sector
-    try:
-        screener = _fmp_get("/stock-screener", {
-            "sector": sector,
-            "limit": 20,
-            "marketCapMoreThan": 1_000_000_000,  # >1B market cap
-        })
-    except Exception:
-        screener = []
+    # With /stable/ API, stock-screener is not available on Starter.
+    # Use sector peers + /ratios endpoint instead.
+    SECTOR_PEERS: dict[str, list[str]] = {
+        "Technology":      ["AAPL", "MSFT", "GOOGL", "META", "NVDA", "AVGO", "CRM", "ADBE"],
+        "Consumer Cyclical": ["AMZN", "TSLA", "HD", "NKE", "SBUX", "MCD", "TJX", "LOW"],
+        "Healthcare":      ["JNJ", "PFE", "UNH", "ABT", "MRK", "TMO", "ABBV", "LLY"],
+        "Financial Services": ["JPM", "BAC", "GS", "MS", "WFC", "BLK", "SCHW", "AXP"],
+        "Communication Services": ["GOOGL", "META", "NFLX", "DIS", "T", "VZ", "TMUS", "CMCSA"],
+        "Industrials":     ["BA", "CAT", "GE", "UPS", "HON", "RTX", "LMT", "DE"],
+        "Energy":          ["XOM", "CVX", "COP", "SLB", "EOG", "MPC", "PSX", "VLO"],
+        "Consumer Defensive": ["KO", "PEP", "PG", "WMT", "COST", "CL", "MDLZ", "PM"],
+    }
 
-    if not isinstance(screener, list) or len(screener) < 3:
-        # Return empty benchmarks — anomaly detection will skip comparisons
-        result = {"peer_count": 0, "sector": sector}
-        _cache_set(cache_key, result)
-        return result
+    peers = [t for t in SECTOR_PEERS.get(sector, ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "JPM", "JNJ"])
+             if t != ticker][:8]
 
-    # Collect metrics from screener results
-    pe_list, pb_list, ps_list = [], [], []
-    gm_list, nm_list, roe_list = [], [], []
-    de_list, rg_list = [], []
+    pe_list, gm_list, nm_list, roe_list = [], [], [], []
 
-    for s in screener:
-        sym = s.get("symbol", "")
-        if sym == ticker:
-            continue
-        pe = s.get("pe")
-        if pe and 0 < pe < 200:
-            pe_list.append(pe)
-        pb = s.get("priceToBook")
-        if pb and 0 < pb < 50:
-            pb_list.append(pb)
-        mc = _safe_float(s.get("marketCap"))
-        rev = _safe_float(s.get("revenue")) or _safe_float(s.get("annualRevenue"))
-        if mc and rev and rev > 0:
-            ps_list.append(mc / rev)
-
-    # For deeper metrics, fetch a few peers' ratios
-    peer_symbols = [s.get("symbol") for s in screener if s.get("symbol") != ticker][:8]
-    for sym in peer_symbols:
+    for sym in peers:
         try:
-            r = _fmp_get(f"/financial-ratios/{sym}", {"limit": 1})
-            if isinstance(r, list) and r:
-                row = r[0]
-                gm = row.get("grossProfitMargin")
-                if gm is not None:
-                    gm_list.append(gm * 100)
-                nm = row.get("netProfitMargin")
-                if nm is not None:
-                    nm_list.append(nm * 100)
-                roe_v = row.get("returnOnEquity")
-                if roe_v is not None:
-                    roe_list.append(roe_v * 100)
-                de = row.get("debtEquityRatio")
-                if de is not None and 0 < de < 20:
-                    de_list.append(de)
+            ratios = _fmp_get("/ratios", {"symbol": sym, "limit": 1})
+            if not isinstance(ratios, list) or not ratios:
+                continue
+            r = ratios[0]
+            pe = r.get("priceEarningsRatio")
+            if pe and 0 < pe < 200:
+                pe_list.append(pe)
+            gm = r.get("grossProfitMargin")
+            if gm is not None:
+                gm_list.append(gm * 100)
+            nm = r.get("netProfitMargin")
+            if nm is not None:
+                nm_list.append(nm * 100)
+            roe_v = r.get("returnOnEquity")
+            if roe_v is not None:
+                roe_list.append(roe_v * 100)
         except Exception:
             continue
 
     def _median(lst: list) -> float | None:
-        valid = [x for x in lst if x is not None]
+        valid = sorted(x for x in lst if x is not None)
         if not valid:
             return None
-        valid.sort()
         mid = len(valid) // 2
-        if len(valid) % 2 == 0:
-            return round((valid[mid - 1] + valid[mid]) / 2, 2)
-        return round(valid[mid], 2)
+        return round((valid[mid - 1] + valid[mid]) / 2, 2) if len(valid) % 2 == 0 else round(valid[mid], 2)
 
     result = {
         "median_pe": _median(pe_list),
-        "median_pb": _median(pb_list),
-        "median_ps": _median(ps_list),
         "median_gross_margin": _median(gm_list),
         "median_net_margin": _median(nm_list),
         "median_roe": _median(roe_list),
-        "median_debt_to_equity": _median(de_list),
-        "peer_count": len(screener),
+        "peer_count": len(peers),
         "sector": sector,
     }
 
-    _cache_set(cache_key, result)
+    CACHE.set(cache_key, result)
     return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FMP Endpoint Status (admin/diagnostic)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def test_fmp_endpoints() -> dict:
+    """Test which FMP /stable/ endpoints are accessible with current plan."""
+    endpoints = {
+        "quote":                       {"symbol": "AAPL"},
+        "profile":                     {"symbol": "AAPL"},
+        "income-statement":            {"symbol": "AAPL", "limit": "1"},
+        "cash-flow-statement":         {"symbol": "AAPL", "limit": "1"},
+        "balance-sheet-statement":     {"symbol": "AAPL", "limit": "1"},
+        "key-metrics":                 {"symbol": "AAPL", "limit": "1"},
+        "ratios":                      {"symbol": "AAPL", "limit": "1"},
+        "price-target-consensus":      {"symbol": "AAPL"},
+        "price-target-summary":        {"symbol": "AAPL"},
+        "revenue-product-segmentation": {"symbol": "AAPL", "period": "annual", "structure": "flat"},
+        "revenue-geographic-segmentation": {"symbol": "AAPL", "period": "annual", "structure": "flat"},
+        "earnings-calendar":           {"symbol": "AAPL"},
+    }
+
+    results = {}
+    for name, params in endpoints.items():
+        try:
+            data = _fmp_get(f"/{name}", params)
+            count = len(data) if isinstance(data, list) else 1
+            results[name] = {"status": "ok", "items": count}
+        except RuntimeError as e:
+            if "403" in str(e) or "Upgrade" in str(e):
+                results[name] = {"status": "upgrade_required"}
+            else:
+                results[name] = {"status": "error", "detail": str(e)[:100]}
+        except Exception as e:
+            results[name] = {"status": "error", "detail": str(e)[:100]}
+
+    return {
+        "endpoints": results,
+        "accessible": sum(1 for v in results.values() if v["status"] == "ok"),
+        "total_tested": len(results),
+        "fmp_usage": get_fmp_call_count(),
+    }

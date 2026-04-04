@@ -27,7 +27,7 @@ from slowapi.errors import RateLimitExceeded
 from models import AnalyzeRequest, AnalyzeResponse, CompanyData, DCFResult, SensitivityMatrix, BullBearAnalysis
 from services.dcf import calculate_dcf, sensitivity_analysis
 from services.ai_analyst import get_bull_bear_analysis, get_swot_analysis, get_pestle_analysis, get_deep_analysis, detect_anomalies, get_dcf_scenarios
-from services.fmp_data import get_deep_financials, get_sector_benchmarks
+from services.fmp_data import get_deep_financials, get_sector_benchmarks, test_fmp_endpoints, get_fmp_call_count
 
 load_dotenv(Path(__file__).parent / ".env", override=True)
 
@@ -568,7 +568,7 @@ def batch_quotes(tickers: str):
     if USE_FMP:
         try:
             joined = ",".join(symbols)
-            url = f"https://financialmodelingprep.com/api/v3/quote/{joined}?apikey={FMP_KEY}"
+            url = f"https://financialmodelingprep.com/stable/batch-quote?symbol={joined}&apikey={FMP_KEY}"
             resp = httpx.get(url, timeout=8)
             resp.raise_for_status()
             return [
@@ -600,13 +600,13 @@ def quote(ticker: str):
     t = ticker.upper().strip()
     if USE_FMP:
         try:
-            url = f"https://financialmodelingprep.com/api/v3/quote/{t}?apikey={FMP_KEY}"
+            url = f"https://financialmodelingprep.com/stable/quote?symbol={t}&apikey={FMP_KEY}"
             resp = httpx.get(url, timeout=5)
             resp.raise_for_status()
             data = resp.json()
             if not data:
                 raise HTTPException(status_code=404, detail=f"'{t}' introuvable")
-            q = data[0]
+            q = data[0] if isinstance(data, list) else data
             return {
                 "ticker":     q.get("symbol", t),
                 "name":       q.get("name", t),
@@ -635,7 +635,7 @@ def profile(ticker: str):
     t = ticker.upper().strip()
     if USE_FMP:
         try:
-            url = f"https://financialmodelingprep.com/api/v3/profile/{t}?apikey={FMP_KEY}"
+            url = f"https://financialmodelingprep.com/stable/profile?symbol={t}&apikey={FMP_KEY}"
             resp = httpx.get(url, timeout=5)
             resp.raise_for_status()
             data = resp.json()
@@ -904,7 +904,7 @@ def check_alerts(request: Request):
     if USE_FMP:
         try:
             joined = ",".join(unique_tickers)
-            url = f"https://financialmodelingprep.com/api/v3/quote/{joined}?apikey={FMP_KEY}"
+            url = f"https://financialmodelingprep.com/stable/batch-quote?symbol={joined}&apikey={FMP_KEY}"
             resp = httpx.get(url, timeout=8)
             resp.raise_for_status()
             for q in resp.json():
@@ -1030,6 +1030,28 @@ async def get_referral(clerk_user_id: str, request: Request):
     except Exception as e:
         logger.error(f"Internal error: {e}")
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ADMIN / DIAGNOSTIC ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/api/admin/fmp-endpoints-status")
+async def admin_fmp_status(request: Request):
+    """Test which FMP endpoints are accessible (protected by internal secret)."""
+    secret = request.headers.get("X-Internal-Secret", "")
+    if not ALERTS_CHECK_SECRET or secret != ALERTS_CHECK_SECRET:
+        raise HTTPException(status_code=403, detail="Accès non autorisé")
+    return test_fmp_endpoints()
+
+
+@app.get("/api/admin/fmp-usage")
+async def admin_fmp_usage(request: Request):
+    """Return current FMP API call count (protected by internal secret)."""
+    secret = request.headers.get("X-Internal-Secret", "")
+    if not ALERTS_CHECK_SECRET or secret != ALERTS_CHECK_SECRET:
+        raise HTTPException(status_code=403, detail="Accès non autorisé")
+    return get_fmp_call_count()
 
 
 # Migration needed: ALTER TABLE analyses ADD COLUMN IF NOT EXISTS share_id TEXT;

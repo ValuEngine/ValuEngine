@@ -58,6 +58,16 @@ class TestSecurity:
         resp = client.get("/api/referral/user_test123")
         assert resp.status_code == 401
 
+    def test_admin_fmp_status_requires_secret(self):
+        """GET /api/admin/fmp-endpoints-status must reject without secret."""
+        resp = client.get("/api/admin/fmp-endpoints-status")
+        assert resp.status_code == 403
+
+    def test_admin_fmp_usage_requires_secret(self):
+        """GET /api/admin/fmp-usage must reject without secret."""
+        resp = client.get("/api/admin/fmp-usage")
+        assert resp.status_code == 403
+
     def test_invalid_id_rejected(self):
         """IDs with injection characters must be rejected."""
         resp = client.get("/api/analyse/test&active=eq.true")
