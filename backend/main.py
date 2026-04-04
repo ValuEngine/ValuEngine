@@ -13,7 +13,7 @@ from pathlib import Path
 from urllib.parse import quote as url_quote
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from dotenv import load_dotenv
 
 import httpx
@@ -28,6 +28,7 @@ from models import AnalyzeRequest, AnalyzeResponse, CompanyData, DCFResult, Sens
 from services.dcf import calculate_dcf, sensitivity_analysis
 from services.ai_analyst import get_bull_bear_analysis, get_swot_analysis, get_pestle_analysis, get_deep_analysis, detect_anomalies, get_dcf_scenarios
 from services.fmp_data import get_deep_financials, get_sector_benchmarks, test_fmp_endpoints, get_fmp_call_count
+from services.pdf_generator import generate_analysis_pdf
 
 load_dotenv(Path(__file__).parent / ".env", override=True)
 
@@ -803,6 +804,38 @@ async def dcf_scenarios_endpoint(request: Request):
     except Exception as e:
         logger.error(f"[DCFScenarios] Error for {ticker}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EXPORT PDF
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.post("/api/analyze/export-pdf")
+@limiter.limit("5/minute")
+async def export_pdf(request: Request):
+    """Generate a branded PDF analysis report. Pro only."""
+    token_user_id = await verify_clerk_token(request)
+
+    if not _is_user_pro(token_user_id):
+        raise HTTPException(status_code=403, detail="Feature Pro uniquement")
+
+    body = await request.json()
+    ticker = body.get("ticker", "ANALYSE").upper().strip()
+
+    try:
+        pdf_bytes = generate_analysis_pdf(body)
+    except Exception as e:
+        logger.error(f"[ExportPDF] Error generating PDF for {ticker}: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors de la generation du PDF")
+
+    date_str = datetime.now().strftime("%Y%m%d")
+    filename = f"ValuEngine_{ticker}_{date_str}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 from services.email_service import send_alert_email, send_welcome_email

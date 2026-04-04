@@ -17,6 +17,7 @@ import AppLayout from "@/components/AppLayout";
 import DeepAnalysisSection from "@/components/DeepAnalysisSection";
 import AnomaliesSection from "@/components/AnomaliesSection";
 import DCFScenariosSection from "@/components/DCFScenariosSection";
+import { useProStatus } from "@/hooks/useProStatus";
 
 /* ─────────────── helpers ────────────────────────────────────────────── */
 
@@ -507,6 +508,10 @@ function AnalyzePage() {
   const searchParams  = useSearchParams();
   const router        = useRouter();
   const initialTicker = searchParams.get("ticker") || "";
+  const { user }      = useUser();
+  const { getToken }  = useAuth();
+  const { isPro }     = useProStatus(user?.id);
+  const API_BASE_MAIN = process.env.NEXT_PUBLIC_API_URL || "";
 
   const [ticker,        setTicker]        = useState(initialTicker);
   const [inputValue,    setInputValue]    = useState(initialTicker);
@@ -520,6 +525,7 @@ function AnalyzePage() {
   const [activeTab,     setActiveTab]     = useState<TabId>("overview");
   const [visitedTabs,  setVisitedTabs]  = useState<Set<TabId>>(() => new Set<TabId>(["overview"]));
   const [shareCopied,  setShareCopied]  = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
 
   useEffect(() => {
     setVisitedTabs((prev) => {
@@ -564,6 +570,65 @@ function AnalyzePage() {
         upside_pct: result.dcf.upside_pct,
       }),
     }).catch(() => {});
+  };
+
+  const handleExportPDF = async () => {
+    if (!isPro) {
+      setShowPaywall(true);
+      return;
+    }
+    if (!data) return;
+
+    setExportingPDF(true);
+    try {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_MAIN}/api/analyze/export-pdf`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ticker: data.company.ticker,
+          company_name: data.company.name,
+          verdict: data.verdict,
+          price: data.company.price,
+          intrinsic_price: data.dcf.intrinsic_value,
+          kpis: {
+            pe_ratio: data.company.pe_ratio,
+            pb_ratio: data.company.pb_ratio,
+            ev_ebitda: data.company.ev_ebitda,
+            profit_margin: data.company.profit_margin != null ? data.company.profit_margin * 100 : null,
+            fcf_margin: data.company.free_cash_flow && data.company.revenue
+              ? (data.company.free_cash_flow / data.company.revenue) * 100
+              : null,
+            roe: data.company.roe != null ? data.company.roe * 100 : null,
+            debt_to_ebitda: data.company.net_debt && data.company.ebitda
+              ? data.company.net_debt / data.company.ebitda
+              : null,
+            revenue_growth: data.company.revenue_growth != null ? data.company.revenue_growth * 100 : null,
+            dividend_yield: data.company.dividend_yield != null ? data.company.dividend_yield * 100 : null,
+            beta: data.company.beta,
+            market_cap: data.company.market_cap,
+            free_cash_flow: data.company.free_cash_flow,
+          },
+        }),
+      });
+
+      if (!response.ok) throw new Error("Erreur generation PDF");
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ValuEngine_${data.company.ticker}_${new Date().toISOString().split("T")[0]}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export PDF failed:", error);
+    } finally {
+      setExportingPDF(false);
+    }
   };
 
   const doAnalyze = async (symbol: string) => {
@@ -802,6 +867,19 @@ function AnalyzePage() {
                       <Share2 size={12} /> {shareCopied ? "Lien copié !" : "Partager"}
                     </button>
                   </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleExportPDF}
+                    disabled={exportingPDF}
+                    className="flex items-center gap-2 border border-[#C9A84C]/40 text-[#C9A84C] hover:bg-[#C9A84C]/10 rounded-xl px-4 py-2 text-sm font-medium transition-all disabled:opacity-50"
+                  >
+                    {exportingPDF ? (
+                      <><Loader2 size={14} className="animate-spin" /> Generation...</>
+                    ) : (
+                      <>&#128196; Exporter PDF</>
+                    )}
+                  </button>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl sm:text-3xl font-black">{currencySymbol(data.company.ticker)}{data.company.price.toFixed(2)}</p>

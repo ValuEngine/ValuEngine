@@ -58,6 +58,11 @@ class TestSecurity:
         resp = client.get("/api/referral/user_test123")
         assert resp.status_code == 401
 
+    def test_export_pdf_requires_auth(self):
+        """POST /api/analyze/export-pdf must reject unauthenticated requests."""
+        resp = client.post("/api/analyze/export-pdf", json={"ticker": "AAPL"})
+        assert resp.status_code == 401
+
     def test_admin_fmp_status_requires_secret(self):
         """GET /api/admin/fmp-endpoints-status must reject without secret."""
         resp = client.get("/api/admin/fmp-endpoints-status")
@@ -197,3 +202,68 @@ class TestCache:
         for t in threads:
             t.join()
         assert len(errors) == 0, f"Thread safety errors: {errors}"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PDF GENERATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestPDFGeneration:
+    def test_pdf_generates_valid_bytes(self):
+        """PDF generator must return valid PDF bytes."""
+        from services.pdf_generator import generate_analysis_pdf
+        result = generate_analysis_pdf({
+            "ticker": "AAPL",
+            "company_name": "Apple Inc.",
+            "verdict": "BUY",
+            "price": 178.72,
+            "intrinsic_price": 215.50,
+            "kpis": {"pe_ratio": 28.5, "market_cap": 2800000000000},
+        })
+        assert isinstance(result, bytes)
+        assert len(result) > 500
+        assert result[:5] == b"%PDF-"
+
+    def test_pdf_handles_empty_data(self):
+        """PDF generator must not crash on minimal/empty data."""
+        from services.pdf_generator import generate_analysis_pdf
+        result = generate_analysis_pdf({"ticker": "TEST"})
+        assert isinstance(result, bytes)
+        assert result[:5] == b"%PDF-"
+
+    def test_pdf_with_deep_analysis(self):
+        """PDF must include deep analysis sections without errors."""
+        from services.pdf_generator import generate_analysis_pdf
+        result = generate_analysis_pdf({
+            "ticker": "MSFT",
+            "company_name": "Microsoft Corp",
+            "verdict": "HOLD",
+            "price": 420.0,
+            "intrinsic_price": 415.0,
+            "kpis": {},
+            "deep_analysis": {
+                "bull_case": {
+                    "titre": "Cloud leader",
+                    "score_confiance": 75,
+                    "arguments": [
+                        {"titre": "Azure growth", "detail": "Cloud at 30% growth.", "chiffre_cle": "Azure: +30%"}
+                    ],
+                },
+                "bear_case": {
+                    "titre": "Regulatory risk",
+                    "score_confiance": 40,
+                    "arguments": [
+                        {"titre": "Antitrust", "detail": "EU probes ongoing.", "chiffre_cle": "EU fines risk"}
+                    ],
+                },
+                "synthese": "Microsoft remains a quality holding.",
+            },
+            "dcf_scenarios": {
+                "bull": {"prix_cible": 500, "upside_pct": 19, "probabilite": 25, "narratif": "AI monetization."},
+                "base": {"prix_cible": 430, "upside_pct": 2.4, "probabilite": 50, "narratif": "Steady growth."},
+                "bear": {"prix_cible": 350, "upside_pct": -16.7, "probabilite": 25, "narratif": "Cloud slowdown."},
+                "conclusion": "Base case most likely.",
+            },
+        })
+        assert isinstance(result, bytes)
+        assert len(result) > 2000  # More content = larger PDF
