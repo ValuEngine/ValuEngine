@@ -1,10 +1,16 @@
 """
 ValuEngine — AI Analyst Service
 Génère une analyse Bull/Bear contextualisée via Claude (Anthropic).
++ Deep Analysis, Anomaly Detection, DCF Scenarios (Niveaux 1-3).
 """
 
 import os
+import json
+import re
+import logging
 from anthropic import Anthropic
+
+logger = logging.getLogger("valuengine")
 
 
 def _fmt_b(value: float) -> str:
@@ -16,6 +22,14 @@ def _fmt_b(value: float) -> str:
     if abs(value) >= 1e6:
         return f"${value/1e6:.0f}M"
     return f"${value:,.0f}"
+
+
+def _parse_json_response(text: str) -> dict:
+    """Parse JSON from Claude response, stripping markdown fences."""
+    text = text.strip()
+    text = re.sub(r"^```(?:json)?\s*", "", text)
+    text = re.sub(r"\s*```$", "", text)
+    return json.loads(text)
 
 
 def get_bull_bear_analysis(company: dict, dcf: dict) -> dict:
@@ -172,13 +186,444 @@ En français, factuel, ancré dans le secteur de l'entreprise."""
             max_tokens=800,
             messages=[{"role": "user", "content": prompt}]
         )
-        import json, re
         text = message.content[0].text.strip()
-        text = re.sub(r"^```(?:json)?\s*", "", text)
-        text = re.sub(r"\s*```$", "", text)
-        return json.loads(text)
+        return _parse_json_response(text)
     except Exception as e:
         return {
             "political": f"Erreur lors de la génération PESTLE : {e}",
             "economic": "", "social": "", "technological": "", "legal": "", "environmental": "",
         }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NIVEAU 1 — Analyse contextuelle profonde (claude-sonnet-4-6)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def get_deep_analysis(ticker: str, company_info: dict, financials: dict, deep_financials: dict) -> dict:
+    """
+    Deep analysis using real 5-year financial data via claude-sonnet-4-6.
+    Returns structured bull/bear case with real figures cited.
+    """
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return {"error": "Clé API Anthropic manquante"}
+
+    client = Anthropic(api_key=api_key)
+
+    # Format data for the prompt
+    df = deep_financials
+    years = df.get("years", [])
+    years_str = " → ".join(str(y) for y in years) if years else "N/A"
+
+    def _fmt_list(lst, suffix="%"):
+        if not lst:
+            return "N/A"
+        return " → ".join(f"{v}{suffix}" if v is not None else "N/A" for v in lst)
+
+    def _fmt_money_list(lst):
+        if not lst:
+            return "N/A"
+        return " → ".join(_fmt_b(v) if v else "N/A" for v in lst)
+
+    # Calculate CAGR revenue
+    rev = df.get("revenue_5y", [])
+    cagr_rev = None
+    if len(rev) >= 2 and rev[-1] and rev[0] and rev[-1] > 0:
+        n_years = len(rev) - 1
+        cagr_rev = ((rev[0] / rev[-1]) ** (1 / n_years) - 1) * 100
+
+    prompt = f"""Tu es un analyste financier senior institutionnel spécialisé dans le secteur {company_info.get('sector', 'N/A')}.
+Analyse {company_info.get('name', ticker)} ({ticker}) avec rigueur et profondeur.
+
+═══ DONNÉES FINANCIÈRES RÉELLES ({years_str}) ═══
+
+Revenus: {_fmt_money_list(rev)}
+CAGR Revenus: {f'{cagr_rev:.1f}%' if cagr_rev else 'N/A'}
+Croissance CA YoY: {_fmt_list(df.get('revenue_growth_5y', []))}
+
+Marges brutes: {_fmt_list(df.get('gross_margin_5y', []))}
+Marges opérationnelles: {_fmt_list(df.get('operating_margin_5y', []))}
+Marges nettes: {_fmt_list(df.get('net_margin_5y', []))}
+
+FCF: {_fmt_money_list(df.get('fcf_5y', []))}
+FCF Margin: {_fmt_list(df.get('fcf_margin_5y', []))}
+
+ROIC: {_fmt_list(df.get('roic_5y', []))}
+Cash conversion (FCF/NI): {_fmt_list(df.get('cash_conversion', []), 'x')}
+Dette/EBITDA: {_fmt_list(df.get('debt_to_ebitda_5y', []), 'x')}
+
+EPS dilué: {_fmt_list(df.get('eps_5y', []), '$')}
+Croissance EPS: {_fmt_list(df.get('eps_growth_5y', []))}
+CapEx/Revenue: {_fmt_list(df.get('capex_intensity', []))}
+
+═══ DONNÉES COURANTES ═══
+Prix: ${company_info.get('price', 0):.2f}
+Market Cap: {_fmt_b(company_info.get('market_cap', 0))}
+P/E: {company_info.get('pe_ratio', 'N/A')}
+EV/EBITDA: {company_info.get('ev_ebitda', 'N/A')}
+
+═══ CONSIGNES ═══
+1. Chaque argument DOIT citer des CHIFFRES RÉELS tirés des données ci-dessus
+2. Pas de généralités — uniquement des faits quantifiés
+3. Ton analytique professionnel, en français
+4. Retourne UNIQUEMENT du JSON valide, sans texte autour
+
+Format JSON attendu:
+{{
+  "bull_case": {{
+    "titre": "string (5-8 mots accrocheur)",
+    "score_confiance": number (0-100),
+    "arguments": [
+      {{
+        "titre": "string court",
+        "detail": "string (2-3 phrases avec CHIFFRES RÉELS)",
+        "chiffre_cle": "string ex: 'FCF margin: 28.3%'"
+      }},
+      {{
+        "titre": "string",
+        "detail": "string",
+        "chiffre_cle": "string"
+      }},
+      {{
+        "titre": "string",
+        "detail": "string",
+        "chiffre_cle": "string"
+      }}
+    ]
+  }},
+  "bear_case": {{
+    "titre": "string",
+    "score_confiance": number (0-100),
+    "arguments": [
+      {{
+        "titre": "string",
+        "detail": "string (2-3 phrases avec chiffres réels)",
+        "chiffre_cle": "string"
+      }},
+      {{
+        "titre": "string",
+        "detail": "string",
+        "chiffre_cle": "string"
+      }},
+      {{
+        "titre": "string",
+        "detail": "string",
+        "chiffre_cle": "string"
+      }}
+    ]
+  }},
+  "synthese": "string (2-3 phrases de conclusion analytique avec position nette)",
+  "catalyseurs_positifs": ["string", "string", "string"],
+  "risques_majeurs": ["string", "string", "string"]
+}}"""
+
+    try:
+        msg = client.messages.create(
+            model="claude-sonnet-4-6-20250514",
+            max_tokens=2000,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return _parse_json_response(msg.content[0].text)
+    except json.JSONDecodeError as e:
+        logger.error(f"[DeepAnalysis] JSON parse error: {e}")
+        return {"error": f"Erreur de parsing JSON: {e}"}
+    except Exception as e:
+        logger.error(f"[DeepAnalysis] Error: {e}")
+        return {"error": str(e)}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NIVEAU 2 — Détection d'anomalies (logique Python pure, pas d'IA)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def detect_anomalies(
+    ticker: str,
+    company_data: dict,
+    deep_financials: dict,
+    sector_benchmarks: dict,
+) -> list:
+    """
+    Detect financial anomalies by comparing company metrics to sector benchmarks.
+    Pure Python logic — no AI call.
+    """
+    anomalies = []
+    df = deep_financials
+    bench = sector_benchmarks
+
+    # Helper
+    def _first(lst):
+        """Get most recent value from a list."""
+        if not lst:
+            return None
+        for v in lst:
+            if v is not None:
+                return v
+        return None
+
+    pe_ratio = company_data.get("pe_ratio")
+    median_pe = bench.get("median_pe")
+
+    # ── 1. VALORISATION ──
+    if pe_ratio and median_pe and median_pe > 0:
+        premium = (pe_ratio - median_pe) / median_pe * 100
+        if premium > 50:
+            anomalies.append({
+                "type": "VALORISATION",
+                "signal": "ATTENTION",
+                "titre": "Prime de valorisation élevée",
+                "detail": f"P/E de {pe_ratio:.1f}x vs médiane sectorielle {median_pe:.1f}x (+{premium:.0f}% de prime)",
+                "impact": "baissier",
+            })
+        elif premium < -30:
+            anomalies.append({
+                "type": "VALORISATION",
+                "signal": "OPPORTUNITE",
+                "titre": "Décote de valorisation significative",
+                "detail": f"P/E de {pe_ratio:.1f}x vs médiane sectorielle {median_pe:.1f}x ({premium:.0f}% de décote)",
+                "impact": "haussier",
+            })
+
+    # ── 2. LEVIER FINANCIER ──
+    debt_ebitda = _first(df.get("debt_to_ebitda_5y", []))
+    if debt_ebitda is not None and debt_ebitda > 4.0:
+        anomalies.append({
+            "type": "BILAN",
+            "signal": "RISQUE",
+            "titre": "Endettement excessif",
+            "detail": f"Dette/EBITDA de {debt_ebitda:.1f}x — niveau critique (seuil d'alerte: 4x)",
+            "impact": "baissier",
+        })
+
+    # ── 3. QUALITÉ DES EARNINGS ──
+    cash_conv = _first(df.get("cash_conversion", []))
+    if cash_conv is not None:
+        if cash_conv < 0.7:
+            anomalies.append({
+                "type": "EARNINGS",
+                "signal": "ATTENTION",
+                "titre": "Qualité des bénéfices faible",
+                "detail": f"Cash conversion de {cash_conv:.0%} — les bénéfices comptables ne se transforment pas bien en cash",
+                "impact": "baissier",
+            })
+        elif cash_conv > 1.2:
+            anomalies.append({
+                "type": "EARNINGS",
+                "signal": "POSITIF",
+                "titre": "Excellente qualité des bénéfices",
+                "detail": f"Cash conversion de {cash_conv:.0%} — les bénéfices sont fortement soutenus par le cash",
+                "impact": "haussier",
+            })
+
+    # ── 4. MARGES vs SECTEUR ──
+    gross_margin = _first(df.get("gross_margin_5y", []))
+    median_gm = bench.get("median_gross_margin")
+    if gross_margin is not None and median_gm is not None:
+        diff = gross_margin - median_gm
+        if diff > 15:
+            anomalies.append({
+                "type": "RENTABILITE",
+                "signal": "POSITIF",
+                "titre": "Avantage concurrentiel sur les marges",
+                "detail": f"Marge brute {gross_margin:.1f}% vs {median_gm:.1f}% médiane secteur (+{diff:.1f}pts) — pricing power élevé",
+                "impact": "haussier",
+            })
+        elif diff < -10:
+            anomalies.append({
+                "type": "RENTABILITE",
+                "signal": "ATTENTION",
+                "titre": "Marges sous la moyenne sectorielle",
+                "detail": f"Marge brute {gross_margin:.1f}% vs {median_gm:.1f}% médiane secteur ({diff:.1f}pts) — pression concurrentielle",
+                "impact": "baissier",
+            })
+
+    # ── 5. CRÉATION DE VALEUR (ROIC) ──
+    roic_current = _first(df.get("roic_5y", []))
+    median_roe = bench.get("median_roe")
+    if roic_current is not None and median_roe is not None and median_roe > 0:
+        if roic_current > median_roe * 1.5:
+            anomalies.append({
+                "type": "CREATION_VALEUR",
+                "signal": "POSITIF",
+                "titre": "Création de valeur supérieure au secteur",
+                "detail": f"ROIC de {roic_current:.1f}% vs {median_roe:.1f}% ROE médian secteur — allocation du capital excellente",
+                "impact": "haussier",
+            })
+
+    # ── 6. TENDANCE FCF ──
+    fcf_5y = df.get("fcf_5y", [])
+    if len(fcf_5y) >= 3 and fcf_5y[0] and fcf_5y[2] and fcf_5y[2] != 0:
+        recent_fcf_trend = (fcf_5y[0] - fcf_5y[2]) / abs(fcf_5y[2])
+        if recent_fcf_trend < -0.3:
+            anomalies.append({
+                "type": "FCF",
+                "signal": "RISQUE",
+                "titre": "Détérioration du Free Cash Flow",
+                "detail": f"FCF en baisse de {abs(recent_fcf_trend):.0%} sur 3 ans — surveiller la consommation de trésorerie",
+                "impact": "baissier",
+            })
+        elif recent_fcf_trend > 0.5:
+            anomalies.append({
+                "type": "FCF",
+                "signal": "POSITIF",
+                "titre": "Forte croissance du Free Cash Flow",
+                "detail": f"FCF en hausse de {recent_fcf_trend:.0%} sur 3 ans — génération de trésorerie en accélération",
+                "impact": "haussier",
+            })
+
+    return anomalies
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NIVEAU 3 — 3 Scénarios DCF avec narratif IA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _calculate_scenario_ev(fcf_base: float, growth_rate: float, wacc: float, terminal_growth: float, horizon: int = 5) -> float:
+    """Calculate enterprise value for a single DCF scenario."""
+    if fcf_base <= 0:
+        fcf_base = abs(fcf_base) if fcf_base != 0 else 1_000_000
+    if wacc <= terminal_growth:
+        terminal_growth = wacc - 0.005
+
+    fcf_projections = []
+    fcf = fcf_base
+    for year in range(1, horizon + 1):
+        fcf *= (1 + growth_rate)
+        fcf_projections.append(fcf)
+
+    # Terminal value (Gordon-Shapiro)
+    terminal_value = fcf_projections[-1] * (1 + terminal_growth) / (wacc - terminal_growth)
+
+    # Discount to present value
+    pv_fcf = sum(f / (1 + wacc) ** i for i, f in enumerate(fcf_projections, 1))
+    pv_terminal = terminal_value / (1 + wacc) ** horizon
+
+    return pv_fcf + pv_terminal
+
+
+def get_dcf_scenarios(ticker: str, company_info: dict, financials: dict, deep_financials: dict) -> dict:
+    """
+    Generate 3 DCF scenarios (bull/base/bear) with AI-generated narratives.
+    """
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return {"error": "Clé API Anthropic manquante"}
+
+    df = deep_financials
+    fcf_5y = df.get("fcf_5y", [])
+    fcf_base = fcf_5y[0] if fcf_5y and fcf_5y[0] else company_info.get("free_cash_flow", 0)
+
+    shares = company_info.get("shares_outstanding", 1)
+    net_debt = company_info.get("net_debt", 0)
+    price = company_info.get("price", 0)
+
+    if shares <= 0:
+        shares = 1
+
+    # ── Calculate 3 scenarios ──
+    scenarios_params = {
+        "bull": {"growth_rate": 0.15, "wacc": 0.08, "terminal_growth": 0.04},
+        "base": {"growth_rate": 0.08, "wacc": 0.10, "terminal_growth": 0.025},
+        "bear": {"growth_rate": 0.02, "wacc": 0.12, "terminal_growth": 0.01},
+    }
+
+    scenarios = {}
+    for name, params in scenarios_params.items():
+        ev = _calculate_scenario_ev(fcf_base, **params)
+        equity = ev - net_debt
+        prix_cible = max(equity / shares, 0)
+        upside = ((prix_cible - price) / price * 100) if price > 0 else 0
+        scenarios[name] = {
+            "prix_cible": round(prix_cible, 2),
+            "upside_pct": round(upside, 1),
+            "params": params,
+        }
+
+    # ── Ask Claude for narratives + probabilities ──
+    client = Anthropic(api_key=api_key)
+
+    def _fmt_money_list(lst):
+        return " → ".join(_fmt_b(v) if v else "N/A" for v in (lst or []))
+
+    prompt = f"""Tu es un analyste financier institutionnel. Génère les narratifs pour 3 scénarios DCF de {company_info.get('name', ticker)} ({ticker}).
+
+═══ RÉSULTATS DES SCÉNARIOS DCF ═══
+Bull: Prix cible ${scenarios['bull']['prix_cible']:.2f} ({scenarios['bull']['upside_pct']:+.1f}% vs cours actuel ${price:.2f})
+  → Params: croissance FCF 15%, WACC 8%, terminal 4%
+Base: Prix cible ${scenarios['base']['prix_cible']:.2f} ({scenarios['base']['upside_pct']:+.1f}%)
+  → Params: croissance FCF 8%, WACC 10%, terminal 2.5%
+Bear: Prix cible ${scenarios['bear']['prix_cible']:.2f} ({scenarios['bear']['upside_pct']:+.1f}%)
+  → Params: croissance FCF 2%, WACC 12%, terminal 1%
+
+═══ DONNÉES FINANCIÈRES ═══
+FCF 5 ans: {_fmt_money_list(fcf_5y)}
+Revenus 5 ans: {_fmt_money_list(df.get('revenue_5y', []))}
+Marges nettes: {' → '.join(str(v) + '%' if v else 'N/A' for v in df.get('net_margin_5y', []))}
+ROIC: {' → '.join(str(v) + '%' if v else 'N/A' for v in df.get('roic_5y', []))}
+Secteur: {company_info.get('sector', 'N/A')}
+
+═══ CONSIGNES ═══
+1. Les probabilités bull + base + bear doivent sommer à 100%
+2. Chaque narratif: 3-4 phrases, catalyseurs PRÉCIS, pas de généralités
+3. En français, ton professionnel
+4. Retourne UNIQUEMENT du JSON valide
+
+Format attendu:
+{{
+  "bull": {{
+    "probabilite": number,
+    "titre": "string (sous-titre accrocheur 5-8 mots)",
+    "narratif": "string (3-4 phrases avec catalyseurs précis)",
+    "hypotheses": ["string", "string", "string"]
+  }},
+  "base": {{
+    "probabilite": number,
+    "titre": "string",
+    "narratif": "string",
+    "hypotheses": ["string", "string", "string"]
+  }},
+  "bear": {{
+    "probabilite": number,
+    "titre": "string",
+    "narratif": "string",
+    "hypotheses": ["string", "string", "string"]
+  }},
+  "conclusion": "string (1-2 phrases — scénario le plus probable et pourquoi)"
+}}"""
+
+    try:
+        msg = client.messages.create(
+            model="claude-sonnet-4-6-20250514",
+            max_tokens=1500,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        ai_result = _parse_json_response(msg.content[0].text)
+
+        # Merge AI narratives with calculated values
+        result = {"prix_actuel": price}
+        for name in ["bull", "base", "bear"]:
+            ai_scenario = ai_result.get(name, {})
+            result[name] = {
+                "prix_cible": scenarios[name]["prix_cible"],
+                "upside_pct": scenarios[name]["upside_pct"],
+                "probabilite": ai_scenario.get("probabilite", 33),
+                "titre": ai_scenario.get("titre", ""),
+                "narratif": ai_scenario.get("narratif", ""),
+                "hypotheses": ai_scenario.get("hypotheses", []),
+            }
+        result["conclusion"] = ai_result.get("conclusion", "")
+
+        return result
+
+    except json.JSONDecodeError as e:
+        logger.error(f"[DCFScenarios] JSON parse error: {e}")
+        # Return raw calculated scenarios without narratives
+        return {
+            "prix_actuel": price,
+            "bull": {**scenarios["bull"], "probabilite": 25, "titre": "Scénario optimiste", "narratif": "", "hypotheses": []},
+            "base": {**scenarios["base"], "probabilite": 50, "titre": "Scénario central", "narratif": "", "hypotheses": []},
+            "bear": {**scenarios["bear"], "probabilite": 25, "titre": "Scénario pessimiste", "narratif": "", "hypotheses": []},
+            "conclusion": "",
+        }
+    except Exception as e:
+        logger.error(f"[DCFScenarios] Error: {e}")
+        return {"error": str(e)}

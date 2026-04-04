@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 // ── Global in-memory store ─────────────────────────────────────────────
-let _globalIsPro = false;
+let _globalIsPro: boolean | null = null; // null = not yet resolved
 const _listeners = new Set<() => void>();
 
 function _notify() {
@@ -16,6 +16,9 @@ function _setGlobal(value: boolean) {
     _notify();
   }
 }
+
+// Track if a server fetch is already in progress (dedup)
+let _fetchPromise: Promise<void> | null = null;
 
 // ── Public API ─────────────────────────────────────────────────────────
 
@@ -33,22 +36,76 @@ export function activateProNow(): void {
 }
 
 /**
- * Hook pour vérifier le statut Pro.
- * 1. Lit localStorage au montage → réponse instantanée
- * 2. Vérifie avec le serveur (GET /api/db/user) → confirmation
+ * Fetch pro status from the server (Supabase via Next.js API route).
+ * Deduplicates concurrent calls. Updates global store.
  */
-export function useProStatus(userId?: string): { isPro: boolean } {
-  const isPro = useSyncExternalStore(
+async function _fetchProFromServer(): Promise<void> {
+  if (_fetchPromise) return _fetchPromise;
+
+  _fetchPromise = (async () => {
+    try {
+      const res = await fetch("/api/db/user");
+      if (!res.ok) return;
+      const data = await res.json();
+
+      if (data && data.is_pro === true) {
+        _setGlobal(true);
+        // Persist flag for instant load next time
+        try {
+          localStorage.setItem("ve_pro_activated", "true");
+          if (!localStorage.getItem("ve_pro_activated_at")) {
+            localStorage.setItem("ve_pro_activated_at", Date.now().toString());
+          }
+        } catch {}
+      } else if (data && data.is_pro === false) {
+        // Server says not Pro — check if we have a very recent optimistic flag (5min grace)
+        const at = localStorage.getItem("ve_pro_activated_at");
+        const isRecent = at && (Date.now() - parseInt(at)) < 5 * 60 * 1000;
+        if (!isRecent) {
+          _setGlobal(false);
+          try {
+            localStorage.removeItem("ve_pro_activated");
+            localStorage.removeItem("ve_pro_activated_at");
+          } catch {}
+        }
+        // Else: keep optimistic for 5 min (PATCH may still be propagating)
+      }
+    } catch {
+      // Network error — keep current state
+    } finally {
+      _fetchPromise = null;
+    }
+  })();
+
+  return _fetchPromise;
+}
+
+/**
+ * Hook pour vérifier le statut Pro.
+ *
+ * FLOW:
+ * 1. useSyncExternalStore reads _globalIsPro (safe for SSR: returns false)
+ * 2. On mount (client-only useEffect):
+ *    a. Read localStorage for instant response (no flash)
+ *    b. Fetch from server (GET /api/db/user) — THE source of truth
+ * 3. After logout/re-login: userId changes → triggers new server fetch
+ *    → isPro restored from Supabase, not just localStorage
+ */
+export function useProStatus(userId?: string): { isPro: boolean; loading: boolean } {
+  const storeValue = useSyncExternalStore(
     (listener) => {
       _listeners.add(listener);
       return () => { _listeners.delete(listener); };
     },
     () => _globalIsPro,
-    () => false
+    () => null as boolean | null // SSR: null (unknown)
   );
 
-  // Client-only : lit localStorage au montage (instantané)
+  const [loading, setLoading] = useState(_globalIsPro === null);
+
+  // Step 1: Client-only — read localStorage for instant display (no flash)
   useEffect(() => {
+    if (_globalIsPro !== null) return; // Already resolved
     try {
       const flag = localStorage.getItem("ve_pro_activated");
       const at = localStorage.getItem("ve_pro_activated_at");
@@ -59,51 +116,37 @@ export function useProStatus(userId?: string): { isPro: boolean } {
     } catch {}
   }, []);
 
-  // Vérifie avec le serveur une fois que l'user est identifié
+  // Step 2: Fetch from server when userId is available (THE source of truth)
   useEffect(() => {
     if (!userId) return;
 
     let cancelled = false;
 
     (async () => {
-      try {
-        const res = await fetch("/api/db/user");
-        if (!res.ok) return;
-        const data = await res.json();
-        if (cancelled) return;
-
-        if (data && data.is_pro === true) {
-          _setGlobal(true);
-          // Persister le flag pour les prochains rechargements
-          try {
-            localStorage.setItem("ve_pro_activated", "true");
-            if (!localStorage.getItem("ve_pro_activated_at")) {
-              localStorage.setItem("ve_pro_activated_at", Date.now().toString());
-            }
-          } catch {}
-        } else if (data && data.is_pro === false) {
-          // Le serveur dit pas Pro — vérifier si le flag optimiste est encore valide
-          const at = localStorage.getItem("ve_pro_activated_at");
-          const isRecent = at && (Date.now() - parseInt(at)) < 5 * 60 * 1000; // 5 min de grâce
-          if (!isRecent) {
-            // Le flag a expiré et le serveur confirme pas Pro
-            _setGlobal(false);
-            try {
-              localStorage.removeItem("ve_pro_activated");
-              localStorage.removeItem("ve_pro_activated_at");
-            } catch {}
-          }
-          // Sinon on garde l'optimiste 5 min le temps que le PATCH se propage
-        }
-      } catch {
-        // Pas de connexion — on garde l'état localStorage
+      await _fetchProFromServer();
+      if (!cancelled) {
+        setLoading(false);
       }
     })();
 
     return () => { cancelled = true; };
   }, [userId]);
 
-  return { isPro };
+  // If no userId yet and no localStorage, resolve to false
+  useEffect(() => {
+    if (!userId && _globalIsPro === null) {
+      // No user = definitely not pro
+      const timer = setTimeout(() => {
+        if (_globalIsPro === null) {
+          _setGlobal(false);
+          setLoading(false);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [userId]);
+
+  return { isPro: storeValue === true, loading };
 }
 
 /** Check if Pro was just activated (for showing welcome modal). */
@@ -118,4 +161,10 @@ export function shouldShowProWelcome(): boolean {
     return flag === "true" && !!isRecent;
   } catch {}
   return false;
+}
+
+/** Force a fresh check from the server. Useful after payment flow. */
+export function refreshProStatus(): Promise<void> {
+  _fetchPromise = null; // Clear dedup lock
+  return _fetchProFromServer();
 }

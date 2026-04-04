@@ -24,7 +24,8 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from models import AnalyzeRequest, AnalyzeResponse, CompanyData, DCFResult, SensitivityMatrix, BullBearAnalysis
 from services.dcf import calculate_dcf, sensitivity_analysis
-from services.ai_analyst import get_bull_bear_analysis, get_swot_analysis, get_pestle_analysis
+from services.ai_analyst import get_bull_bear_analysis, get_swot_analysis, get_pestle_analysis, get_deep_analysis, detect_anomalies, get_dcf_scenarios
+from services.fmp_data import get_deep_financials, get_sector_benchmarks
 
 load_dotenv(Path(__file__).parent / ".env", override=True)
 
@@ -94,6 +95,30 @@ def _sb_patch(table: str, params: str, body: dict) -> list:
         return data if isinstance(data, list) else [data] if data else []
     except Exception:
         return []
+
+
+def _webhook_patch_user(user_id: str, update_full: dict, update_minimal: dict) -> list:
+    """
+    Try to PATCH user with full payload (incl. pro_until).
+    If that fails (e.g. column doesn't exist), retry with minimal payload (just is_pro).
+    Tries id= first, then clerk_user_id= as fallback column.
+    """
+    for body_label, body in [("full", update_full), ("minimal", update_minimal)]:
+        for col in ["id", "clerk_user_id"]:
+            try:
+                updated = _sb_patch("users", f"{col}=eq.{user_id}", body)
+                if updated:
+                    logger.info(f"[Patch] {col}=eq.{user_id} ({body_label}) → {len(updated)} row(s) ✓")
+                    return updated
+                else:
+                    logger.info(f"[Patch] {col}=eq.{user_id} ({body_label}) → 0 rows (no match)")
+            except Exception as e:
+                logger.warning(f"[Patch] {col}=eq.{user_id} ({body_label}) → erreur: {e}")
+                # If full body failed with a column error, break to try minimal
+                if body_label == "full" and ("column" in str(e).lower() or "42703" in str(e)):
+                    logger.info("[Patch] Colonne manquante détectée, bascule vers payload minimal")
+                    break
+    return []
 
 
 # ── Freemium enforcement helpers ────────────────────────────────────────────
@@ -567,6 +592,102 @@ def pestle_endpoint(request: Request, ticker: str):
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
+# ── Cache pour les endpoints Pro (deep analysis, anomalies, DCF scenarios) ──
+_ANALYSIS_CACHE: dict = {}
+_CACHE_TTL_30M = 30 * 60
+_CACHE_TTL_1H = 60 * 60
+
+
+def _cache_get(key: str, ttl: int) -> dict | None:
+    entry = _ANALYSIS_CACHE.get(key)
+    if entry and (time.time() - entry["ts"]) < ttl:
+        return entry["data"]
+    return None
+
+
+def _cache_set(key: str, data: dict):
+    _ANALYSIS_CACHE[key] = {"data": data, "ts": time.time()}
+
+
+@app.post("/api/analyze/deep-analysis")
+@limiter.limit("5/minute")
+async def deep_analysis_endpoint(request: Request):
+    """Analyse approfondie IA avec données financières 5 ans (Pro only)."""
+    body = await request.json()
+    ticker = body.get("ticker", "").upper().strip()
+    if not ticker:
+        raise HTTPException(status_code=400, detail="ticker requis")
+
+    # Check cache
+    cache_key = f"deep_{ticker}"
+    cached = _cache_get(cache_key, _CACHE_TTL_30M)
+    if cached:
+        return cached
+
+    try:
+        company_info = _get_data(ticker)
+        deep_fin = get_deep_financials(ticker)
+        result = get_deep_analysis(ticker, company_info, company_info, deep_fin)
+        _cache_set(cache_key, result)
+        return result
+    except Exception as e:
+        logger.error(f"[DeepAnalysis] Error for {ticker}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/analyze/anomalies")
+@limiter.limit("10/minute")
+async def anomalies_endpoint(request: Request):
+    """Détection d'anomalies financières vs benchmarks sectoriels."""
+    body = await request.json()
+    ticker = body.get("ticker", "").upper().strip()
+    if not ticker:
+        raise HTTPException(status_code=400, detail="ticker requis")
+
+    cache_key = f"anomalies_{ticker}"
+    cached = _cache_get(cache_key, _CACHE_TTL_1H)
+    if cached:
+        return cached
+
+    try:
+        company_data = _get_data(ticker)
+        deep_fin = get_deep_financials(ticker)
+        sector = company_data.get("sector", "Technology")
+        benchmarks = get_sector_benchmarks(ticker, sector)
+        anomalies = detect_anomalies(ticker, company_data, deep_fin, benchmarks)
+        result = {"anomalies": anomalies, "sector": sector, "peer_count": benchmarks.get("peer_count", 0)}
+        _cache_set(cache_key, result)
+        return result
+    except Exception as e:
+        logger.error(f"[Anomalies] Error for {ticker}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/analyze/dcf-scenarios")
+@limiter.limit("5/minute")
+async def dcf_scenarios_endpoint(request: Request):
+    """3 scénarios DCF (bull/base/bear) avec narratif IA."""
+    body = await request.json()
+    ticker = body.get("ticker", "").upper().strip()
+    if not ticker:
+        raise HTTPException(status_code=400, detail="ticker requis")
+
+    cache_key = f"dcf_scenarios_{ticker}"
+    cached = _cache_get(cache_key, _CACHE_TTL_30M)
+    if cached:
+        return cached
+
+    try:
+        company_info = _get_data(ticker)
+        deep_fin = get_deep_financials(ticker)
+        result = get_dcf_scenarios(ticker, company_info, company_info, deep_fin)
+        _cache_set(cache_key, result)
+        return result
+    except Exception as e:
+        logger.error(f"[DCFScenarios] Error for {ticker}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 from services.email_service import send_alert_email, send_welcome_email
 
 
@@ -848,21 +969,9 @@ async def verify_stripe_session(session_id: str):
         "stripe_subscription_id": subscription_id or "",
     }
 
-    # 3. Try PATCH with id=eq.{user_id} (frontend stores clerk_user_id as "id")
-    updated_rows = []
-    try:
-        updated_rows = _sb_patch("users", f"id=eq.{user_id}", update_body)
-        logger.info(f"[verify-session] PATCH id=eq.{user_id} → {len(updated_rows)} row(s) updated")
-    except Exception as e:
-        logger.error(f"[verify-session] PATCH id= failed: {e}")
-
-    # 4. Fallback: try clerk_user_id column if "id" matched nothing
-    if not updated_rows:
-        try:
-            updated_rows = _sb_patch("users", f"clerk_user_id=eq.{user_id}", update_body)
-            logger.info(f"[verify-session] PATCH clerk_user_id=eq.{user_id} → {len(updated_rows)} row(s) updated")
-        except Exception as e:
-            logger.error(f"[verify-session] PATCH clerk_user_id= also failed: {e}")
+    # 3. PATCH user — with full body, fallback to minimal if column missing
+    update_minimal = {"is_pro": True, "stripe_subscription_id": subscription_id or ""}
+    updated_rows = _webhook_patch_user(user_id, update_body, update_minimal)
 
     # 5. Final check
     if not updated_rows:
@@ -885,6 +994,8 @@ async def stripe_webhook(request: Request):
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
     webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+
+    logger.info(f"[Webhook] Reçu — sig={'oui' if sig_header else 'NON'}, secret={'oui' if webhook_secret else 'NON CONFIGURÉ'}")
 
     # ── 1. Vérification de signature ────────────────────────────────────
     if not webhook_secret:
@@ -909,9 +1020,9 @@ async def stripe_webhook(request: Request):
             session = event["data"]["object"]
             metadata = session.get("metadata") or {}
 
-            # Log la metadata complète pour debug
             logger.info(f"[Webhook] Session metadata: {metadata}")
             logger.info(f"[Webhook] Session subscription: {session.get('subscription')}")
+            logger.info(f"[Webhook] Customer email: {session.get('customer_email')}")
 
             user_id = metadata.get("userId", "")
             plan = metadata.get("plan", "monthly")
@@ -924,32 +1035,25 @@ async def stripe_webhook(request: Request):
 
             pro_duration = timedelta(days=365) if plan == "yearly" else timedelta(days=31)
             pro_until = (datetime.now(timezone.utc) + pro_duration).isoformat()
-            update_body = {
+
+            # Build update — try with pro_until first, fallback without if column doesn't exist
+            update_full = {
                 "is_pro": True,
                 "pro_until": pro_until,
                 "stripe_subscription_id": str(subscription_id or ""),
             }
+            update_minimal = {
+                "is_pro": True,
+                "stripe_subscription_id": str(subscription_id or ""),
+            }
 
-            # Essai 1 : id = clerk_user_id (schéma frontend)
-            updated = []
-            try:
-                updated = _sb_patch("users", f"id=eq.{user_id}", update_body)
-                logger.info(f"[Webhook] PATCH id=eq.{user_id} → {len(updated)} row(s)")
-            except Exception as e:
-                logger.error(f"[Webhook] PATCH id= erreur: {e}")
-
-            # Essai 2 : clerk_user_id column (schéma alternatif)
-            if not updated:
-                try:
-                    updated = _sb_patch("users", f"clerk_user_id=eq.{user_id}", update_body)
-                    logger.info(f"[Webhook] PATCH clerk_user_id= → {len(updated)} row(s)")
-                except Exception as e:
-                    logger.error(f"[Webhook] PATCH clerk_user_id= erreur: {e}")
+            updated = _webhook_patch_user(user_id, update_full, update_minimal)
 
             if updated:
-                logger.info(f"[Webhook] SUCCESS — Pro activé, plan={plan}")
+                logger.info(f"[Webhook] SUCCESS — Pro activé pour user_id={user_id}, plan={plan}")
             else:
                 logger.error(f"[Webhook] ECHEC — 0 rows updated pour user_id={user_id}")
+                logger.error(f"[Webhook] Vérifier que l'utilisateur existe dans la table 'users' avec id={user_id}")
 
         elif event_type == "customer.subscription.deleted":
             sub_id = event["data"]["object"].get("id", "")
@@ -978,3 +1082,5 @@ async def stripe_webhook(request: Request):
 
     # TOUJOURS retourner 200 — Stripe arrête les retries
     return {"status": "ok"}
+
+

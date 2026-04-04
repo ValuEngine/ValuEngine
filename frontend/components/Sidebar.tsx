@@ -58,7 +58,7 @@ export default function Sidebar() {
   const { isSignedIn, user } = useUser();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const { isPro } = useProStatus(user?.id);
+  const { isPro, loading: proLoading } = useProStatus(user?.id);
 
   const firstName = user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] || "Utilisateur";
 
@@ -183,7 +183,7 @@ export default function Sidebar() {
             </div>
           </div>
         )}
-        {isSignedIn && !isPro && (
+        {isSignedIn && !isPro && !proLoading && (
           <button
             onClick={async () => {
               if (!user) { router.push("/sign-up"); return; }

@@ -14,6 +14,9 @@ import { FCFChart } from "@/components/FCFChart";
 import { TradingComps } from "@/components/TradingComps";
 import { PriceChart } from "@/components/PriceChart";
 import AppLayout from "@/components/AppLayout";
+import DeepAnalysisSection from "@/components/DeepAnalysisSection";
+import AnomaliesSection from "@/components/AnomaliesSection";
+import DCFScenariosSection from "@/components/DCFScenariosSection";
 
 /* ─────────────── helpers ────────────────────────────────────────────── */
 
@@ -914,14 +917,20 @@ function AnalyzePage() {
                         sub={data.company.beta != null ? (data.company.beta > 1.2 ? "Volatil" : data.company.beta < 0.8 ? "Défensif" : "Neutre") : ""} />
                     </div>
                   </Section>
+
+                  {/* Anomalies (Niveau 2) — auto-loads */}
+                  <AnomaliesSection ticker={data.company.ticker} />
                 </div>
               )}
 
               {/* ── TAB 2: ANALYSE IA ─────────────────────────────────── */}
               {activeTab === "ai" && (
                 <div className="animate-fade-in-up">
-                  {/* Bull & Bear */}
-                  <Section title="Bull & Bear Case">
+                  {/* Deep Analysis Pro (Niveau 1) */}
+                  <DeepAnalysisSection ticker={data.company.ticker} />
+
+                  {/* Bull & Bear (analyse rapide existante) */}
+                  <Section title="Bull & Bear Case (aperçu rapide)">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
                       {[
                         { key: "bull_case", label: "BULL CASE — Scénario Haussier", color: "#00d4aa", bg: "rgba(0,212,170,0.05)", border: "rgba(0,212,170,0.2)" },
@@ -950,6 +959,9 @@ function AnalyzePage() {
               {/* ── TAB 3: VALORISATION ───────────────────────────────── */}
               {activeTab === "valuation" && (
                 <div className="animate-fade-in-up">
+                  {/* DCF Scenarios Pro (Niveau 3) */}
+                  <DCFScenariosSection ticker={data.company.ticker} />
+
                   <Section title="Résultats DCF & Projections FCF">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                       <div className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl p-6">

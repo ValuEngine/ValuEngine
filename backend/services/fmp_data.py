@@ -229,3 +229,229 @@ def get_peers_data(ticker: str, sector: str) -> list[dict]:
             continue
 
     return results
+
+
+# ── NIVEAU 1 — Deep Financials (5 ans) ──────────────────────────────────────
+
+def get_deep_financials(ticker: str) -> dict:
+    """
+    Fetch 5 years of income statement, cash flow, balance sheet, key metrics
+    and financial ratios from FMP. Returns a structured dict for AI analysis.
+    """
+    ticker = ticker.upper().strip()
+
+    # Check cache (separate key)
+    cache_key = f"__deep__{ticker}"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
+    # Fetch all 5 endpoints
+    income = _fmp_get(f"/income-statement/{ticker}", {"limit": 5})
+    cashflow = _fmp_get(f"/cash-flow-statement/{ticker}", {"limit": 5})
+    balance = _fmp_get(f"/balance-sheet-statement/{ticker}", {"limit": 5})
+    metrics = _fmp_get(f"/key-metrics/{ticker}", {"limit": 5})
+    ratios = _fmp_get(f"/financial-ratios/{ticker}", {"limit": 5})
+
+    # Normalize to lists
+    if not isinstance(income, list): income = []
+    if not isinstance(cashflow, list): cashflow = []
+    if not isinstance(balance, list): balance = []
+    if not isinstance(metrics, list): metrics = []
+    if not isinstance(ratios, list): ratios = []
+
+    n = max(len(income), 1)
+
+    # Helper to safely extract a list of floats
+    def _extract(source: list, key: str) -> list:
+        return [_safe_float(row.get(key)) if row else 0.0 for row in source[:n]]
+
+    # ── Revenue & Growth ──
+    revenue_5y = _extract(income, "revenue")
+    revenue_growth_5y = []
+    for i in range(len(revenue_5y) - 1):
+        prev = revenue_5y[i + 1]
+        curr = revenue_5y[i]
+        revenue_growth_5y.append(round((curr - prev) / prev * 100, 2) if prev else None)
+    revenue_growth_5y.append(None)  # oldest year has no prior
+
+    # ── Margins ──
+    gross_margin_5y = []
+    for row in income[:n]:
+        rev = _safe_float(row.get("revenue"))
+        gp = _safe_float(row.get("grossProfit"))
+        gross_margin_5y.append(round(gp / rev * 100, 2) if rev else None)
+
+    operating_margin_5y = []
+    for row in income[:n]:
+        rev = _safe_float(row.get("revenue"))
+        oi = _safe_float(row.get("operatingIncome"))
+        operating_margin_5y.append(round(oi / rev * 100, 2) if rev else None)
+
+    net_margin_5y = []
+    for row in income[:n]:
+        rev = _safe_float(row.get("revenue"))
+        ni = _safe_float(row.get("netIncome"))
+        net_margin_5y.append(round(ni / rev * 100, 2) if rev else None)
+
+    # ── FCF ──
+    fcf_5y = _extract(cashflow, "freeCashFlow")
+    fcf_margin_5y = []
+    for i in range(min(len(fcf_5y), len(revenue_5y))):
+        rev = revenue_5y[i]
+        fcf_margin_5y.append(round(fcf_5y[i] / rev * 100, 2) if rev else None)
+
+    # ── ROIC ──
+    roic_5y = _extract(ratios, "returnOnCapitalEmployed")
+    roic_5y = [round(v * 100, 2) if v else None for v in roic_5y]
+
+    # ── Debt/EBITDA ──
+    debt_to_ebitda_5y = []
+    for i in range(min(len(balance), len(income))):
+        debt = _safe_float(balance[i].get("totalDebt")) if i < len(balance) else 0
+        ebitda = _safe_float(income[i].get("ebitda")) if i < len(income) else 0
+        debt_to_ebitda_5y.append(round(debt / ebitda, 2) if ebitda else None)
+
+    # ── EPS ──
+    eps_5y = _extract(income, "epsDiluted")
+    eps_growth_5y = []
+    for i in range(len(eps_5y) - 1):
+        prev = eps_5y[i + 1]
+        curr = eps_5y[i]
+        eps_growth_5y.append(round((curr - prev) / abs(prev) * 100, 2) if prev else None)
+    eps_growth_5y.append(None)
+
+    # ── CapEx intensity ──
+    capex_values = _extract(cashflow, "capitalExpenditure")
+    capex_intensity = []
+    for i in range(min(len(capex_values), len(revenue_5y))):
+        rev = revenue_5y[i]
+        capex_intensity.append(round(abs(capex_values[i]) / rev * 100, 2) if rev else None)
+
+    # ── Cash conversion (FCF / Net Income) ──
+    net_income_5y = _extract(income, "netIncome")
+    cash_conversion = []
+    for i in range(min(len(fcf_5y), len(net_income_5y))):
+        ni = net_income_5y[i]
+        cash_conversion.append(round(fcf_5y[i] / ni, 2) if ni else None)
+
+    # ── Years ──
+    years = []
+    for row in income[:n]:
+        date_str = row.get("calendarYear") or row.get("date", "")
+        try:
+            years.append(int(str(date_str)[:4]))
+        except (ValueError, TypeError):
+            years.append(None)
+
+    result = {
+        "revenue_5y": revenue_5y,
+        "revenue_growth_5y": revenue_growth_5y,
+        "gross_margin_5y": gross_margin_5y,
+        "operating_margin_5y": operating_margin_5y,
+        "net_margin_5y": net_margin_5y,
+        "fcf_5y": fcf_5y,
+        "fcf_margin_5y": fcf_margin_5y,
+        "roic_5y": roic_5y,
+        "debt_to_ebitda_5y": debt_to_ebitda_5y,
+        "eps_5y": eps_5y,
+        "eps_growth_5y": eps_growth_5y,
+        "capex_intensity": capex_intensity,
+        "cash_conversion": cash_conversion,
+        "years": years,
+    }
+
+    _cache_set(cache_key, result)
+    return result
+
+
+# ── NIVEAU 2 — Sector Benchmarks ────────────────────────────────────────────
+
+def get_sector_benchmarks(ticker: str, sector: str) -> dict:
+    """
+    Fetch sector peers via FMP screener and compute median benchmarks.
+    """
+    cache_key = f"__bench__{ticker}_{sector}"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
+    # Use stock screener for the sector
+    try:
+        screener = _fmp_get("/stock-screener", {
+            "sector": sector,
+            "limit": 20,
+            "marketCapMoreThan": 1_000_000_000,  # >1B market cap
+        })
+    except Exception:
+        screener = []
+
+    if not isinstance(screener, list) or len(screener) < 3:
+        return {}
+
+    # Collect metrics from screener results
+    pe_list, pb_list, ps_list = [], [], []
+    gm_list, nm_list, roe_list = [], [], []
+    de_list, rg_list = [], []
+
+    for s in screener:
+        sym = s.get("symbol", "")
+        if sym == ticker:
+            continue
+        pe = s.get("pe")
+        if pe and 0 < pe < 200:
+            pe_list.append(pe)
+        pb = s.get("priceToBook")
+        if pb and 0 < pb < 50:
+            pb_list.append(pb)
+        mc = _safe_float(s.get("marketCap"))
+        rev = _safe_float(s.get("revenue")) or _safe_float(s.get("annualRevenue"))
+        if mc and rev and rev > 0:
+            ps_list.append(mc / rev)
+
+    # For deeper metrics, fetch a few peers' ratios
+    peer_symbols = [s.get("symbol") for s in screener if s.get("symbol") != ticker][:8]
+    for sym in peer_symbols:
+        try:
+            r = _fmp_get(f"/financial-ratios/{sym}", {"limit": 1})
+            if isinstance(r, list) and r:
+                row = r[0]
+                gm = row.get("grossProfitMargin")
+                if gm is not None:
+                    gm_list.append(gm * 100)
+                nm = row.get("netProfitMargin")
+                if nm is not None:
+                    nm_list.append(nm * 100)
+                roe_v = row.get("returnOnEquity")
+                if roe_v is not None:
+                    roe_list.append(roe_v * 100)
+                de = row.get("debtEquityRatio")
+                if de is not None and 0 < de < 20:
+                    de_list.append(de)
+        except Exception:
+            continue
+
+    def _median(lst: list) -> float | None:
+        valid = [x for x in lst if x is not None]
+        if not valid:
+            return None
+        valid.sort()
+        mid = len(valid) // 2
+        if len(valid) % 2 == 0:
+            return round((valid[mid - 1] + valid[mid]) / 2, 2)
+        return round(valid[mid], 2)
+
+    result = {
+        "median_pe": _median(pe_list),
+        "median_pb": _median(pb_list),
+        "median_ps": _median(ps_list),
+        "median_gross_margin": _median(gm_list),
+        "median_net_margin": _median(nm_list),
+        "median_roe": _median(roe_list),
+        "median_debt_to_equity": _median(de_list),
+        "peer_count": len(screener),
+        "sector": sector,
+    }
+
+    _cache_set(cache_key, result)
+    return result

@@ -24,7 +24,7 @@ const BREADCRUMBS: Record<string, string> = {
 function TopHeader() {
   const pathname = usePathname();
   const { user } = useUser();
-  const { isPro } = useProStatus(user?.id);
+  const { isPro, loading: proLoading } = useProStatus(user?.id);
 
   // Sync user to Supabase on first visit (ensures row exists)
   useEffect(() => {
@@ -52,11 +52,11 @@ function TopHeader() {
             <span className="w-1.5 h-1.5 rounded-full bg-[#C9A84C] animate-pulse" />
             PRO
           </span>
-        ) : (
+        ) : !proLoading ? (
           <span className="hidden md:flex text-xs font-medium px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300">
             3 analyses / jour
           </span>
-        )}
+        ) : null}
 
         {/* Bell */}
         <button className="relative text-zinc-400 hover:text-zinc-200 transition-colors p-1">

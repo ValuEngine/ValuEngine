@@ -47,7 +47,7 @@ export function NavAuth() {
 
 export function NavAuthCompact() {
   const { isSignedIn, user } = useUser();
-  const { isPro } = useProStatus(user?.id);
+  const { isPro, loading: proLoading } = useProStatus(user?.id);
 
   if (isSignedIn) {
 
