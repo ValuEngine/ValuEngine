@@ -1271,6 +1271,40 @@ def get_shared_analysis(share_id: str):
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
+# ── Public stats (cached) ──────────────────────────────────────────────────
+_users_count_cache: dict = {"count": 0, "ts": 0}
+
+@app.get("/api/stats/users-count")
+@limiter.limit("30/minute")
+async def get_users_count(request: Request):
+    """Retourne le nombre total d'utilisateurs inscrits. Public, cache 1h."""
+    import time as _time
+    now = _time.time()
+    if now - _users_count_cache["ts"] < 3600 and _users_count_cache["count"] > 0:
+        return {"count": _users_count_cache["count"]}
+    try:
+        rows = _sb_get("users", "select=id&limit=1&order=id&head=true")
+        # Use Supabase count via Prefer header
+        import httpx
+        url = f"{SUPABASE_URL}/rest/v1/users?select=id"
+        headers = {
+            "apikey": SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Prefer": "count=exact",
+            "Range": "0-0",
+        }
+        r = httpx.get(url, headers=headers, timeout=10)
+        content_range = r.headers.get("content-range", "")
+        # Format: "0-0/123" or "*/123"
+        total = int(content_range.split("/")[-1]) if "/" in content_range else 0
+        _users_count_cache["count"] = total
+        _users_count_cache["ts"] = now
+        return {"count": total}
+    except Exception as e:
+        logger.error(f"[Stats] users-count error: {e}")
+        return {"count": _users_count_cache.get("count", 0)}
+
+
 # ── Email sequence scheduler (called by GitHub Actions cron) ───────────────
 @app.post("/api/email/trigger-sequence")
 async def trigger_email_sequence(request: Request):

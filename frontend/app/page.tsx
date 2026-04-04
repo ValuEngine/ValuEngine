@@ -154,6 +154,16 @@ export default function LandingPage() {
       .catch(() => {});
   }, []);
 
+  /* ── Users count for social proof ── */
+  const [usersCount, setUsersCount] = useState(0);
+  useEffect(() => {
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+    fetch(`${API_BASE}/api/stats/users-count`)
+      .then((r) => r.ok ? r.json() : { count: 0 })
+      .then((d: { count: number }) => { if (d.count > 0) setUsersCount(d.count); })
+      .catch(() => {});
+  }, []);
+
   /* ── Sticky CTA visibility ── */
   const [showSticky, setShowSticky] = useState(false);
   useEffect(() => {
@@ -308,6 +318,19 @@ export default function LandingPage() {
           </div>
 
           <p className="text-zinc-400 text-xs font-medium">✓ Gratuit · ✓ Sans carte bancaire · ✓ 3 analyses/jour</p>
+
+          {usersCount >= 10 && (
+            <div className="mt-4 inline-flex items-center gap-2 bg-zinc-900/80 border border-zinc-800 rounded-full px-4 py-2">
+              <div className="flex -space-x-1.5">
+                {["T", "S", "M", "K"].map((l, i) => (
+                  <div key={i} className="w-6 h-6 rounded-full bg-[rgba(201,168,76,0.12)] border-2 border-[#09090b] flex items-center justify-center text-[#C9A84C] text-[9px] font-bold">{l}</div>
+                ))}
+              </div>
+              <span className="text-zinc-400 text-xs">
+                Rejoignez les <span className="text-white font-bold">{usersCount.toLocaleString("fr-FR")}</span> investisseurs sur ValuEngine
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-zinc-600 animate-bounce"><ArrowDown size={20} /></div>
@@ -533,6 +556,45 @@ export default function LandingPage() {
           <p className="text-[10px] text-zinc-600 text-center mt-8 max-w-xl mx-auto leading-relaxed">
             Les t&eacute;moignages pr&eacute;sent&eacute;s sont des exemples illustratifs bas&eacute;s sur des cas d&apos;usage r&eacute;els. Les pr&eacute;noms et profils ont &eacute;t&eacute; modifi&eacute;s pour prot&eacute;ger la vie priv&eacute;e des utilisateurs. Les r&eacute;sultats peuvent varier.
           </p>
+        </div>
+      </section>
+
+      {/* ── ILS EN PARLENT — Social Proof badges ─────────────────────── */}
+      <section className="relative z-10 py-12 sm:py-16 px-4 sm:px-6 border-t border-[#27272a]">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-6">Ils en parlent</p>
+          <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap opacity-50 hover:opacity-80 transition-opacity">
+            {/* Reddit */}
+            <div className="flex items-center gap-2 text-zinc-500">
+              <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current"><path d="M12 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0zm5.01 13.38c.15.36.23.75.23 1.14 0 2.35-2.46 4.26-5.5 4.26s-5.5-1.91-5.5-4.26c0-.39.08-.78.23-1.14a1.56 1.56 0 01-.66-1.28 1.58 1.58 0 012.69-1.12c1.07-.74 2.5-1.2 4.08-1.27l.77-3.58a.32.32 0 01.38-.24l2.5.53a1.12 1.12 0 112.1.45l-2.34-.5-.68 3.16c1.5.1 2.87.55 3.89 1.27a1.58 1.58 0 012.04 1.5 1.56 1.56 0 01-.66 1.28zM9.5 13.5a1.25 1.25 0 100 2.5 1.25 1.25 0 000-2.5zm5 0a1.25 1.25 0 100 2.5 1.25 1.25 0 000-2.5zm-4.86 3.75c-.08-.08-.08-.2 0-.28.08-.08.2-.08.28 0 .56.56 1.35.84 2.08.84s1.52-.28 2.08-.84c.08-.08.2-.08.28 0 .08.08.08.2 0 .28-.64.64-1.5.96-2.36.96s-1.72-.32-2.36-.96z"/></svg>
+              <span className="text-xs font-semibold">r/vosfinances</span>
+            </div>
+            {/* Product Hunt */}
+            <div className="flex items-center gap-2 text-zinc-500">
+              <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2zm-1.5 5v10h2v-3.5h1.75c2.347 0 3.75-1.403 3.75-3.25S16.597 7 14.25 7H10.5zm2 2h1.75c1.103 0 1.75.647 1.75 1.25s-.647 1.25-1.75 1.25H12.5V9z"/></svg>
+              <span className="text-xs font-semibold">Product Hunt</span>
+            </div>
+            {/* Twitter/X */}
+            <div className="flex items-center gap-2 text-zinc-500">
+              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              <span className="text-xs font-semibold">@ValuEngine</span>
+            </div>
+            {/* LinkedIn */}
+            <div className="flex items-center gap-2 text-zinc-500">
+              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+              <span className="text-xs font-semibold">LinkedIn</span>
+            </div>
+          </div>
+
+          {/* Presse & Médias — prêt à remplir */}
+          <div className="mt-8 pt-6 border-t border-[#27272a]/50">
+            <p className="text-[10px] font-bold text-zinc-600 tracking-widest uppercase mb-4">Presse &amp; Médias</p>
+            <div className="flex items-center justify-center gap-8 flex-wrap text-zinc-600 text-xs">
+              <span className="border border-zinc-800 px-4 py-2 rounded-lg opacity-40">Votre logo ici</span>
+              <span className="border border-zinc-800 px-4 py-2 rounded-lg opacity-40">Votre logo ici</span>
+              <span className="border border-zinc-800 px-4 py-2 rounded-lg opacity-40">Votre logo ici</span>
+            </div>
+          </div>
         </div>
       </section>
 
