@@ -672,6 +672,86 @@ def get_sector_benchmarks(ticker: str, sector: str) -> dict:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# Screener Universe
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def get_screener_universe() -> list:
+    """Fetch a universe of ~200 stocks for the AI screener."""
+    cached = CACHE.get("screener_universe", TTL_ANNUAL)
+    if cached:
+        return cached
+
+    try:
+        data = _fmp_get("/stock-screener", {
+            "marketCapMoreThan": 1000000000,
+            "limit": 200,
+            "exchange": "NASDAQ,NYSE",
+        })
+    except Exception as e:
+        logger.warning(f"[FMP] Stock screener unavailable: {e}")
+        # Fallback: use a curated list of ~60 popular stocks
+        return _get_fallback_universe()
+
+    if not isinstance(data, list) or not data:
+        return _get_fallback_universe()
+
+    universe = []
+    for s in data:
+        if not s.get("symbol") or not s.get("companyName"):
+            continue
+        universe.append({
+            "symbol": s.get("symbol"),
+            "name": s.get("companyName"),
+            "sector": s.get("sector", ""),
+            "industry": s.get("industry", ""),
+            "marketCap": s.get("marketCap", 0),
+            "country": s.get("country", ""),
+            "beta": s.get("beta"),
+            "pe": s.get("priceEarningsRatio") or s.get("pe"),
+            "price": s.get("price", 0),
+        })
+
+    CACHE.set("screener_universe", universe)
+    return universe
+
+
+def _get_fallback_universe() -> list:
+    """Fallback universe when FMP screener is unavailable."""
+    TICKERS = [
+        ("AAPL", "Apple Inc.", "Technology"), ("MSFT", "Microsoft Corp", "Technology"),
+        ("GOOGL", "Alphabet Inc.", "Communication Services"), ("AMZN", "Amazon.com Inc.", "Consumer Cyclical"),
+        ("NVDA", "NVIDIA Corp", "Technology"), ("META", "Meta Platforms", "Communication Services"),
+        ("TSLA", "Tesla Inc.", "Consumer Cyclical"), ("BRK-B", "Berkshire Hathaway", "Financial Services"),
+        ("JPM", "JPMorgan Chase", "Financial Services"), ("JNJ", "Johnson & Johnson", "Healthcare"),
+        ("V", "Visa Inc.", "Financial Services"), ("UNH", "UnitedHealth Group", "Healthcare"),
+        ("HD", "Home Depot", "Consumer Cyclical"), ("PG", "Procter & Gamble", "Consumer Defensive"),
+        ("MA", "Mastercard", "Financial Services"), ("ABBV", "AbbVie Inc.", "Healthcare"),
+        ("KO", "Coca-Cola Co.", "Consumer Defensive"), ("PEP", "PepsiCo Inc.", "Consumer Defensive"),
+        ("COST", "Costco Wholesale", "Consumer Defensive"), ("MRK", "Merck & Co.", "Healthcare"),
+        ("AVGO", "Broadcom Inc.", "Technology"), ("CRM", "Salesforce Inc.", "Technology"),
+        ("ADBE", "Adobe Inc.", "Technology"), ("AMD", "AMD Inc.", "Technology"),
+        ("NFLX", "Netflix Inc.", "Communication Services"), ("DIS", "Walt Disney Co.", "Communication Services"),
+        ("XOM", "Exxon Mobil", "Energy"), ("CVX", "Chevron Corp", "Energy"),
+        ("WMT", "Walmart Inc.", "Consumer Defensive"), ("BAC", "Bank of America", "Financial Services"),
+        ("LLY", "Eli Lilly", "Healthcare"), ("TMO", "Thermo Fisher", "Healthcare"),
+        ("GS", "Goldman Sachs", "Financial Services"), ("CAT", "Caterpillar Inc.", "Industrials"),
+        ("BA", "Boeing Co.", "Industrials"), ("NEE", "NextEra Energy", "Utilities"),
+        ("GE", "GE Aerospace", "Industrials"), ("RTX", "RTX Corp", "Industrials"),
+        ("UBER", "Uber Technologies", "Technology"), ("SQ", "Block Inc.", "Technology"),
+        ("SHOP", "Shopify Inc.", "Technology"), ("SPOT", "Spotify Technology", "Communication Services"),
+        ("NET", "Cloudflare Inc.", "Technology"), ("CRWD", "CrowdStrike", "Technology"),
+        ("SNOW", "Snowflake Inc.", "Technology"), ("DDOG", "Datadog Inc.", "Technology"),
+        ("ZS", "Zscaler Inc.", "Technology"), ("PANW", "Palo Alto Networks", "Technology"),
+        ("PLTR", "Palantir Technologies", "Technology"), ("COIN", "Coinbase Global", "Financial Services"),
+    ]
+    return [
+        {"symbol": t[0], "name": t[1], "sector": t[2], "industry": "", "marketCap": 0,
+         "country": "US", "beta": None, "pe": None, "price": 0}
+        for t in TICKERS
+    ]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # FMP Endpoint Status (admin/diagnostic)
 # ═══════════════════════════════════════════════════════════════════════════════
 

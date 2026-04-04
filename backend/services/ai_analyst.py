@@ -687,3 +687,90 @@ Format attendu:
     except Exception as e:
         logger.error(f"[DCFScenarios] Error: {e}")
         return {"error": str(e)}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SCREENER IA — Recherche en langage naturel
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def ai_screen_stocks(user_query: str, universe: list) -> dict:
+    """
+    Use Claude to screen stocks based on a natural language query.
+    Returns structured results with scores and reasoning.
+    """
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return {"error": "Cle API Anthropic manquante"}
+
+    client = Anthropic(api_key=api_key)
+
+    # Compact universe data for the prompt
+    universe_compact = json.dumps([
+        {"s": s.get("symbol"), "n": s.get("name"), "sec": s.get("sector", ""),
+         "ind": s.get("industry", ""), "mc": s.get("marketCap", 0),
+         "pe": s.get("pe"), "beta": s.get("beta"), "co": s.get("country", "")}
+        for s in universe[:200]
+    ], ensure_ascii=False)
+
+    prompt = f"""Tu es un analyste financier expert specialise dans le stock screening.
+
+L'utilisateur cherche : "{user_query}"
+
+Voici l'univers de {len(universe)} actions disponibles (format compact) :
+{universe_compact}
+
+CONSIGNES :
+1. Selectionne les 5 a 8 actions qui correspondent LE MIEUX a la recherche de l'utilisateur
+2. Minimum 3 resultats, maximum 8
+3. Score de 0 a 100 basee sur la pertinence par rapport a la requete
+4. Sois factuel et precis dans tes raisons
+5. Retourne UNIQUEMENT du JSON valide, sans texte autour
+
+Format JSON attendu :
+{{
+  "resultats": [
+    {{
+      "ticker": "string",
+      "nom": "string",
+      "score_match": number (0-100),
+      "raison": "2-3 phrases expliquant pourquoi cette action correspond a la recherche",
+      "points_forts": ["string", "string"],
+      "point_vigilance": "string",
+      "secteur": "string",
+      "capitalisation": "Large Cap | Mid Cap | Small Cap"
+    }}
+  ],
+  "interpretation_requete": "Comment tu as compris la recherche de l'utilisateur",
+  "nb_actions_analysees": {len(universe)}
+}}
+
+Classe les resultats par score_match decroissant."""
+
+    try:
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=2000,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        result = _parse_json_response(msg.content[0].text)
+
+        # Validate structure
+        if "resultats" not in result:
+            result["resultats"] = []
+        if not isinstance(result["resultats"], list):
+            result["resultats"] = []
+
+        # Ensure 3-8 results
+        result["resultats"] = result["resultats"][:8]
+
+        # Sort by score
+        result["resultats"].sort(key=lambda x: x.get("score_match", 0), reverse=True)
+
+        return result
+
+    except json.JSONDecodeError as e:
+        logger.error(f"[AIScreener] JSON parse error: {e}")
+        return {"error": f"Erreur de parsing JSON: {e}", "resultats": []}
+    except Exception as e:
+        logger.error(f"[AIScreener] Error: {e}")
+        return {"error": str(e), "resultats": []}

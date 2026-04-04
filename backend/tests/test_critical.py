@@ -63,6 +63,17 @@ class TestSecurity:
         resp = client.post("/api/analyze/export-pdf", json={"ticker": "AAPL"})
         assert resp.status_code == 401
 
+    def test_screener_search_requires_auth(self):
+        """POST /api/screener/search must reject unauthenticated requests."""
+        resp = client.post("/api/screener/search", json={"query": "tech actions sous-evaluees"})
+        assert resp.status_code == 401
+
+    def test_screener_suggestions_public(self):
+        """GET /api/screener/suggestions must be public."""
+        resp = client.get("/api/screener/suggestions")
+        assert resp.status_code == 200
+        assert len(resp.json()["suggestions"]) >= 3
+
     def test_admin_fmp_status_requires_secret(self):
         """GET /api/admin/fmp-endpoints-status must reject without secret."""
         resp = client.get("/api/admin/fmp-endpoints-status")

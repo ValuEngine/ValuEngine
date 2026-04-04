@@ -26,8 +26,8 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from models import AnalyzeRequest, AnalyzeResponse, CompanyData, DCFResult, SensitivityMatrix, BullBearAnalysis
 from services.dcf import calculate_dcf, sensitivity_analysis
-from services.ai_analyst import get_bull_bear_analysis, get_swot_analysis, get_pestle_analysis, get_deep_analysis, detect_anomalies, get_dcf_scenarios
-from services.fmp_data import get_deep_financials, get_sector_benchmarks, test_fmp_endpoints, get_fmp_call_count
+from services.ai_analyst import get_bull_bear_analysis, get_swot_analysis, get_pestle_analysis, get_deep_analysis, detect_anomalies, get_dcf_scenarios, ai_screen_stocks
+from services.fmp_data import get_deep_financials, get_sector_benchmarks, test_fmp_endpoints, get_fmp_call_count, get_screener_universe
 from services.pdf_generator import generate_analysis_pdf
 
 load_dotenv(Path(__file__).parent / ".env", override=True)
@@ -1063,6 +1063,48 @@ async def get_referral(clerk_user_id: str, request: Request):
     except Exception as e:
         logger.error(f"Internal error: {e}")
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SCREENER IA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+SCREENER_SUGGESTIONS = [
+    "Societes tech americaines avec forte generation de cash et peu d'endettement",
+    "Actions sous-evaluees dans le secteur de la sante",
+    "Entreprises avec dividendes croissants et rendement superieur a 2%",
+    "Small caps a fort potentiel dans la transition energetique",
+    "Actions decotees avec ROIC superieur a la moyenne sectorielle",
+]
+
+
+@app.get("/api/screener/suggestions")
+async def get_screener_suggestions():
+    """Return screener search suggestions."""
+    return {"suggestions": SCREENER_SUGGESTIONS}
+
+
+@app.post("/api/screener/search")
+@limiter.limit("3/minute")
+async def screener_search(request: Request):
+    """AI-powered stock screening. Pro only."""
+    token_user_id = await verify_clerk_token(request)
+
+    if not _is_user_pro(token_user_id):
+        raise HTTPException(status_code=403, detail="Feature Pro uniquement")
+
+    body = await request.json()
+    query = body.get("query", "").strip()
+    if not query or len(query) < 10:
+        raise HTTPException(status_code=400, detail="Requete trop courte (10 caracteres minimum)")
+
+    try:
+        universe = get_screener_universe()
+        results = ai_screen_stocks(query, universe)
+        return results
+    except Exception as e:
+        logger.error(f"[Screener] Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

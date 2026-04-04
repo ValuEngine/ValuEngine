@@ -27,9 +27,9 @@ const MAIN_ITEMS = [
 ];
 
 const SECONDARY_ITEMS = [
-  { label: "Comparer",       href: "/compare",      icon: GitCompare },
-  { label: "Screener",       href: "/screener",     icon: Filter },
-  { label: "Track Record",   href: "/track-record", icon: TrendingUp },
+  { label: "Comparer",       href: "/compare",      icon: GitCompare,  badge: null },
+  { label: "Screener IA",    href: "/screener",     icon: Filter,      badge: "Pro" },
+  { label: "Track Record",   href: "/track-record", icon: TrendingUp,  badge: null },
 ];
 
 const BOTTOM_ITEMS = [
@@ -109,7 +109,7 @@ export default function Sidebar() {
           <span className="text-[10px] uppercase tracking-widest text-zinc-600 px-3">Outils</span>
         </div>
         <div className="space-y-0.5">
-          {SECONDARY_ITEMS.map(({ label, href, icon: Icon }) => {
+          {SECONDARY_ITEMS.map(({ label, href, icon: Icon, badge }) => {
             const isActive =
               pathname === href ||
               (href !== "/dashboard" && pathname.startsWith(href));
@@ -129,6 +129,11 @@ export default function Sidebar() {
                   className={isActive ? "text-[#C9A84C]" : "text-[#52525b]"}
                 />
                 {label}
+                {badge && (
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-[#C9A84C] bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.25)] px-1.5 py-0.5 rounded-full ml-auto">
+                    {badge}
+                  </span>
+                )}
               </Link>
             );
           })}
