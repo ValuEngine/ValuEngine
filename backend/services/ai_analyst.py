@@ -27,8 +27,14 @@ def _fmt_b(value: float) -> str:
 def _parse_json_response(text: str) -> dict:
     """Parse JSON from Claude response, stripping markdown fences."""
     text = text.strip()
+    # Remove markdown fences
     text = re.sub(r"^```(?:json)?\s*", "", text)
-    text = re.sub(r"\s*```$", "", text)
+    text = re.sub(r"\s*```\s*$", "", text)
+    # Extract JSON object between first { and last }
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        text = text[start:end + 1]
     return json.loads(text)
 
 
@@ -320,12 +326,12 @@ Format JSON attendu:
     try:
         msg = client.messages.create(
             model="claude-haiku-4-5-20251001",
-            max_tokens=2000,
+            max_tokens=3000,
             messages=[{"role": "user", "content": prompt}],
         )
         return _parse_json_response(msg.content[0].text)
     except json.JSONDecodeError as e:
-        logger.error(f"[DeepAnalysis] JSON parse error: {e}")
+        logger.error(f"[DeepAnalysis] JSON parse error: {e}\nRaw text: {msg.content[0].text[:500]}")
         return {"error": f"Erreur de parsing JSON: {e}"}
     except Exception as e:
         logger.error(f"[DeepAnalysis] Error: {e}")
