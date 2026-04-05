@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { ArrowRight, Plus, X, Loader2, ChevronRight } from "lucide-react";
+import { ArrowRight, Plus, X, Loader2 } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import ProWelcomeModal from "@/components/ProWelcomeModal";
+import OnboardingModal from "@/components/OnboardingModal";
 import { shouldShowProWelcome } from "@/hooks/useProStatus";
 import { warmupBackend } from "@/lib/api";
 
@@ -59,8 +60,7 @@ export default function DashboardPage() {
   const [addError, setAddError] = useState("");
   const [marketData, setMarketData] = useState<MarketItem[]>([]);
   const [marketLoading, setMarketLoading] = useState(true);
-  const [onboardingStep, setOnboardingStep] = useState(0); // 0 = hidden
-  const [onboardingTicker, setOnboardingTicker] = useState("");
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [showProWelcome, setShowProWelcome] = useState(false);
 
   // Warmup backend Railway dès l'arrivée sur le dashboard
@@ -88,14 +88,15 @@ export default function DashboardPage() {
     } catch { /* ignore */ }
   }, []);
 
-  // Onboarding: show if user created < 5min ago
+  // Onboarding: check via backend + localStorage fallback
   useEffect(() => {
-    if (!user) return;
-    const created = user.createdAt ? new Date(user.createdAt).getTime() : 0;
-    const fiveMin = 5 * 60 * 1000;
+    if (!user?.id) return;
     const seen = localStorage.getItem("ve_onboarding_done");
-    if (!seen && Date.now() - created < fiveMin) {
-      setOnboardingStep(1);
+    if (seen) return;
+    // Fallback: show if user created recently (backend check is best-effort)
+    const created = user.createdAt ? new Date(user.createdAt).getTime() : 0;
+    if (Date.now() - created < 10 * 60 * 1000) {
+      setShowOnboarding(true);
     }
   }, [user]);
 
@@ -407,80 +408,27 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Onboarding Modal ──────────────────────────────────────── */}
-      {onboardingStep > 0 && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="bg-[#18181b]/95 backdrop-blur-md border border-[#27272a] rounded-2xl max-w-md w-full p-8 shadow-2xl">
-            {onboardingStep === 1 && (
-              <>
-                <p className="text-2xl font-bold mb-2">Bienvenue sur ValuEngine</p>
-                <p className="text-zinc-400 text-sm mb-6">Entre le ticker de ta première action à analyser.</p>
-                <div className="flex gap-2 mb-4">
-                  <input
-                    autoFocus value={onboardingTicker}
-                    onChange={e => setOnboardingTicker(e.target.value.toUpperCase())}
-                    onKeyDown={e => e.key === "Enter" && setOnboardingStep(2)}
-                    placeholder="Ex: AAPL, MC.PA..."
-                    className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-white placeholder-zinc-600 text-sm focus:outline-none focus:border-[rgba(201,168,76,0.5)]"
-                  />
-                </div>
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {["AAPL", "MC.PA", "MSFT"].map(t => (
-                    <button key={t} onClick={() => { setOnboardingTicker(t); setOnboardingStep(2); }} className="text-xs bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-lg text-zinc-400 hover:border-zinc-600 hover:text-white transition-all">{t}</button>
-                  ))}
-                </div>
-                <button onClick={() => setOnboardingStep(2)} className="w-full bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
-                  Suivant <ChevronRight size={16} />
-                </button>
-              </>
-            )}
-            {onboardingStep === 2 && (
-              <>
-                <p className="text-2xl font-bold mb-2">Comment lire ton résultat</p>
-                <div className="text-sm text-zinc-400 leading-relaxed mb-6 space-y-3">
-                  <p>Le <span className="text-white font-semibold">DCF</span> (Discounted Cash Flow) compare la valeur intrinsèque calculée au prix de marché.</p>
-                  <p><span className="text-emerald-400 font-semibold">Sous-évalué</span> = le prix est inférieur à la valeur DCF → opportunité potentielle.</p>
-                  <p><span className="text-red-400 font-semibold">Surévalué</span> = le prix est supérieur → prudence.</p>
-                  <p className="text-xs text-zinc-500 mt-4">Ce n&apos;est pas un conseil en investissement. Fais toujours tes propres recherches.</p>
-                </div>
-                <button onClick={() => setOnboardingStep(3)} className="w-full bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
-                  Suivant <ChevronRight size={16} />
-                </button>
-              </>
-            )}
-            {onboardingStep === 3 && (
-              <>
-                <p className="text-2xl font-bold mb-2">Ta watchlist t&apos;attend</p>
-                <p className="text-zinc-400 text-sm mb-6">Ajoute cette action à ta watchlist pour suivre son évolution au quotidien.</p>
-                <div className="flex gap-3 mb-2">
-                  <button
-                    onClick={() => {
-                      if (onboardingTicker) {
-                        setAddInput(onboardingTicker);
-                        setShowAddInput(true);
-                      }
-                      localStorage.setItem("ve_onboarding_done", "1");
-                      setOnboardingStep(0);
-                      if (onboardingTicker) router.push(`/analyze?ticker=${onboardingTicker}`);
-                    }}
-                    className="flex-1 bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold py-3 rounded-xl transition-all"
-                  >
-                    Lancer l&apos;analyse{onboardingTicker ? ` de ${onboardingTicker}` : ""} →
-                  </button>
-                </div>
-                <button onClick={() => { localStorage.setItem("ve_onboarding_done", "1"); setOnboardingStep(0); }} className="w-full text-zinc-500 text-sm py-2 hover:text-zinc-300 transition-colors">
-                  Passer
-                </button>
-              </>
-            )}
-            {/* Step indicator */}
-            <div className="flex items-center justify-center gap-2 mt-6">
-              {[1, 2, 3].map(s => (
-                <div key={s} className={`w-2 h-2 rounded-full transition-colors ${s === onboardingStep ? "bg-[#C9A84C]" : "bg-zinc-700"}`} />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      <OnboardingModal
+        show={showOnboarding}
+        onComplete={(ticker) => {
+          localStorage.setItem("ve_onboarding_done", "1");
+          setShowOnboarding(false);
+          // Mark complete in backend (best-effort)
+          if (user?.id) {
+            const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+            fetch(`${API_BASE}/api/user/onboarding-complete/${user.id}`, { method: "POST" }).catch(() => {});
+          }
+          if (ticker) router.push(`/analyze?ticker=${ticker}`);
+        }}
+        onSkip={() => {
+          localStorage.setItem("ve_onboarding_done", "1");
+          setShowOnboarding(false);
+          if (user?.id) {
+            const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+            fetch(`${API_BASE}/api/user/onboarding-complete/${user.id}`, { method: "POST" }).catch(() => {});
+          }
+        }}
+      />
 
       {/* Pro Welcome Modal */}
       <ProWelcomeModal show={showProWelcome} onClose={() => setShowProWelcome(false)} />

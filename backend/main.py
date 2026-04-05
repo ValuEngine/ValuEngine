@@ -31,7 +31,7 @@ from models import (
     TickerRequest, CheckoutRequest, WelcomeRequest, AlertRequest,
 )
 from services.dcf import calculate_dcf, sensitivity_analysis
-from services.ai_analyst import get_bull_bear_analysis, get_swot_analysis, get_pestle_analysis, get_deep_analysis, detect_anomalies, get_dcf_scenarios, ai_screen_stocks, _parse_json_response
+from services.ai_analyst import get_bull_bear_analysis, get_swot_analysis, get_pestle_analysis, get_deep_analysis, detect_anomalies, get_dcf_scenarios, ai_screen_stocks, _parse_json_response, get_comparison_analysis
 import json as _json
 from anthropic import Anthropic as _Anthropic
 from services.fmp_data import get_deep_financials, get_sector_benchmarks, test_fmp_endpoints, get_fmp_call_count, get_screener_universe
@@ -1230,6 +1230,107 @@ async def screener_search(request: Request):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# COMPARAISON — Compare deux actions côte à côte
+# ═══════════════════════════════════════════════════════════════════════════════
+
+_compare_cache: dict = {}  # key: "TICKER1_vs_TICKER2" -> {"data": ..., "ts": float}
+_COMPARE_CACHE_TTL = 1800  # 30 minutes
+
+@app.post("/api/compare")
+@limiter.limit("5/minute")
+async def compare_stocks(request: Request):
+    """Compare deux actions avec analyse IA. Pro uniquement pour l'IA."""
+    token_user_id = await verify_clerk_token(request)
+    is_pro = _is_user_pro(token_user_id)
+
+    try:
+        body = await request.json()
+        tickers = body.get("tickers", [])
+        if not isinstance(tickers, list) or len(tickers) != 2:
+            raise HTTPException(status_code=400, detail="Exactement 2 tickers requis")
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=400, detail="Requête invalide")
+
+    t1 = tickers[0].strip().upper()
+    t2 = tickers[1].strip().upper()
+    if not t1 or not t2 or t1 == t2:
+        raise HTTPException(status_code=400, detail="Deux tickers différents requis")
+
+    cache_key = f"{t1}_vs_{t2}"
+    now = time.time()
+    if cache_key in _compare_cache and (now - _compare_cache[cache_key]["ts"]) < _COMPARE_CACHE_TTL:
+        cached = _compare_cache[cache_key]["data"]
+        if not is_pro:
+            cached = {**cached, "ai_comparison": None}
+        return cached
+
+    # Fetch data for both tickers (yfinance is sync)
+    try:
+        data1 = _get_data(t1)
+        data2 = _get_data(t2)
+    except Exception as e:
+        logger.error(f"[Compare] Error fetching data: {e}")
+        raise HTTPException(status_code=404, detail="Un des tickers est introuvable")
+
+    # Calculate DCF for each
+    growth, wacc, tg, horizon = 0.08, 0.09, 0.03, 5
+    try:
+        fcf1 = data1.get("free_cash_flow", 0) or 0
+        shares1 = data1.get("shares_outstanding", 1) or 1
+        nd1 = data1.get("net_debt", 0) or 0
+        dcf1 = calculate_dcf(fcf1, growth, wacc, tg, horizon, shares1, nd1)
+
+        fcf2 = data2.get("free_cash_flow", 0) or 0
+        shares2 = data2.get("shares_outstanding", 1) or 1
+        nd2 = data2.get("net_debt", 0) or 0
+        dcf2 = calculate_dcf(fcf2, growth, wacc, tg, horizon, shares2, nd2)
+    except Exception as e:
+        logger.error(f"[Compare] DCF error: {e}")
+        raise HTTPException(status_code=500, detail="Erreur de calcul DCF")
+
+    def build_company(data: dict, dcf: dict) -> dict:
+        iv = dcf.get("intrinsic_value", 0)
+        upside = dcf.get("upside_pct", 0)
+        verdict = "BUY" if upside > 15 else ("SELL" if upside < -15 else "HOLD")
+        return {
+            "ticker": data.get("ticker", ""),
+            "name": data.get("name", ""),
+            "price": data.get("price", 0),
+            "market_cap": data.get("market_cap", 0),
+            "pe_ratio": data.get("pe_ratio"),
+            "ev_ebitda": data.get("ev_ebitda"),
+            "profit_margin": data.get("profit_margin"),
+            "revenue_growth": data.get("revenue_growth"),
+            "free_cash_flow": data.get("free_cash_flow"),
+            "intrinsic_value": iv,
+            "upside_pct": upside,
+            "verdict": verdict,
+        }
+
+    c1 = build_company(data1, dcf1)
+    c2 = build_company(data2, dcf2)
+
+    # AI comparison (Pro only)
+    ai_text = None
+    if is_pro:
+        try:
+            ai_text = get_comparison_analysis(c1, c2)
+        except Exception as e:
+            logger.error(f"[Compare] AI error: {e}")
+            ai_text = None
+
+    result = {"companies": [c1, c2], "ai_comparison": ai_text}
+    _compare_cache[cache_key] = {"data": result, "ts": now}
+
+    if not is_pro:
+        result = {**result, "ai_comparison": None}
+
+    return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # ADMIN / DIAGNOSTIC ENDPOINTS
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1269,6 +1370,53 @@ def get_shared_analysis(share_id: str):
     except Exception as e:
         logger.error(f"Internal error: {e}")
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
+
+
+# ── Onboarding ─────────────────────────────────────────────────────────────
+@app.get("/api/user/onboarding-status/{user_id}")
+@limiter.limit("15/minute")
+async def get_onboarding_status(user_id: str, request: Request):
+    """Retourne le statut onboarding d'un utilisateur."""
+    token_user_id = await verify_clerk_token(request)
+    user_id = _safe_id(user_id)
+    _require_owner(token_user_id, user_id)
+    try:
+        rows = _sb_get("users", f"clerk_user_id=eq.{user_id}&select=onboarding_completed,onboarding_step")
+        if not rows:
+            rows = _sb_get("users", f"id=eq.{user_id}&select=onboarding_completed,onboarding_step")
+        if not rows:
+            return {"completed": False, "step": 0}
+        row = rows[0]
+        return {
+            "completed": row.get("onboarding_completed", False) or False,
+            "step": row.get("onboarding_step", 0) or 0,
+        }
+    except Exception as e:
+        logger.error(f"[Onboarding] status error: {e}")
+        return {"completed": False, "step": 0}
+
+
+@app.post("/api/user/onboarding-complete/{user_id}")
+@limiter.limit("5/minute")
+async def complete_onboarding(user_id: str, request: Request):
+    """Marque l'onboarding comme terminé."""
+    token_user_id = await verify_clerk_token(request)
+    user_id = _safe_id(user_id)
+    _require_owner(token_user_id, user_id)
+    try:
+        updated = _sb_patch("users", f"clerk_user_id=eq.{user_id}", {
+            "onboarding_completed": True,
+            "onboarding_step": 4,
+        })
+        if not updated:
+            _sb_patch("users", f"id=eq.{user_id}", {
+                "onboarding_completed": True,
+                "onboarding_step": 4,
+            })
+        return {"ok": True}
+    except Exception as e:
+        logger.error(f"[Onboarding] complete error: {e}")
+        return {"ok": True}  # Don't block the user if this fails
 
 
 # ── Public stats (cached) ──────────────────────────────────────────────────
