@@ -238,3 +238,68 @@ def run_email_sequences() -> dict:
 
     logger.info(f"[EmailScheduler] Results: {results}")
     return results
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# WEEKLY DIGEST
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def run_weekly_digest() -> dict:
+    """
+    Send weekly digest to all active users.
+    - Top 5 most analyzed tickers this week (community-wide)
+    - Per-user analysis count
+    Called every Monday via GitHub Actions cron.
+    """
+    from services.email_service import send_weekly_digest
+
+    now = datetime.now(timezone.utc)
+    week_ago = (now - timedelta(days=7)).strftime("%Y-%m-%dT00:00:00Z")
+    results = {"sent": 0, "errors": 0, "skipped": 0}
+
+    # 1. Get top 5 tickers analyzed this week (community-wide)
+    recent_analyses = _sb_get(
+        "analyses",
+        f"created_at=gte.{week_ago}&select=ticker,company_name,verdict"
+    )
+
+    # Count by ticker
+    ticker_counts: dict = {}
+    for a in recent_analyses:
+        t = a.get("ticker", "")
+        if not t:
+            continue
+        if t not in ticker_counts:
+            ticker_counts[t] = {"ticker": t, "name": a.get("company_name", t), "verdict": a.get("verdict", "HOLD"), "count": 0}
+        ticker_counts[t]["count"] += 1
+
+    top_tickers = sorted(ticker_counts.values(), key=lambda x: x["count"], reverse=True)[:5]
+
+    # 2. Get all users with email
+    users = _sb_get("users", "select=id,email,first_name&email=neq.&limit=500")
+
+    for user in users:
+        email = user.get("email", "")
+        if not email:
+            results["skipped"] += 1
+            continue
+
+        user_id = user.get("id", "")
+        first_name = user.get("first_name", "")
+
+        # Count user's analyses this week
+        user_analyses = [a for a in recent_analyses if a.get("user_id") == user_id] if user_id else []
+        user_count = len(user_analyses)
+
+        if send_weekly_digest(
+            to=email,
+            first_name=first_name,
+            top_tickers=top_tickers,
+            user_analyses_count=user_count,
+        ):
+            results["sent"] += 1
+        else:
+            results["errors"] += 1
+
+    logger.info(f"[WeeklyDigest] Results: {results}")
+    return results

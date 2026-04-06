@@ -532,6 +532,8 @@ function AnalyzePage() {
   const [showAdvanced,  setShowAdvanced]  = useState(false);
   const [showPaywall,   setShowPaywall]   = useState(false);
   const [pendingTicker, setPendingTicker] = useState<string | null>(null);
+  const isFirstAnalysis = data?.is_first_analysis === true;
+  const trialPro = isFirstAnalysis && !isPro;
   const [activeTab,     setActiveTab]     = useState<TabId>("overview");
   const [visitedTabs,  setVisitedTabs]  = useState<Set<TabId>>(() => new Set<TabId>(["overview"]));
   const [shareCopied,  setShareCopied]  = useState(false);
@@ -924,6 +926,21 @@ function AnalyzePage() {
               {/* ── TAB 1: VUE D'ENSEMBLE ─────────────────────────────── */}
               {activeTab === "overview" && (
                 <div className="animate-fade-in-up">
+                  {/* Trial Pro banner */}
+                  {trialPro && (
+                    <div className="bg-[#C9A84C]/10 border border-[#C9A84C]/30 rounded-xl p-4 mb-6 flex items-center gap-3">
+                      <span className="text-[#C9A84C] text-xl flex-shrink-0">&#10022;</span>
+                      <div>
+                        <p className="text-[#C9A84C] font-semibold">
+                          Analyse Pro offerte &mdash; d&eacute;couvre la puissance compl&egrave;te
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          Deep Analysis, 3 sc&eacute;narios DCF et anomalies sectorielles d&eacute;bloqu&eacute;s pour cette premi&egrave;re analyse.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Verdict hero card */}
                   <div
                     className="rounded-xl p-6 sm:p-8 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] hover:border-[#3f3f46] transition-colors anim-1"
@@ -1014,7 +1031,7 @@ function AnalyzePage() {
                   </Section>
 
                   {/* Anomalies (Niveau 2) — auto-loads */}
-                  <AnomaliesSection ticker={data.company.ticker} />
+                  <AnomaliesSection ticker={data.company.ticker} trialPro={trialPro} />
                 </div>
               )}
 
@@ -1022,7 +1039,7 @@ function AnalyzePage() {
               {activeTab === "ai" && (
                 <div className="animate-fade-in-up">
                   {/* Deep Analysis Pro (Niveau 1) */}
-                  <DeepAnalysisSection ticker={data.company.ticker} />
+                  <DeepAnalysisSection ticker={data.company.ticker} trialPro={trialPro} />
 
                   {/* Bull & Bear (analyse rapide existante) */}
                   <Section title="Bull & Bear Case (aperçu rapide)">
@@ -1055,7 +1072,7 @@ function AnalyzePage() {
               {activeTab === "valuation" && (
                 <div className="animate-fade-in-up">
                   {/* DCF Scenarios Pro (Niveau 3) */}
-                  <DCFScenariosSection ticker={data.company.ticker} />
+                  <DCFScenariosSection ticker={data.company.ticker} trialPro={trialPro} />
 
                   <Section title="Résultats DCF & Projections FCF">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -1159,6 +1176,28 @@ function AnalyzePage() {
 
               {/* ── Price Alert ─────────────────────────────────────── */}
               <PriceAlertSection ticker={data.company.ticker} tickerName={data.company.name} />
+
+              {/* Pro conversion CTA after trial */}
+              {trialPro && (
+                <div className="bg-[#18181b]/80 border border-[#C9A84C]/30 rounded-2xl p-8 text-center mt-8">
+                  <p className="text-[#C9A84C] font-bold text-lg mb-2">
+                    Tu viens de voir ValuEngine Pro en action &#10022;
+                  </p>
+                  <p className="text-gray-300 mb-6">
+                    Deep Analysis, 3 sc&eacute;narios DCF, d&eacute;tection d&apos;anomalies,
+                    export PDF, screener IA &mdash; tout &ccedil;a pour 99&euro;/an.
+                  </p>
+                  <button
+                    onClick={() => router.push("/#pricing")}
+                    className="bg-[#C9A84C] text-black font-bold rounded-xl px-8 py-3 hover:bg-[#A8863C] transition-all"
+                  >
+                    Passer Pro &#10022;
+                  </button>
+                  <p className="text-gray-500 text-xs mt-3">
+                    Sinon, tu gardes 3 analyses gratuites par jour.
+                  </p>
+                </div>
+              )}
 
               <p className="text-[#2a3a4a] text-xs text-center mt-8 pb-4">
                 ValuEngine est un outil d&apos;analyse éducatif uniquement. Les analyses ne constituent pas des conseils en investissement au sens de la directive MIF II.

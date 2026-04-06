@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
 import { useProStatus } from "@/hooks/useProStatus";
 import { useUser } from "@clerk/nextjs";
@@ -60,33 +60,90 @@ function ProGateOverlay({ onUpgrade }: { onUpgrade: () => void }) {
   );
 }
 
-export default function DeepAnalysisSection({ ticker }: { ticker: string }) {
+export default function DeepAnalysisSection({ ticker, trialPro = false }: { ticker: string; trialPro?: boolean }) {
   const { user } = useUser();
   const { isPro } = useProStatus(user?.id);
+  const canAccess = isPro || trialPro;
   const [data, setData] = useState<DeepAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [autoTriggered, setAutoTriggered] = useState(false);
 
   const generate = async () => {
-    if (!isPro) return;
+    if (!canAccess) return;
     setLoading(true);
     setError(null);
+    setStreamingText("");
+
     try {
-      const res = await fetch(`${API_BASE}/api/analyze/deep-analysis`, {
+      // Try SSE streaming first
+      const res = await fetch(`${API_BASE}/api/analyze/deep-analysis/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ticker }),
       });
-      if (!res.ok) throw new Error(`Erreur ${res.status}`);
-      const json: DeepAnalysis = await res.json();
-      if (json.error) throw new Error(json.error);
-      setData(json);
+
+      if (!res.ok || !res.body) {
+        // Fallback to non-streaming
+        const fallback = await fetch(`${API_BASE}/api/analyze/deep-analysis`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ticker }),
+        });
+        if (!fallback.ok) throw new Error(`Erreur ${fallback.status}`);
+        const json: DeepAnalysis = await fallback.json();
+        if (json.error) throw new Error(json.error);
+        setData(json);
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const payload = line.slice(6);
+          if (payload === "[DONE]") continue;
+
+          try {
+            const evt = JSON.parse(payload);
+            if (evt.token) {
+              setStreamingText(prev => prev + evt.token);
+            } else if (evt.done && evt.parsed) {
+              setData(evt.parsed as DeepAnalysis);
+            } else if (evt.error) {
+              throw new Error(evt.error);
+            }
+          } catch {
+            // Skip malformed SSE events
+          }
+        }
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur inconnue");
     } finally {
       setLoading(false);
+      setStreamingText("");
     }
   };
+
+  // Auto-trigger for trial Pro users
+  useEffect(() => {
+    if (trialPro && !data && !loading && !autoTriggered) {
+      setAutoTriggered(true);
+      generate();
+    }
+  }, [trialPro, data, loading, autoTriggered]);
 
   // Not generated yet — show button
   if (!data) {
@@ -105,15 +162,21 @@ export default function DeepAnalysisSection({ ticker }: { ticker: string }) {
             </div>
           )}
           {loading ? (
-            <div className="flex flex-col items-center py-12">
+            <div className="flex flex-col items-center py-8">
               <Loader2 size={24} className="animate-spin text-[#C9A84C] mb-3" />
-              <p className="text-zinc-400 text-sm">Analyse en cours avec Claude Sonnet...</p>
-              <p className="text-zinc-500 text-xs mt-1">Données financières 5 ans en cours de traitement</p>
+              <p className="text-zinc-400 text-sm mb-1">Analyse en cours avec Claude...</p>
+              {streamingText ? (
+                <div className="w-full mt-4 bg-[#27272a]/50 rounded-xl p-4 max-h-48 overflow-y-auto">
+                  <pre className="text-zinc-400 text-xs whitespace-pre-wrap font-mono leading-relaxed">{streamingText.slice(-500)}</pre>
+                </div>
+              ) : (
+                <p className="text-zinc-500 text-xs">Données financières 5 ans en cours de traitement</p>
+              )}
             </div>
           ) : (
             <button
               onClick={generate}
-              disabled={!isPro}
+              disabled={!canAccess}
               className="flex items-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#09090b] font-bold px-6 py-2.5 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all disabled:opacity-40"
             >
               <Sparkles size={16} />
@@ -121,7 +184,7 @@ export default function DeepAnalysisSection({ ticker }: { ticker: string }) {
             </button>
           )}
         </div>
-        {!isPro && <ProGateOverlay onUpgrade={() => window.location.href = "/dashboard"} />}
+        {!canAccess && <ProGateOverlay onUpgrade={() => window.location.href = "/dashboard"} />}
       </div>
     );
   }

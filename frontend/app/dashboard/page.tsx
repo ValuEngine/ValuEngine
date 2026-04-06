@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { ArrowRight, Plus, X, Loader2, Search } from "lucide-react";
+import { ArrowRight, Plus, X, Loader2, Search, Copy, Check, Users } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import ProWelcomeModal from "@/components/ProWelcomeModal";
 import OnboardingModal from "@/components/OnboardingModal";
@@ -144,6 +144,8 @@ export default function DashboardPage() {
   const [marketLoading, setMarketLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showProWelcome, setShowProWelcome] = useState(false);
+  const [referralCount, setReferralCount] = useState(0);
+  const [refCopied, setRefCopied] = useState(false);
 
   // Warmup backend Railway dès l'arrivée sur le dashboard
   useEffect(() => { warmupBackend(); }, []);
@@ -181,6 +183,16 @@ export default function DashboardPage() {
       setShowOnboarding(true);
     }
   }, [user]);
+
+  // Fetch referral count
+  useEffect(() => {
+    if (!user?.id) return;
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+    fetch(`${API_BASE}/api/referral/${user.id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setReferralCount(d.count ?? 0); })
+      .catch(() => {});
+  }, [user?.id]);
 
   const fetchWatchlist = useCallback(async () => {
     setWatchlistLoading(true);
@@ -483,6 +495,43 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
+
+        {/* Referral section */}
+        {user?.id && (
+          <section className="mt-8 anim-6">
+            <div className="rounded-xl border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Users size={16} className="text-[#C9A84C]" />
+                <h3 className="text-sm font-bold text-white">Inviter des amis</h3>
+              </div>
+              <p className="text-xs text-zinc-400 mb-4">
+                Partage ton lien et gagne des avantages. 3 filleuls = 1 mois Pro offert.
+              </p>
+              <div className="flex gap-2 items-center mb-3">
+                <input
+                  readOnly
+                  value={`https://valuengine.fr?ref=${user.id}`}
+                  className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 truncate focus:outline-none"
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`https://valuengine.fr?ref=${user.id}`);
+                    setRefCopied(true);
+                    setTimeout(() => setRefCopied(false), 2000);
+                  }}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border border-[rgba(201,168,76,0.3)] text-[#C9A84C] hover:bg-[rgba(201,168,76,0.08)] transition-all whitespace-nowrap"
+                >
+                  {refCopied ? <><Check size={13} /> Copié</> : <><Copy size={13} /> Copier</>}
+                </button>
+              </div>
+              <p className="text-xs text-zinc-500">
+                {referralCount === 0
+                  ? "Aucun filleul pour le moment"
+                  : `${referralCount} filleul${referralCount > 1 ? "s" : ""} — ${referralCount >= 3 ? "1 mois Pro débloqué !" : `encore ${3 - referralCount} pour débloquer 1 mois Pro`}`}
+              </p>
+            </div>
+          </section>
+        )}
 
       </div>
 

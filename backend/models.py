@@ -139,3 +139,4 @@ class AnalyzeResponse(BaseModel):
     verdict: str          # "BUY" | "HOLD" | "SELL"
     verdict_label: str    # "Sous-évalué" | "Juste valeur" | "Surévalué"
     share_id: Optional[str] = None
+    is_first_analysis: bool = False

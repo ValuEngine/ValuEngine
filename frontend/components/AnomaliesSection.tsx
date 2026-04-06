@@ -28,9 +28,10 @@ const SIGNAL_STYLES: Record<string, { bg: string; border: string; text: string }
   OPPORTUNITE:{ bg: "bg-blue-500/10",    border: "border-blue-500/20",    text: "text-blue-400" },
 };
 
-export default function AnomaliesSection({ ticker }: { ticker: string }) {
+export default function AnomaliesSection({ ticker, trialPro = false }: { ticker: string; trialPro?: boolean }) {
   const { user } = useUser();
   const { isPro } = useProStatus(user?.id);
+  const canAccess = isPro || trialPro;
   const [data, setData] = useState<AnomaliesData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,7 +109,7 @@ export default function AnomaliesSection({ ticker }: { ticker: string }) {
         </div>
       ) : (
         <div className="relative">
-          <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${!isPro ? "blur-sm" : ""}`}>
+          <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${!canAccess ? "blur-sm" : ""}`}>
             {anomalies.map((a, i) => {
               const style = SIGNAL_STYLES[a.signal] || SIGNAL_STYLES.ATTENTION;
               return (
@@ -137,7 +138,7 @@ export default function AnomaliesSection({ ticker }: { ticker: string }) {
           </div>
 
           {/* Pro gate overlay */}
-          {!isPro && (
+          {!canAccess && (
             <div className="absolute inset-0 bg-[#09090b]/60 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center z-10">
               <Sparkles size={20} className="text-[#C9A84C] mb-2" />
               <p className="text-white font-bold mb-1">Signaux Pro</p>

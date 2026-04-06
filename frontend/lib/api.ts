@@ -79,6 +79,7 @@ export interface AnalyzeResponse {
   verdict: "BUY" | "HOLD" | "SELL";
   verdict_label: string;
   share_id?: string;
+  is_first_analysis?: boolean;
 }
 
 export interface SearchResult {

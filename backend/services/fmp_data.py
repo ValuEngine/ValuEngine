@@ -25,7 +25,7 @@ class _FmpCache:
         self._max = max_size
         self._default_ttl = default_ttl
 
-    def get(self, key: str, ttl: int | None = None):
+    def get(self, key: str, ttl: Optional[int] = None):
         ttl = ttl or self._default_ttl
         with self._lock:
             if key not in self._data:
@@ -89,7 +89,7 @@ def _safe_float(val, default: float = 0.0) -> float:
 FMP_BASE = "https://financialmodelingprep.com/stable"
 
 
-def _fmp_get(endpoint: str, params: dict | None = None) -> dict | list:
+def _fmp_get(endpoint: str, params: Optional[dict] = None):
     """
     Call FMP /stable/ API. Symbol goes in params, not URL path.
     Example: _fmp_get("/income-statement", {"symbol": "AAPL", "limit": 5})
@@ -371,7 +371,7 @@ def _get_deep_financials_yf(ticker: str) -> dict:
     return result
 
 
-def _fetch_analyst_targets(ticker: str) -> dict | None:
+def _fetch_analyst_targets(ticker: str) -> Optional[dict]:
     """Fetch analyst price target consensus from FMP."""
     cached = CACHE.get(f"analyst:{ticker}", TTL_ANALYST)
     if cached:
@@ -405,7 +405,7 @@ def _fetch_analyst_targets(ticker: str) -> dict | None:
         return None
 
 
-def _fetch_revenue_segments(ticker: str) -> dict | None:
+def _fetch_revenue_segments(ticker: str) -> Optional[dict]:
     """Fetch revenue breakdown by product and geography."""
     cached = CACHE.get(f"segments:{ticker}", TTL_SEGMENTS)
     if cached:
@@ -654,7 +654,7 @@ def get_sector_benchmarks(ticker: str, sector: str) -> dict:
         except Exception:
             continue
 
-    def _median(lst: list) -> float | None:
+    def _median(lst: list) -> Optional[float]:
         valid = sorted(x for x in lst if x is not None)
         if not valid:
             return None

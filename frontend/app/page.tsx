@@ -133,6 +133,13 @@ export default function LandingPage() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typewriterText = useTypewriter(TYPEWRITER_TICKERS);
 
+  /* ── Capture referral code from URL ── */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) localStorage.setItem("valuengine_ref", ref);
+  }, []);
+
   /* ── Live ticker tape from backend ── */
   const [tapeData, setTapeData] = useState<MarketItem[]>([]);
   useEffect(() => {

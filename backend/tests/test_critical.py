@@ -7,7 +7,8 @@ from fastapi.testclient import TestClient
 
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from main import app, TTLCache
+from main import app
+from deps import TTLCache
 
 client = TestClient(app)
 
@@ -534,3 +535,59 @@ class TestComparisonAnalysis:
             assert "indisponible" in result.lower() or len(result) > 0
         finally:
             os.environ.pop("ANTHROPIC_API_KEY", None)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EMAIL SCHEDULER ENDPOINT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestEmailScheduler:
+    def test_email_scheduler_endpoint_sans_secret_retourne_403(self):
+        """POST /api/email/trigger-sequence without secret must return 403."""
+        resp = client.post("/api/email/trigger-sequence")
+        assert resp.status_code == 403
+
+    def test_email_scheduler_endpoint_mauvais_secret_retourne_403(self):
+        """POST /api/email/trigger-sequence with wrong secret must return 403."""
+        resp = client.post(
+            "/api/email/trigger-sequence",
+            headers={"X-Internal-Secret": "wrong_secret_value"}
+        )
+        assert resp.status_code == 403
+
+    def test_weekly_digest_endpoint_sans_secret_retourne_403(self):
+        """POST /api/email/trigger-weekly-digest without secret must return 403."""
+        resp = client.post("/api/email/trigger-weekly-digest")
+        assert resp.status_code == 403
+
+    def test_weekly_digest_endpoint_mauvais_secret_retourne_403(self):
+        """POST /api/email/trigger-weekly-digest with wrong secret must return 403."""
+        resp = client.post(
+            "/api/email/trigger-weekly-digest",
+            headers={"X-Internal-Secret": "wrong_secret_value"}
+        )
+        assert resp.status_code == 403
+
+
+class TestAICostMonitoring:
+    def test_ai_costs_endpoint_sans_secret_retourne_403(self):
+        """GET /api/admin/ai-costs without secret must return 403."""
+        resp = client.get("/api/admin/ai-costs")
+        assert resp.status_code == 403
+
+    def test_ai_cost_tracker_tracks_call(self):
+        """ai_cost_tracker.track_ai_call records data and get_cost_summary returns it."""
+        from services.ai_cost_tracker import track_ai_call, get_cost_summary
+        track_ai_call(
+            model="claude-haiku-4-5-20251001",
+            endpoint="test",
+            input_tokens=100,
+            output_tokens=50,
+            ticker="TEST",
+            duration_ms=500,
+        )
+        summary = get_cost_summary()
+        assert summary["today"]["calls"] >= 1
+        assert summary["totals"]["calls"] >= 1
+        assert summary["totals"]["input_tokens"] >= 100
+        assert summary["totals"]["cost_usd"] > 0

@@ -38,20 +38,38 @@ export async function GET() {
 }
 
 // POST — upsert user (appelé à la connexion)
-export async function POST() {
+export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const user = await currentUser();
   const email = user?.emailAddresses?.[0]?.emailAddress ?? "";
 
+  // Parse optional referral code from body
+  let referredBy: string | undefined;
+  try {
+    const body = await req.json();
+    if (body?.referred_by && typeof body.referred_by === "string" && /^[a-zA-Z0-9_]{3,32}$/.test(body.referred_by)) {
+      referredBy = body.referred_by;
+    }
+  } catch {
+    // No body or invalid JSON — that's fine
+  }
+
   const sb = getAdminClient();
+
+  // Check if user already exists (don't overwrite referred_by on subsequent logins)
+  const { data: existing } = await sb.from("users").select("id,referred_by").eq("id", userId).single();
+
+  const upsertData: Record<string, unknown> = { id: userId, email, updated_at: new Date().toISOString() };
+  // Only set referred_by if user is new (no existing row) or has no referred_by yet
+  if (referredBy && (!existing || !existing.referred_by)) {
+    upsertData.referred_by = referredBy;
+  }
+
   const { data, error } = await sb
     .from("users")
-    .upsert(
-      { id: userId, email, updated_at: new Date().toISOString() },
-      { onConflict: "id", ignoreDuplicates: false }
-    )
+    .upsert(upsertData, { onConflict: "id", ignoreDuplicates: false })
     .select()
     .single();
 

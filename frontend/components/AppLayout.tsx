@@ -29,7 +29,14 @@ function TopHeader() {
   // Sync user to Supabase on first visit (ensures row exists)
   useEffect(() => {
     if (user?.id) {
-      fetch("/api/db/user", { method: "POST" }).catch(() => {});
+      const ref = typeof window !== "undefined" ? localStorage.getItem("valuengine_ref") : null;
+      fetch("/api/db/user", {
+        method: "POST",
+        headers: ref ? { "Content-Type": "application/json" } : {},
+        body: ref ? JSON.stringify({ referred_by: ref }) : undefined,
+      }).then(() => {
+        if (ref) localStorage.removeItem("valuengine_ref");
+      }).catch(() => {});
     }
   }, [user?.id]);
 

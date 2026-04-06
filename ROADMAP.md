@@ -1,6 +1,7 @@
 # ValuEngine — Audit Complet & Roadmap
 
 > Audit realise le 6 avril 2026 sur l'integralite du codebase.
+> Mis a jour le 6 avril 2026 apres execution des 3 corrections critiques.
 > Ce document est 100% honnete — pas de bullshit, pas de vanity metrics.
 
 ---
@@ -12,12 +13,12 @@
 | Fichier | Role | Etat | Derniere modif majeure |
 |---------|------|------|----------------------|
 | `backend/main.py` (~1400 lignes) | API FastAPI — 30+ endpoints (analyze, compare, alerts, stripe, screener, portfolio, admin, onboarding) | **Stable mais monolithique** — tout dans un seul fichier. Auth Clerk solide, rate limiting, input sanitization, freemium enforcement. Cache TTL thread-safe. | Avril 2026 |
-| `backend/services/ai_analyst.py` (~830 lignes) | 7 fonctions IA (bull/bear, SWOT, PESTLE, deep analysis, anomalies, DCF scenarios, screener, comparison) | **Stable** — toutes les fonctions ont des fallbacks gracieux. Anomaly detection = pure Python (pas d'IA, bon choix). get_comparison_analysis utilise Sonnet, le reste Haiku. | Avril 2026 |
+| `backend/services/ai_analyst.py` (~830 lignes) | 7 fonctions IA (bull/bear, SWOT, PESTLE, deep analysis, anomalies, DCF scenarios, screener, comparison) | **Stable** — toutes les fonctions ont des fallbacks gracieux. Anomaly detection = pure Python (pas d'IA, bon choix). get_comparison_analysis utilise Sonnet, le reste Haiku. **Bug comparison corrige** (avril 2026). | Avril 2026 |
 | `backend/services/fmp_data.py` (~500 lignes) | Source de donnees financieres FMP /stable/ avec fallback yfinance | **Stable** — cache multi-niveau (5min quotes, 6h profil, 24h statements). Fallback yfinance automatique. Deep financials 5 ans + analyst targets + revenue segments. | Avril 2026 |
 | `backend/services/pdf_generator.py` (~570 lignes) | Generation PDF ReportLab (rapport branded 4 pages) | **Stable** — verdict, metriques, analyse IA, scenarios DCF. Gestion robuste des valeurs nulles. | Mars 2026 |
 | `backend/services/email_service.py` (~160 lignes) | Emails transactionnels via Resend (alerte prix + welcome) | **Stable** — templates HTML inline, disclaimer MIF II present. | Mars 2026 |
 | `backend/services/email_scheduler.py` (~240 lignes) | Sequences email D+3, D+7, D+30 via cron GitHub Actions | **Fragile** — depend de Supabase REST direct (pas de SDK), queries manuelles. Jamais teste en prod a ma connaissance. | Mars 2026 |
-| `backend/tests/test_critical.py` (~430 lignes) | 30+ tests : securite (auth 401/403), calculs DCF, validation Pydantic, cache TTL, PDF generation | **Solide** — bonne couverture securite. Manque tests d'integration (endpoints avec donnees reelles). | Mars 2026 |
+| `backend/tests/test_critical.py` (~500 lignes) | **47 tests** : securite (auth 401/403, webhook Stripe), calculs DCF, validation Pydantic, cache TTL, PDF generation, comparison data structure | **Solide** — bonne couverture securite + webhook + comparison. Manque tests d'integration (endpoints avec donnees reelles). | Avril 2026 |
 | `backend/requirements.txt` | 17 dependances | **Stable** — versions pinees. anthropic 0.39.0 pourrait etre mis a jour. | Mars 2026 |
 
 ### Frontend
@@ -26,7 +27,7 @@
 |---------|------|------|----------------------|
 | `frontend/app/page.tsx` (~600 lignes) | Landing page marketing — hero, features, FAQ, pricing, community | **Stable** — audit brief termine (testimonials supprimes, Schema.org, MIF II, sous-headline). Composant monolithique. | Avril 2026 |
 | `frontend/app/analyze/page.tsx` (~900 lignes) | Page d'analyse principale — DCF, metriques, charts, AI, sensibilite | **Stable mais tres gros** — composant monolithique avec gate Pro, DeepAnalysis, Anomalies, DCFScenarios. Feature-complete. | Avril 2026 |
-| `frontend/app/dashboard/page.tsx` (~440 lignes) | Hub utilisateur — analyses recentes, watchlist, market overview | **Stable** — warmup backend, onboarding modal, pro welcome. Bien structure. | Avril 2026 |
+| `frontend/app/dashboard/page.tsx` (~500 lignes) | Hub utilisateur — analyses recentes, watchlist, market overview, **FirstRunHero** pour les nouveaux users | **Stable** — warmup backend, onboarding modal, pro welcome. FirstRunHero avec tickers populaires (MC.PA, AAPL, TTE.PA, NVDA, AIR.PA, MSFT) pour les dashboards vides. | Avril 2026 |
 | `frontend/app/compare/page.tsx` (~315 lignes) | Comparaison 2 actions — metriques + AI comparative (Pro) | **Stable** — paires populaires, blur gate free, CTA. | Avril 2026 |
 | `frontend/app/screener/page.tsx` (~305 lignes) | Screener IA en langage naturel — Pro only | **Stable** — suggestions, score matching, cards resultats. | Avril 2026 |
 | `frontend/app/portfolio/page.tsx` (~250+ lignes) | Suivi portefeuille + AI insight (Pro) | **Stable** — positions CRUD, prix live, AI diversification. | Avril 2026 |
@@ -56,12 +57,13 @@
 - DCF 3 scenarios avec narratif IA
 - Export PDF (Pro)
 - Alertes prix email (Resend)
-- Comparaison 2 actions + AI (Pro)
+- Comparaison 2 actions + AI (Pro) — **bug corrige**, donnees transmises correctement a l'IA
 - Screener IA langage naturel (Pro)
 - Portfolio AI insight (Pro)
-- Stripe checkout (monthly/yearly)
+- Stripe checkout (monthly/yearly) — **webhook securise** avec `construct_event` + signature verification
 - Auth Clerk + freemium 3 analyses/jour
 - Share analysis (public link)
+- **FirstRunHero** — experience premier lancement avec CTA fort et tickers populaires
 
 **2. Features partiellement implementees :**
 - **Track Record** : le code existe et affiche des stats, mais depend de donnees en BDD qui ne sont pas encore suffisantes pour etre credibles. Section masquee sur la landing (bon reflexe).
@@ -81,22 +83,21 @@
 **5. Tunnel complet Landing → Inscription → Dashboard → Analyse → Pro → Paiement :**
 - **Landing** : OK, CTA vers `/sign-up` et `/analyze`
 - **Inscription** : Clerk, OK
-- **Dashboard** : OK, affiche analyses recentes + watchlist
+- **Dashboard** : OK, affiche analyses recentes + watchlist. **FirstRunHero** pour les nouveaux users (dashboard vide).
 - **Analyse** : OK, gate freemium apres 3/jour
 - **Pro CTA** : Present dans Sidebar + pages Pro-gated
 - **Paiement** : Stripe checkout fonctionnel (monthly/yearly)
-- **Post-paiement** : Webhook Stripe → `_sb_patch` users table → `is_pro=true`
-- **Verdict** : Le tunnel est complet. Le maillon le plus faible est le **onboarding** — un nouveau user arrive sur le dashboard vide sans guidance forte.
+- **Post-paiement** : Webhook Stripe → `construct_event` signature verification → `_sb_patch` users table → `is_pro=true`
+- **Verdict** : Le tunnel est complet. Le maillon le plus faible est la **conversion Free→Pro** — le moment "aha" est la, mais l'utilisateur n'a pas encore l'occasion de gouter une feature Pro gratuitement.
 
 ### Technique
 
 **6. Tests existants :**
-- **30+ tests** dans `test_critical.py`
-- Couvrent : auth (17 endpoints rejectent sans token), DCF edge cases (zero shares, negative net debt), validation Pydantic (injection, bornes WACC/growth), cache TTL/LRU, PDF generation (3 scenarios)
+- **47 tests** dans `test_critical.py`
+- Couvrent : auth (17 endpoints rejectent sans token), DCF edge cases (zero shares, negative net debt), validation Pydantic (injection, bornes WACC/growth), cache TTL/LRU, PDF generation (3 scenarios), **webhook Stripe** (sans signature → 400, signature invalide → 400), **comparison data structure** (dict plat accepte, donnees reelles presentes)
 - **Manquent** : tests d'integration avec donnees reelles, tests frontend (0), tests email scheduler
 
 **7. Endpoints sans tests :**
-- `/api/compare` (POST) — pas teste
 - `/api/market-overview` — pas teste
 - `/api/quotes` et `/api/quote/{ticker}` — pas testes
 - `/api/profile/{ticker}` — pas teste
@@ -110,7 +111,6 @@
 - **`analyze/page.tsx` a 900 lignes** — composant monolithique React. Difficile a maintenir.
 - **`page.tsx` (landing) a 600 lignes** — idem
 - **`_compare_cache`** utilise un simple dict au lieu du TTLCache existant (incoherence)
-- **`get_comparison_analysis`** dans ai_analyst.py attend `ticker1_data` et `ticker2_data` mais le _summarize interne cherche `d.get("company", {})` et `d.get("dcf", {})` — or main.py passe `c1` et `c2` qui sont des dicts plats (pas imbriques). **Bug potentiel** : l'AI recoit des donnees vides.
 
 ### GTM
 
@@ -130,15 +130,15 @@
 
 | Dimension | Force | Faiblesse | Priorite |
 |-----------|-------|-----------|----------|
-| **Securite** | Auth Clerk + JWT verification, input sanitization regex, rate limiting slowapi, owner checks, Sentry monitoring | Pas de CSRF protection explicite, webhook Stripe sans `construct_event` signature verification visible | CRITIQUE |
+| **Securite** | Auth Clerk + JWT verification, input sanitization regex, rate limiting slowapi, owner checks, Sentry monitoring, **Stripe webhook securise** avec `construct_event` + signature verification | Pas de CSRF protection explicite | IMPORTANT |
 | **Donnees financieres** | Double source (FMP + yfinance fallback), cache multi-niveau, deep financials 5 ans, analyst targets, revenue segments | yfinance peut etre instable/lent, donnees parfois manquantes pour small caps EU | IMPORTANT |
-| **Analyse IA** | 7 modules IA distincts, fallbacks gracieux, anomaly detection sans IA (deterministe, fiable), DCF scenarios bien structures | Pas de streaming (reponses longues = attente), cout Anthropic non monitore, comparison_analysis a un bug de format de donnees | IMPORTANT |
-| **UX/Onboarding** | Dashboard clair, onboarding modal, warmup backend, popular tickers, suggestions screener | Nouveau user arrive sur dashboard VIDE (pas d'analyse pre-generee), pas de tour guide, notification bell placeholder | CRITIQUE |
+| **Analyse IA** | 7 modules IA distincts, fallbacks gracieux, anomaly detection sans IA (deterministe, fiable), DCF scenarios bien structures, **comparison_analysis corrige** et fonctionnel | Pas de streaming (reponses longues = attente), cout Anthropic non monitore | IMPORTANT |
+| **UX/Onboarding** | Dashboard clair, onboarding modal, warmup backend, popular tickers, suggestions screener, **FirstRunHero** avec CTA fort pour les nouveaux users | Pas de tour guide, notification bell placeholder, pas d'"analyse Pro offerte" au 1er ticker | IMPORTANT |
 | **Conversion Free→Pro** | Gate visible partout (blur + lock), CTA dans sidebar, reassurance paiement Stripe, pricing clair | Pas de trial gratuit, pas de "premiere analyse Pro offerte", ratio valeur percue pas assez demontree avant paywall | CRITIQUE |
 | **Retention** | Alertes prix, portfolio tracker, email D+3/D+7/D+30, watchlist, analyses sauvegardees | Emails non verifies en prod, pas de notifications push/in-app, pas de weekly digest, dashboard statique | IMPORTANT |
 | **Performance** | Cache TTL partout, yfinance fast_info pour quotes, FMP batch-quote | Certaines pages font 3-5 API calls sequentiels au chargement, pas de SSR/ISR pour le SEO, main.py sync (pas async yfinance) | NICE TO HAVE |
-| **Tests** | 30+ tests couvrant securite + calculs + cache + PDF | Zero tests frontend, zero tests d'integration, zero tests email, endpoints recents non couverts | IMPORTANT |
-| **GTM** | Plan 90 jours detaille, 6 articles blog, templates email, tracker hebdo | Aucune execution commencee (tracker vide), Product Hunt dans ~6 semaines, pas de contenu social pre-ecrit | CRITIQUE |
+| **Tests** | **47 tests** couvrant securite + webhook Stripe + calculs + cache + PDF + comparison | Zero tests frontend, zero tests d'integration, zero tests email, certains endpoints non couverts | IMPORTANT |
+| **GTM** | Plan 90 jours detaille, 6 articles blog, templates email, tracker hebdo, **og-image.png** et **photo fondateur** prets | Aucune execution commencee (tracker vide), Product Hunt dans ~6 semaines, pas de contenu social pre-ecrit | CRITIQUE |
 
 ---
 
@@ -146,20 +146,20 @@
 
 ### CRITIQUE — Avant tout lancement public
 
-| # | Tache | Effort | Impact | Dependances |
-|---|-------|--------|--------|-------------|
-| C1 | **Fixer le bug get_comparison_analysis** — le _summarize cherche `d["company"]` et `d["dcf"]` mais recoit un dict plat. L'AI recoit des champs vides. Restructurer le passage de donnees dans main.py `/api/compare`. | S (1h) | Retention (compare est une feature Pro differenciante) | Aucune |
-| C2 | **Verifier Stripe webhook signature** — s'assurer que le webhook `/api/stripe/webhook` (s'il existe) utilise `stripe.Webhook.construct_event()` avec le signing secret. Sans ca, n'importe qui peut forger un event et s'octroyer Pro. | S (1-2h) | Securite (critique si paiement actif) | Stripe signing secret |
-| C3 | **Tester et activer les email sequences** — verifier que le cron GitHub Actions tourne, que Supabase a les colonnes requises (`email_sequence_sent`), et que Resend delivre. Tester avec un vrai user. | M (3h) | Retention (D+3/D+7 sont le moment cle pour activer les free users) | RESEND_API_KEY, Supabase schema |
-| C4 | **First-run experience** — quand le dashboard est vide (0 analyses), afficher un CTA fort : "Lance ta premiere analyse" avec un ticker pre-rempli (MC.PA ou AAPL). Pas juste une liste vide. | M (3h) | Conversion (un user qui ne fait pas d'analyse J1 est perdu) | Aucune |
-| C5 | **Preparer 5 screenshots HD pour Product Hunt** — screenshots reels de : (1) verdict AAPL, (2) DCF interactif, (3) AI bull/bear, (4) screener, (5) comparaison. Format 1270x760. | M (2-3h) | Acquisition (PH = potentiel 500+ signups en 1 jour) | Produit stable |
+| # | Tache | Effort | Impact | Statut |
+|---|-------|--------|--------|--------|
+| C1 | ~~**Fixer le bug get_comparison_analysis**~~ — `_summarize` reecrit pour accepter un dict plat. L'AI recoit maintenant toutes les donnees correctement. | S (1h) | Retention | **✅ FAIT** |
+| C2 | ~~**Verifier Stripe webhook signature**~~ — `construct_event` avec signing secret deja implementé. 2 tests ajoutes (sans signature → 400, signature invalide → 400). | S (1h) | Securite | **✅ FAIT** |
+| C3 | **Tester et activer les email sequences** — verifier que le cron GitHub Actions tourne, que Supabase a les colonnes requises (`email_sequence_sent`), et que Resend delivre. Tester avec un vrai user. | M (3h) | Retention (D+3/D+7 sont le moment cle pour activer les free users) | A FAIRE |
+| C4 | ~~**First-run experience**~~ — FirstRunHero ajoute au dashboard : CTA "Analyse ta premiere action en 60 secondes" avec input ticker, 6 tickers populaires, et stats visuelles. | M (3h) | Conversion | **✅ FAIT** |
+| C5 | **Preparer 5 screenshots HD pour Product Hunt** — screenshots reels de : (1) verdict AAPL, (2) DCF interactif, (3) AI bull/bear, (4) screener, (5) comparaison. Format 1270x760. | M (2-3h) | Acquisition (PH = potentiel 500+ signups en 1 jour) | A FAIRE |
 
 ### IMPORTANT — Semaines 1-4
 
 | # | Tache | Effort | Impact | Dependances |
 |---|-------|--------|--------|-------------|
 | I1 | **Decouple main.py en FastAPI routers** — `analyze_router`, `alerts_router`, `stripe_router`, `screener_router`, `admin_router`. Garder main.py comme orchestrateur. | L (1-2 jours) | Maintenabilite (1400 lignes = dette technique majeure) | Aucune |
-| I2 | **Ajouter une "analyse gratuite Pro" a l'onboarding** — offrir une deep analysis complete (sans gate) au premier ticker analyse. Montre la valeur Pro immediatement. | M (3-4h) | Conversion Free→Pro (+20-30% attendu) | C4 |
+| I2 | **Ajouter une "analyse gratuite Pro" a l'onboarding** — offrir une deep analysis complete (sans gate) au premier ticker analyse. Montre la valeur Pro immediatement. | M (3-4h) | Conversion Free→Pro (+20-30% attendu) | C4 ✅ |
 | I3 | **Weekly digest email** — un email hebdo aux users actifs avec : top 3 verdicts de la semaine, performance du track record, 1 article blog. | M (4-5h) | Retention (ramene les users inactifs) | C3 (emails fonctionnels) |
 | I4 | **Tests d'integration backend** — tester `/api/analyze` avec AAPL (mock yfinance), `/api/compare`, `/api/screener/search`. Objectif : les endpoints critiques ne crashent pas. | M (4h) | Stabilite | Aucune |
 | I5 | **Connecter le referral end-to-end** — ajouter `?ref=USER_ID` au lien d'invitation, tracker dans Clerk/Supabase, afficher le compteur dans le dashboard. | M (4h) | Acquisition (chaque user Pro invite potentiellement 2-3 personnes) | Aucune |
@@ -184,8 +184,8 @@
 ### Semaine 1 (7-13 avril) — Fondations
 
 **Dev :**
-1. Fixer le bug comparison_analysis (C1)
-2. Verifier Stripe webhook signature (C2)
+1. ~~Fixer le bug comparison_analysis (C1)~~ ✅
+2. ~~Verifier Stripe webhook signature (C2)~~ ✅
 3. Tester et activer les email sequences (C3)
 
 **GTM :**
@@ -193,15 +193,15 @@
 2. Poster 1 tweet d'introduction + epingler
 3. Commencer le karma Reddit (3-5 commentaires utiles sur r/vosfinances)
 
-**Objectif mesurable :** 0 bug critique, emails D+3 fonctionnels, compte Twitter actif
+**Objectif mesurable :** ~~0 bug critique~~ ✅, emails D+3 fonctionnels, compte Twitter actif
 
 ---
 
-### Semaine 2 (14-20 avril) — Onboarding
+### Semaine 2 (14-20 avril) — Onboarding & Conversion
 
 **Dev :**
-1. First-run experience dashboard vide (C4)
-2. "Analyse gratuite Pro" au 1er ticker (I2)
+1. ~~First-run experience dashboard vide (C4)~~ ✅
+2. "Analyse gratuite Pro" au 1er ticker (I2) — **nouvelle priorite #1**
 3. Preparer screenshots Product Hunt (C5)
 
 **GTM :**
@@ -225,7 +225,7 @@
 2. 1er article LinkedIn (repost du thread enrichi)
 3. 2eme post Reddit (valeur differente)
 
-**Objectif mesurable :** 30+ tests passent en CI, 50 followers Twitter
+**Objectif mesurable :** 47+ tests passent en CI, 50 followers Twitter
 
 ---
 
@@ -311,18 +311,18 @@
 
 ## PARTIE 6 — LES 3 PROCHAINES ACTIONS (48h)
 
-### 1. Fixer le bug get_comparison_analysis — PARCE QUE C'EST CASSE EN PROD — 1h
+### 1. Tester et activer les email sequences (C3) — PARCE QUE C'EST LE LEVIER RETENTION #1 — 3h
 
-La fonction `get_comparison_analysis` dans `ai_analyst.py` (ligne 795) fait `d.get("company", {})` et `d.get("dcf", {})` pour construire le summary. Mais `main.py` (ligne 1319) passe `c1` et `c2` qui sont des dicts plats (`{"ticker": ..., "price": ..., "intrinsic_value": ...}`) — pas imbriques avec `company`/`dcf`. L'IA recoit donc des champs vides et genere une comparaison bidon. Fix : adapter le `_summarize` dans ai_analyst.py pour accepter un dict plat OU restructurer le passage dans main.py.
+Le code existe dans `email_scheduler.py` mais n'a jamais ete teste en prod. Verifier : (1) le cron GitHub Actions est configure et tourne, (2) Supabase a les colonnes `email_sequence_sent`, `created_at` dans la table users, (3) Resend delivre reellement les emails D+3 et D+7. Tester avec un vrai user inscrit. Sans ca, les free users qui ne reviennent pas J+3 sont perdus a jamais.
 
-### 2. Verifier le webhook Stripe — PARCE QUE SANS CA LE PAIEMENT EST VULNERABLE — 1h
+### 2. "Analyse gratuite Pro" au premier ticker (I2) — PARCE QUE C'EST LE MOMENT "AHA" PRO — 3h
 
-Grep le codebase pour `stripe.Webhook.construct_event` — si absent, n'importe quelle requete POST forgee peut activer Pro pour n'importe quel user. C'est la faille de securite #1.
+Le FirstRunHero est en place (C4 ✅), mais le user qui lance sa premiere analyse ne voit que la version free. Offrir une deep analysis complete (SWOT, PESTLE, DCF scenarios, anomalies) sans gate au premier ticker analyse. Ca montre immediatement la valeur Pro et devrait augmenter la conversion de 20-30%. Dependance : C4 est fait, on peut y aller.
 
-### 3. First-run experience (dashboard vide) — PARCE QUE C'EST LE MOMENT "AHA" — 3h
+### 3. Preparer 5 screenshots HD pour Product Hunt (C5) — PARCE QUE PH = 500+ SIGNUPS POTENTIELS — 2h
 
-Un nouveau user qui arrive sur un dashboard vide avec "Aucune analyse recente" va fermer l'onglet. Ajouter un hero CTA : "Bienvenue ! Analyse ta premiere action en 60 secondes" avec un input pre-rempli MC.PA et un gros bouton dore. C'est le #1 levier de retention J1.
+Product Hunt est prevu semaine 7 (~19 mai). Il faut des screenshots reels, pas des maquettes : (1) verdict AAPL avec prix + valeur intrinseque, (2) DCF sensibilite interactif, (3) analyse Bull/Bear IA, (4) screener IA, (5) comparaison 2 actions. Format 1270x760. L'og-image.png et la photo fondateur sont deja prets.
 
 ---
 
-*Fichier genere automatiquement. Ne pas deployer — document de planification uniquement.*
+*Fichier genere le 6 avril 2026. Mis a jour apres corrections C1, C2, C4. Ne pas deployer — document de planification uniquement.*

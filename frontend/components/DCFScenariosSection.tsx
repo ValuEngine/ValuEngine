@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2, Sparkles, Pin } from "lucide-react";
 import { useProStatus } from "@/hooks/useProStatus";
 import { useUser } from "@clerk/nextjs";
@@ -111,15 +111,17 @@ function ScenarioCard({
   );
 }
 
-export default function DCFScenariosSection({ ticker }: { ticker: string }) {
+export default function DCFScenariosSection({ ticker, trialPro = false }: { ticker: string; trialPro?: boolean }) {
   const { user } = useUser();
   const { isPro } = useProStatus(user?.id);
+  const canAccess = isPro || trialPro;
   const [data, setData] = useState<DCFScenariosData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autoTriggered, setAutoTriggered] = useState(false);
 
   const generate = async () => {
-    if (!isPro) return;
+    if (!canAccess) return;
     setLoading(true);
     setError(null);
     try {
@@ -138,6 +140,14 @@ export default function DCFScenariosSection({ ticker }: { ticker: string }) {
       setLoading(false);
     }
   };
+
+  // Auto-trigger for trial Pro users
+  useEffect(() => {
+    if (trialPro && !data && !loading && !autoTriggered) {
+      setAutoTriggered(true);
+      generate();
+    }
+  }, [trialPro, data, loading, autoTriggered]);
 
   const cs = currencySymbol(ticker);
 
@@ -165,7 +175,7 @@ export default function DCFScenariosSection({ ticker }: { ticker: string }) {
           ) : (
             <button
               onClick={generate}
-              disabled={!isPro}
+              disabled={!canAccess}
               className="flex items-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#09090b] font-bold px-6 py-2.5 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all disabled:opacity-40"
             >
               <Sparkles size={16} />
@@ -173,7 +183,7 @@ export default function DCFScenariosSection({ ticker }: { ticker: string }) {
             </button>
           )}
         </div>
-        {!isPro && (
+        {!canAccess && (
           <div className="absolute inset-0 bg-[#09090b]/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center z-10">
             <Sparkles size={24} className="text-[#C9A84C] mb-3" />
             <p className="text-white font-bold text-lg mb-2">Scénarios DCF Pro</p>

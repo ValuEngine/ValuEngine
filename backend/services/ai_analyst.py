@@ -7,7 +7,9 @@ Génère une analyse Bull/Bear contextualisée via Claude (Anthropic).
 import os
 import json
 import re
+import time
 import logging
+from typing import Optional
 from anthropic import Anthropic
 
 logger = logging.getLogger("valuengine")
@@ -38,7 +40,7 @@ def _parse_json_response(text: str) -> dict:
     return json.loads(text)
 
 
-def _format_analyst_targets(targets: dict | None) -> str:
+def _format_analyst_targets(targets: Optional[dict]) -> str:
     """Format analyst targets section for prompts."""
     if not targets:
         return ""
@@ -52,7 +54,7 @@ def _format_analyst_targets(targets: dict | None) -> str:
     )
 
 
-def _format_revenue_segments(products: dict | None, geography: dict | None) -> str:
+def _format_revenue_segments(products: Optional[dict], geography: Optional[dict]) -> str:
     """Format revenue segments section for prompts."""
     parts = []
     if products and products.get("segments"):
@@ -119,11 +121,24 @@ def get_bull_bear_analysis(company: dict, dcf: dict) -> dict:
     )
 
     try:
+        t0 = time.time()
         msg = client.messages.create(
             model="claude-haiku-4-5-20251001",
             max_tokens=600,
             messages=[{"role": "user", "content": prompt}],
         )
+        duration_ms = int((time.time() - t0) * 1000)
+
+        try:
+            from services.ai_cost_tracker import track_ai_call
+            track_ai_call(
+                model="claude-haiku-4-5-20251001", endpoint="bull-bear",
+                input_tokens=msg.usage.input_tokens, output_tokens=msg.usage.output_tokens,
+                ticker=company_info.get("ticker", ""), duration_ms=duration_ms,
+            )
+        except Exception:
+            pass
+
         response = msg.content[0].text.strip()
 
         # Parsing robuste
@@ -229,18 +244,8 @@ En français, factuel, ancré dans le secteur de l'entreprise."""
 # NIVEAU 1 — Analyse contextuelle profonde (Claude Haiku)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def get_deep_analysis(ticker: str, company_info: dict, financials: dict, deep_financials: dict) -> dict:
-    """
-    Deep analysis using real 5-year financial data via claude-sonnet-4-6.
-    Returns structured bull/bear case with real figures cited.
-    """
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-    if not api_key:
-        return {"error": "Clé API Anthropic manquante"}
-
-    client = Anthropic(api_key=api_key)
-
-    # Format data for the prompt
+def build_deep_analysis_prompt(ticker: str, company_info: dict, deep_financials: dict) -> str:
+    """Build the deep analysis prompt (reusable for streaming)."""
     df = deep_financials
     years = df.get("years", [])
     years_str = " → ".join(str(y) for y in years) if years else "N/A"
@@ -349,13 +354,44 @@ Format JSON attendu:
   "catalyseurs_positifs": ["string", "string", "string"],
   "risques_majeurs": ["string", "string", "string"]
 }}"""
+    return prompt
+
+
+def get_deep_analysis(ticker: str, company_info: dict, financials: dict, deep_financials: dict) -> dict:
+    """
+    Deep analysis using real 5-year financial data via Claude.
+    Returns structured bull/bear case with real figures cited.
+    """
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return {"error": "Clé API Anthropic manquante"}
+
+    client = Anthropic(api_key=api_key)
+    prompt = build_deep_analysis_prompt(ticker, company_info, deep_financials)
 
     try:
+        t0 = time.time()
         msg = client.messages.create(
             model="claude-haiku-4-5-20251001",
             max_tokens=3000,
             messages=[{"role": "user", "content": prompt}],
         )
+        duration_ms = int((time.time() - t0) * 1000)
+
+        # Track AI cost
+        try:
+            from services.ai_cost_tracker import track_ai_call
+            track_ai_call(
+                model="claude-haiku-4-5-20251001",
+                endpoint="deep-analysis",
+                input_tokens=msg.usage.input_tokens,
+                output_tokens=msg.usage.output_tokens,
+                ticker=ticker,
+                duration_ms=duration_ms,
+            )
+        except Exception:
+            pass
+
         result = _parse_json_response(msg.content[0].text)
 
         # ── Structural validation ──
@@ -641,11 +677,24 @@ Format attendu:
 }}"""
 
     try:
+        t0 = time.time()
         msg = client.messages.create(
             model="claude-haiku-4-5-20251001",
             max_tokens=1500,
             messages=[{"role": "user", "content": prompt}],
         )
+        duration_ms = int((time.time() - t0) * 1000)
+
+        try:
+            from services.ai_cost_tracker import track_ai_call
+            track_ai_call(
+                model="claude-haiku-4-5-20251001", endpoint="dcf-scenarios",
+                input_tokens=msg.usage.input_tokens, output_tokens=msg.usage.output_tokens,
+                ticker=ticker, duration_ms=duration_ms,
+            )
+        except Exception:
+            pass
+
         ai_result = _parse_json_response(msg.content[0].text)
 
         # Merge AI narratives with calculated values
