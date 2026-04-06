@@ -46,10 +46,7 @@ export default function AboutPage() {
           <div className="max-w-md">
             <div className="rounded-xl bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] p-6 w-full max-w-md">
               <div className="flex items-center gap-4 mb-3">
-                {/* Replace with <img src="/images/ilias.jpg" ... /> once photo is added */}
-                <div className="w-12 h-12 rounded-full bg-[#C9A84C]/15 border-2 border-[#C9A84C]/30 flex items-center justify-center text-[#C9A84C] font-bold text-lg overflow-hidden">
-                  I
-                </div>
+                <img src="/images/ilias.jpg" alt="Ilias — Fondateur de ValuEngine" className="w-12 h-12 rounded-full border-2 border-[#C9A84C]/30 object-cover" />
                 <div>
                   <p className="text-white font-semibold">Ilias</p>
                   <p className="text-zinc-500 text-sm">Fondateur</p>
