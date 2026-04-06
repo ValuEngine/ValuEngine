@@ -1161,7 +1161,7 @@ function AnalyzePage() {
               <PriceAlertSection ticker={data.company.ticker} tickerName={data.company.name} />
 
               <p className="text-[#2a3a4a] text-xs text-center mt-8 pb-4">
-                ValuEngine est un outil d&apos;aide à la décision. Les analyses ne constituent pas des conseils en investissement.
+                ValuEngine est un outil d&apos;analyse éducatif uniquement. Les analyses ne constituent pas des conseils en investissement au sens de la directive MIF II.
                 FCF issu des données Yahoo Finance. Tout investissement comporte des risques. · ValuEngine 2026
               </p>
             </div>

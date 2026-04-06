@@ -61,8 +61,11 @@ const FAQ: { q: string; a: string }[] = [
   { q: "Est-ce que les analyses sont fiables ?", a: "Nos analyses sont basées sur des données financières réelles (Financial Modeling Prep) et un modèle DCF standard. L'IA ajoute une couche qualitative. Consulte notre Track Record pour juger par toi-même — nous publions toutes nos performances passées." },
   { q: "Quelles actions sont couvertes ?", a: "Toutes les actions cotées sur les bourses américaines (NYSE, NASDAQ) et européennes (Euronext Paris, Xetra, etc.). Plus de 50 000 tickers disponibles." },
   { q: "Pourquoi c'est en français ?", a: "Parce qu'aucun outil de valorisation sérieux n'existait en français. Les investisseurs francophones méritent des outils de qualité professionnelle dans leur langue." },
-  { q: "Est-ce un conseil en investissement ?", a: "Non. ValuEngine est un outil d'aide à la décision éducatif. Nos verdicts sont des estimations mathématiques, pas des recommandations au sens de la directive MIF II. Consulte un conseiller agréé avant d'investir." },
+  { q: "Est-ce un conseil en investissement ?", a: "Non. ValuEngine est un outil d'analyse éducatif uniquement. Nos verdicts sont des estimations mathématiques, pas des recommandations au sens de la directive MIF II. Consulte un conseiller agréé avant d'investir." },
   { q: "Je peux annuler mon abonnement Pro ?", a: "Oui, à tout moment. Pas d'engagement, pas de frais cachés. Tu gardes l'accès jusqu'à la fin de ta période en cours." },
+  { q: "Comment ValuEngine se compare à AlphaSpread ou Morningstar ?", a: "AlphaSpread et Morningstar sont en anglais et couvrent mal les actions françaises (CAC 40, SBF 120). ValuEngine est conçu spécifiquement pour les investisseurs francophones, avec un DCF calibré sur les valeurs françaises et européennes." },
+  { q: "À quelle fréquence les données sont-elles mises à jour ?", a: "Les données financières (comptes de résultat, bilan, flux de trésorerie) proviennent de yfinance et sont mises à jour trimestriellement après chaque publication de résultats. Les prix sont actualisés en temps réel." },
+  { q: "Mes données sont-elles en sécurité ?", a: "Oui. L'authentification est gérée par Clerk, les paiements par Stripe, et les données sont hébergées en Union Européenne (Supabase). Aucune donnée personnelle n'est revendue. Nous sommes conformes au RGPD." },
 ];
 
 const TYPEWRITER_TICKERS = ["AAPL", "MC.PA", "TSLA", "TTE.PA", "NVDA", "BNP.PA"];
@@ -212,6 +215,27 @@ export default function LandingPage() {
   return (
     <main className="min-h-screen bg-[#09090b] text-white overflow-x-hidden relative">
 
+      {/* Schema.org structured data */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "ValuEngine",
+        "description": "Outil de valorisation DCF et analyse boursière IA pour investisseurs francophones",
+        "url": "https://valuengine.fr",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Web",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "description": "Plan gratuit — 3 analyses par jour" },
+      })}} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": FAQ.map(f => ({
+          "@type": "Question",
+          "name": f.q,
+          "acceptedAnswer": { "@type": "Answer", "text": f.a },
+        })),
+      })}} />
+
       <AnimatedBackground />
 
       {/* ── LIVE TICKER TAPE ─────────────────────────────────────────── */}
@@ -275,9 +299,11 @@ export default function LandingPage() {
             </span>
           </h1>
 
-          <p className="text-sm sm:text-base md:text-lg text-zinc-400 text-center max-w-xl mx-auto mb-10">
-            Valorisation DCF, arguments Bull &amp; Bear par IA, matrice de sensibilité — en 60 secondes, en français, avec un{" "}
-            <Link href="/track-record" className="text-[#C9A84C] hover:underline">Track Record vérifié</Link>.
+          <p className="text-base sm:text-lg md:text-xl text-[#C9A84C] font-medium text-center max-w-xl mx-auto mb-2">
+            L&apos;analyse fondamentale que font les pros — en français, en 60 secondes.
+          </p>
+          <p className="text-sm sm:text-base text-zinc-400 text-center max-w-xl mx-auto mb-10">
+            Valorisation DCF, arguments Bull &amp; Bear par IA, matrice de sensibilité — gratuit, sans carte bancaire.
           </p>
 
           {/* Smart Search bar */}
@@ -313,7 +339,7 @@ export default function LandingPage() {
           <div className="flex items-center justify-center gap-2 flex-wrap mb-6">
             <span className="text-zinc-600 text-xs mr-1">Populaires :</span>
             {["MC.PA", "AAPL", "TTE.PA", "TSLA", "BNP.PA", "NVDA"].map((t) => (
-              <button key={t} onClick={() => handleAnalyze(t)} className="text-xs font-semibold text-zinc-400 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-lg hover:border-zinc-600 hover:text-white transition-all">{t}</button>
+              <button key={t} onClick={() => handleAnalyze(t)} className="text-xs font-semibold text-zinc-400 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-lg hover:border-zinc-600 hover:text-white transition-all whitespace-nowrap">{t}</button>
             ))}
           </div>
 
@@ -357,21 +383,21 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── TRACK RECORD (moved up — strongest social proof) ──────────── */}
-      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 mb-4">
-              <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase">Track Record</p>
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> LIVE
-              </span>
+      {/* ── TRACK RECORD (only shown when real data exists) ──────────── */}
+      {summary && summary.total > 0 && (
+        <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 mb-4">
+                <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase">Track Record</p>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> LIVE
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Nos verdicts, vérifiés en temps réel</h2>
+              <p className="text-zinc-500 text-sm mt-2">Aucun autre outil ne publie ses performances passées. Nous si.</p>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Nos verdicts, vérifiés en temps réel</h2>
-            <p className="text-zinc-500 text-sm mt-2">Aucun autre outil ne publie ses performances passées. Nous si.</p>
-          </div>
 
-          {summary && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
               {[
                 { label: "Win Rate", value: `${summary.win_rate.toFixed(0)}%` },
@@ -384,48 +410,48 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-          )}
 
-          {recentAnalyses.length > 0 && (
-            <div className="flex flex-col gap-3 mb-8">
-              {recentAnalyses.map((entry) => {
-                const isUp = (entry.performance_pct ?? 0) >= 0;
-                const isBuy = entry.verdict === "BUY";
-                const isSell = entry.verdict === "SELL";
-                return (
-                  <Link key={entry.id} href={`/analyse/${entry.ticker}`} className="flex items-center justify-between gap-2 sm:gap-4 bg-[#18181b] border border-[#27272a] hover:border-[#3f3f46] rounded-xl px-3 sm:px-5 py-3 sm:py-4 transition-colors group">
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isBuy ? "bg-emerald-500/10 text-emerald-400" : isSell ? "bg-red-500/10 text-red-400" : "bg-yellow-500/10 text-yellow-400"}`}>
-                        {isBuy ? <TrendingUp size={14} /> : isSell ? <TrendingDown size={14} /> : <Minus size={14} />}
+            {recentAnalyses.length > 0 && (
+              <div className="flex flex-col gap-3 mb-8">
+                {recentAnalyses.map((entry) => {
+                  const isUp = (entry.performance_pct ?? 0) >= 0;
+                  const isBuy = entry.verdict === "BUY";
+                  const isSell = entry.verdict === "SELL";
+                  return (
+                    <Link key={entry.id} href={`/analyse/${entry.ticker}`} className="flex items-center justify-between gap-2 sm:gap-4 bg-[#18181b] border border-[#27272a] hover:border-[#3f3f46] rounded-xl px-3 sm:px-5 py-3 sm:py-4 transition-colors group">
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isBuy ? "bg-emerald-500/10 text-emerald-400" : isSell ? "bg-red-500/10 text-red-400" : "bg-yellow-500/10 text-yellow-400"}`}>
+                          {isBuy ? <TrendingUp size={14} /> : isSell ? <TrendingDown size={14} /> : <Minus size={14} />}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="font-bold text-white text-sm">{entry.ticker}</span>
+                          <span className="text-zinc-500 text-sm ml-2 truncate hidden sm:inline">{entry.name}</span>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <span className="font-bold text-white text-sm">{entry.ticker}</span>
-                        <span className="text-zinc-500 text-sm ml-2 truncate hidden sm:inline">{entry.name}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4 flex-shrink-0">
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isBuy ? "bg-emerald-500/10 text-emerald-400" : isSell ? "bg-red-500/10 text-red-400" : "bg-yellow-500/10 text-yellow-400"}`}>
-                        {isBuy ? "Sous-évalué" : isSell ? "Surévalué" : "Juste valeur"}
-                      </span>
-                      {entry.performance_pct != null && (
-                        <span className={`text-sm font-bold w-16 text-right ${isUp ? "text-emerald-400" : "text-red-400"}`}>
-                          {isUp ? "+" : ""}{entry.performance_pct.toFixed(1)}%
+                      <div className="flex items-center gap-4 flex-shrink-0">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isBuy ? "bg-emerald-500/10 text-emerald-400" : isSell ? "bg-red-500/10 text-red-400" : "bg-yellow-500/10 text-yellow-400"}`}>
+                          {isBuy ? "Sous-évalué" : isSell ? "Surévalué" : "Juste valeur"}
                         </span>
-                      )}
-                      <span className="text-[#C9A84C] text-xs group-hover:translate-x-0.5 transition-transform">→</span>
-                    </div>
-                  </Link>
-                );
-              })}
+                        {entry.performance_pct != null && (
+                          <span className={`text-sm font-bold w-16 text-right ${isUp ? "text-emerald-400" : "text-red-400"}`}>
+                            {isUp ? "+" : ""}{entry.performance_pct.toFixed(1)}%
+                          </span>
+                        )}
+                        <span className="text-[#C9A84C] text-xs group-hover:translate-x-0.5 transition-transform">→</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+            <div className="text-center">
+              <Link href="/track-record" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 px-5 py-2.5 rounded-lg transition-all">
+                Voir le Track Record complet →
+              </Link>
             </div>
-          )}
-          <div className="text-center">
-            <Link href="/track-record" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 px-5 py-2.5 rounded-lg transition-all">
-              Voir le Track Record complet →
-            </Link>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── FEATURES ─────────────────────────────────────────────────── */}
       <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
@@ -500,103 +526,31 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── TÉMOIGNAGES ─────────────────────────────────────────────── */}
+      {/* ── COMMUNAUTÉ ──────────────────────────────────────────────── */}
       <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Témoignages</p>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Ce qu&apos;en pensent nos utilisateurs</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              {
-                prenom: "Thomas", initiale: "T", profil: "Investisseur particulier — 9 ans d'expérience", ville: "Lyon", note: 5,
-                texte: "J'ai analysé TotalEnergies avec ValuEngine avant de renforcer ma position. Le DCF m'a montré un upside de 22% que j'avais pas vu avec mes propres calculs Excel. L'analyse IA Bull/Bear était vraiment bien construite — pas du bullshit générique.",
-              },
-              {
-                prenom: "Sarah", initiale: "S", profil: "Analyste financière junior", ville: "Paris", note: 5,
-                texte: "Enfin un outil sérieux en français. J'utilisais Simply Wall St mais l'interface était en anglais et les données sur les actions françaises étaient souvent fausses. Là sur LVMH et Sanofi les fondamentaux sont corrects et le SWOT est vraiment pertinent.",
-              },
-              {
-                prenom: "Marc", initiale: "M", profil: "Ingénieur — investisseur depuis 4 ans", ville: "Bordeaux", note: 5,
-                texte: "La matrice de sensibilité DCF c'est ce qui m'a convaincu. Je modifie le WACC et le taux de croissance, je vois instantanément l'impact sur la valorisation. C'est ce que je faisais sur Excel depuis des heures, là c'est en 30 secondes.",
-              },
-              {
-                prenom: "Julie", initiale: "J", profil: "Étudiante en finance — Master CCA", ville: "Toulouse", note: 4,
-                texte: "J'utilise ValuEngine pour mes études de cas. Le modèle DCF est bien implémenté et les ratios de trading comps m'évitent de chercher les données manuellement. L'analyse Bull/Bear IA est un vrai plus pour structurer mes présentations.",
-              },
-              {
-                prenom: "Karim", initiale: "K", profil: "Chef de projet — portefeuille long terme", ville: "Marseille", note: 5,
-                texte: "J'avais essayé Morningstar et AlphaSpread. Morningstar c'est trop cher, AlphaSpread c'est en anglais avec des données approximatives sur le CAC 40. ValuEngine c'est le seul qui fait du DCF sérieux sur les valeurs françaises avec une interface propre.",
-              },
-            ].map((t, idx) => (
-              <div
-                key={idx}
-                className={`bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-2xl p-6 hover:border-[#3f3f46] transition-colors ${idx >= 3 ? "hidden md:block" : ""}`}
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-[rgba(201,168,76,0.12)] border border-[rgba(201,168,76,0.25)] flex items-center justify-center text-[#C9A84C] font-bold text-sm">
-                    {t.initiale}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white">{t.prenom}</p>
-                    <p className="text-[11px] text-zinc-500 truncate">{t.profil}</p>
-                  </div>
-                  <span className="text-[10px] text-zinc-600 bg-zinc-800/50 px-2 py-0.5 rounded-full">{t.ville}</span>
-                </div>
-                <div className="flex gap-0.5 mb-3">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <span key={i} className={`text-xs ${i < t.note ? "text-[#C9A84C]" : "text-zinc-700"}`}>★</span>
-                  ))}
-                </div>
-                <p className="text-xs text-zinc-400 leading-relaxed italic">&ldquo;{t.texte}&rdquo;</p>
-              </div>
-            ))}
-          </div>
-          <p className="text-[10px] text-zinc-600 text-center mt-8 max-w-xl mx-auto leading-relaxed">
-            Les t&eacute;moignages pr&eacute;sent&eacute;s sont des exemples illustratifs bas&eacute;s sur des cas d&apos;usage r&eacute;els. Les pr&eacute;noms et profils ont &eacute;t&eacute; modifi&eacute;s pour prot&eacute;ger la vie priv&eacute;e des utilisateurs. Les r&eacute;sultats peuvent varier.
+        <div className="max-w-3xl mx-auto text-center">
+          <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Communauté</p>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">Rejoint par des investisseurs particuliers partout en France</h2>
+          <p className="text-sm text-zinc-400 mb-8">
+            Parle-nous de ton expérience :{" "}
+            <a href="mailto:contact@valuengine.fr" className="text-[#C9A84C] hover:underline">contact@valuengine.fr</a>
           </p>
-        </div>
-      </section>
-
-      {/* ── ILS EN PARLENT — Social Proof badges ─────────────────────── */}
-      <section className="relative z-10 py-12 sm:py-16 px-4 sm:px-6 border-t border-[#27272a]">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-6">Ils en parlent</p>
-          <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap opacity-50 hover:opacity-80 transition-opacity">
-            {/* Reddit */}
-            <div className="flex items-center gap-2 text-zinc-500">
-              <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current"><path d="M12 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0zm5.01 13.38c.15.36.23.75.23 1.14 0 2.35-2.46 4.26-5.5 4.26s-5.5-1.91-5.5-4.26c0-.39.08-.78.23-1.14a1.56 1.56 0 01-.66-1.28 1.58 1.58 0 012.69-1.12c1.07-.74 2.5-1.2 4.08-1.27l.77-3.58a.32.32 0 01.38-.24l2.5.53a1.12 1.12 0 112.1.45l-2.34-.5-.68 3.16c1.5.1 2.87.55 3.89 1.27a1.58 1.58 0 012.04 1.5 1.56 1.56 0 01-.66 1.28zM9.5 13.5a1.25 1.25 0 100 2.5 1.25 1.25 0 000-2.5zm5 0a1.25 1.25 0 100 2.5 1.25 1.25 0 000-2.5zm-4.86 3.75c-.08-.08-.08-.2 0-.28.08-.08.2-.08.28 0 .56.56 1.35.84 2.08.84s1.52-.28 2.08-.84c.08-.08.2-.08.28 0 .08.08.08.2 0 .28-.64.64-1.5.96-2.36.96s-1.72-.32-2.36-.96z"/></svg>
-              <span className="text-xs font-semibold">r/vosfinances</span>
-            </div>
-            {/* Product Hunt */}
-            <div className="flex items-center gap-2 text-zinc-500">
-              <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2zm-1.5 5v10h2v-3.5h1.75c2.347 0 3.75-1.403 3.75-3.25S16.597 7 14.25 7H10.5zm2 2h1.75c1.103 0 1.75.647 1.75 1.25s-.647 1.25-1.75 1.25H12.5V9z"/></svg>
-              <span className="text-xs font-semibold">Product Hunt</span>
-            </div>
-            {/* Twitter/X */}
-            <div className="flex items-center gap-2 text-zinc-500">
-              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              <span className="text-xs font-semibold">@ValuEngine</span>
-            </div>
-            {/* LinkedIn */}
-            <div className="flex items-center gap-2 text-zinc-500">
-              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-              <span className="text-xs font-semibold">LinkedIn</span>
-            </div>
-          </div>
-
-          {/* Presse & Médias — prêt à remplir */}
-          <div className="mt-8 pt-6 border-t border-[#27272a]/50">
-            <p className="text-[10px] font-bold text-zinc-600 tracking-widest uppercase mb-4">Presse &amp; Médias</p>
-            <div className="flex items-center justify-center gap-8 flex-wrap text-zinc-600 text-xs">
-              <span className="border border-zinc-800 px-4 py-2 rounded-lg opacity-40">Votre logo ici</span>
-              <span className="border border-zinc-800 px-4 py-2 rounded-lg opacity-40">Votre logo ici</span>
-              <span className="border border-zinc-800 px-4 py-2 rounded-lg opacity-40">Votre logo ici</span>
-            </div>
+          <div className="flex items-center justify-center gap-4 sm:gap-6 flex-wrap">
+            <a href="https://x.com/ValuEngine_" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 px-4 py-2.5 rounded-lg transition-all text-xs font-semibold">
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              @ValuEngine_
+            </a>
+            <a href="https://valuengine.substack.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 px-4 py-2.5 rounded-lg transition-all text-xs font-semibold">
+              Substack
+            </a>
+            <a href="https://reddit.com/r/vosfinances" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 px-4 py-2.5 rounded-lg transition-all text-xs font-semibold">
+              r/vosfinances
+            </a>
           </div>
         </div>
       </section>
+
+      {/* Section "Ils en parlent" et Presse supprimées — pas de mentions réelles encore */}
 
       {/* ── PRICING ──────────────────────────────────────────────────── */}
       <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
@@ -674,7 +628,13 @@ export default function LandingPage() {
                 Passer Pro <ChevronRight size={16} />
               </button>
               {checkoutErr && <p className="text-[#ff4d6d] text-xs text-center mt-2">{checkoutErr}</p>}
-              <p className="text-center text-zinc-400 text-sm mt-3">✓ Sans engagement · Annulable à tout moment</p>
+              <div className="flex items-center justify-center gap-2 flex-wrap text-[#7a9bb5] text-xs mt-3">
+                <span>Paiement sécurisé par Stripe</span>
+                <span className="text-zinc-700">·</span>
+                <span>Annulable à tout moment</span>
+                <span className="text-zinc-700">·</span>
+                <span>Données hébergées en UE</span>
+              </div>
             </div>
           </div>
         </div>
@@ -730,7 +690,7 @@ export default function LandingPage() {
             <a href="mailto:contact@valuengine.fr" className="hover:text-zinc-400 transition-colors">Contact</a>
           </div>
           <p className="text-zinc-600 text-xs text-center max-w-sm">
-            Outil d&apos;aide à la décision uniquement. Ne constitue pas un conseil en investissement.
+            Outil d&apos;analyse éducatif uniquement. Ne constitue pas un conseil en investissement au sens de la directive MIF II.
           </p>
         </div>
       </footer>

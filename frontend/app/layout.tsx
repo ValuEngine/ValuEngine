@@ -17,15 +17,20 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://valuengine.fr"),
   openGraph: {
     title: "ValuEngine — Analyse boursière IA pour investisseurs français",
-    description: "Valorise n'importe quelle action en 60 secondes : DCF interactif, analyse IA Bull/Bear, SWOT et PESTLE. L'outil d'analyse fondamentale en français.",
+    description: "Analyse DCF + IA pour investisseurs retail francophones. Gratuit, sans carte bancaire.",
     type: "website",
     url: "https://valuengine.fr",
+    siteName: "ValuEngine",
+    locale: "fr_FR",
     images: [{ url: "/og-image.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
+    site: "@ValuEngine_",
+    creator: "@ValuEngine_",
     title: "ValuEngine — Analyse boursière IA pour investisseurs français",
     description: "Valorise n'importe quelle action en 60 secondes : DCF interactif, analyse IA Bull/Bear, SWOT et PESTLE.",
+    images: ["/og-image.png"],
   },
   icons: {
     icon: "/favicon.svg",
