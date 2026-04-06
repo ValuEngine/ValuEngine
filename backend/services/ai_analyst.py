@@ -793,20 +793,18 @@ def get_comparison_analysis(ticker1_data: dict, ticker2_data: dict) -> str:
     client = Anthropic(api_key=api_key)
 
     def _summarize(d: dict) -> str:
-        c = d.get("company", {})
-        dcf = d.get("dcf", {})
+        # Accepts flat dict from main.py build_company() — keys at top level
         return (
-            f"{c.get('ticker', '?')} ({c.get('name', '?')}) — "
-            f"Prix: ${c.get('price', 0):.2f}, "
-            f"Valeur intrinsèque DCF: ${dcf.get('intrinsic_value', 0):.2f}, "
-            f"Upside: {dcf.get('upside_pct', 0):.1f}%, "
+            f"{d.get('ticker', '?')} ({d.get('name', '?')}) — "
+            f"Prix: ${d.get('price', 0):.2f}, "
+            f"Valeur intrinsèque DCF: ${d.get('intrinsic_value', 0):.2f}, "
+            f"Upside: {d.get('upside_pct', 0):.1f}%, "
             f"Verdict: {d.get('verdict', 'N/A')}, "
-            f"P/E: {c.get('pe_ratio') or 'N/A'}, "
-            f"EV/EBITDA: {c.get('ev_ebitda') or 'N/A'}, "
-            f"Marge nette: {(c.get('profit_margin') or 0) * 100:.1f}%, "
-            f"ROIC: N/A, "
-            f"Croissance CA: {(c.get('revenue_growth') or 0) * 100:.1f}%, "
-            f"Secteur: {c.get('sector', 'N/A')}"
+            f"P/E: {d.get('pe_ratio') or 'N/A'}, "
+            f"EV/EBITDA: {d.get('ev_ebitda') or 'N/A'}, "
+            f"Marge nette: {(d.get('profit_margin') or 0) * 100:.1f}%, "
+            f"Croissance CA: {(d.get('revenue_growth') or 0) * 100:.1f}%, "
+            f"FCF: {d.get('free_cash_flow', 'N/A')}"
         )
 
     prompt = f"""Compare ces deux entreprises en 3-4 phrases concises en français.

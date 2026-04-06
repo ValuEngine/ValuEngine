@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { ArrowRight, Plus, X, Loader2 } from "lucide-react";
+import { ArrowRight, Plus, X, Loader2, Search } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import ProWelcomeModal from "@/components/ProWelcomeModal";
 import OnboardingModal from "@/components/OnboardingModal";
@@ -40,6 +40,88 @@ const MARKET_FALLBACK: MarketItem[] = [
 ];
 
 const POPULAR_TICKERS = ["MC.PA", "AAPL", "TTE.PA", "TSLA", "BNP.PA", "NVDA"];
+
+const FIRST_RUN_TICKERS = [
+  { symbol: "MC.PA", name: "LVMH" },
+  { symbol: "AAPL", name: "Apple" },
+  { symbol: "TTE.PA", name: "TotalEnergies" },
+  { symbol: "NVDA", name: "Nvidia" },
+  { symbol: "AIR.PA", name: "Airbus" },
+  { symbol: "MSFT", name: "Microsoft" },
+];
+
+function FirstRunHero({ onAnalyze }: { onAnalyze: (ticker: string) => void }) {
+  const [ticker, setTicker] = useState("MC.PA");
+
+  return (
+    <div className="flex flex-col items-center justify-center py-12 sm:py-16 text-center px-4 rounded-xl border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm">
+      {/* Icon */}
+      <div className="w-14 h-14 rounded-full bg-[#C9A84C]/10 border border-[#C9A84C]/30 flex items-center justify-center mb-5 animate-pulse">
+        <Search className="w-6 h-6 text-[#C9A84C]" />
+      </div>
+
+      {/* Title */}
+      <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
+        Analyse ta première action en 60 secondes
+      </h2>
+      <p className="text-zinc-400 text-sm mb-7 max-w-md">
+        DCF automatisé, analyse Bull/Bear IA, valeur intrinsèque.
+        Les mêmes outils que les professionnels.
+      </p>
+
+      {/* Input + button */}
+      <div className="flex gap-2 w-full max-w-sm mb-4">
+        <input
+          value={ticker}
+          onChange={(e) => setTicker(e.target.value.toUpperCase())}
+          onKeyDown={(e) => e.key === "Enter" && ticker && onAnalyze(ticker)}
+          placeholder="Ex: AAPL, MC.PA, TSLA..."
+          className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:border-[#C9A84C]/50 outline-none transition-all"
+        />
+        <button
+          onClick={() => onAnalyze(ticker)}
+          disabled={!ticker}
+          className="bg-[#C9A84C] text-black font-bold rounded-xl px-5 py-3 hover:bg-[#b8943d] transition-all disabled:opacity-50 whitespace-nowrap"
+        >
+          Analyser →
+        </button>
+      </div>
+
+      {/* Popular tickers */}
+      <div className="flex flex-wrap gap-2 justify-center">
+        {FIRST_RUN_TICKERS.map((t) => (
+          <button
+            key={t.symbol}
+            onClick={() => setTicker(t.symbol)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+              ticker === t.symbol
+                ? "bg-[#C9A84C]/15 border-[#C9A84C]/40 text-[#C9A84C]"
+                : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-600"
+            }`}
+          >
+            {t.symbol} · {t.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Reassurance stats */}
+      <div className="flex gap-8 mt-8 text-center">
+        <div>
+          <div className="text-[#C9A84C] font-bold text-lg">60s</div>
+          <div className="text-zinc-500 text-[11px]">Analyse complète</div>
+        </div>
+        <div>
+          <div className="text-[#C9A84C] font-bold text-lg">5 ans</div>
+          <div className="text-zinc-500 text-[11px]">Données financières</div>
+        </div>
+        <div>
+          <div className="text-[#C9A84C] font-bold text-lg">IA</div>
+          <div className="text-zinc-500 text-[11px]">Bull/Bear réel</div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function verdictColor(verdict: string) {
   if (verdict === "BUY")  return "bg-[rgba(63,185,80,0.12)] text-[#3fb950] border border-[rgba(63,185,80,0.25)]";
@@ -222,10 +304,7 @@ export default function DashboardPage() {
         <div className="mb-8 anim-3">
           <p className="text-xs font-bold uppercase tracking-[2px] text-zinc-500 mb-4">Analyses récentes</p>
           {recent.length === 0 ? (
-            <div className="rounded-xl p-8 text-center border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm">
-              <p className="text-sm text-zinc-500">Aucune analyse récente</p>
-              <p className="text-xs mt-1 text-zinc-600">Lance ta première analyse ci-dessus</p>
-            </div>
+            <FirstRunHero onAnalyze={(t) => router.push(`/analyze?ticker=${t}`)} />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {recent.map((entry) => (
