@@ -1,11 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ── NEW DESIGN SYSTEM — Revolut-inspired ─────────────────────── */
+/* ── NEW DESIGN SYSTEM — Premium SaaS ────────────────────────── */
 :root {
+  --font-display: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
   --font-inter: 'Inter', system-ui, sans-serif;
 
   /* Backgrounds — 4 niveaux de profondeur */
@@ -126,13 +128,13 @@
   animation: countUp 0.3s ease-out;
 }
 
-/* ── Card system — 4 variants ─────────────────────────────── */
+/* ── Card system — 6 variants ─────────────────────────────── */
 .card {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 16px;
-  padding: 24px;
-  transition: all 0.2s ease;
+  border-radius: 20px;
+  padding: 28px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .card:hover {
   border-color: var(--border-default);
@@ -143,8 +145,8 @@
 .card-highlight {
   background: linear-gradient(135deg, var(--bg-elevated), var(--bg-surface));
   border: 1px solid var(--border-default);
-  border-radius: 20px;
-  padding: 28px;
+  border-radius: 24px;
+  padding: 36px;
   position: relative;
   overflow: hidden;
 }
@@ -161,8 +163,8 @@
 .card-interactive {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 16px;
-  padding: 20px;
+  border-radius: 20px;
+  padding: 24px;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -176,8 +178,54 @@
 .card-pro {
   background: linear-gradient(135deg, #1a1a2e, #1e1830);
   border: 1px solid var(--accent-gold-muted);
+  border-radius: 24px;
+  padding: 36px;
+}
+
+/* Card stat — for big numbers (KPIs, scores) */
+.card-stat {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+}
+.card-stat .stat-value {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+.card-stat .stat-label {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+}
+
+/* Card soft — shadow instead of border (Notion style) */
+.card-soft {
+  background: var(--bg-surface);
+  border: none;
   border-radius: 20px;
   padding: 28px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    0 8px 24px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-soft:hover {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    0 16px 48px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
 /* ── Buttons ──────────────────────────────────────────────── */
@@ -240,6 +288,86 @@
 .btn-pro:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 24px rgba(240, 200, 80, 0.4);
+}
+
+/* ── Typography system — Premium SaaS ────────────────────── */
+.font-display {
+  font-family: var(--font-display);
+}
+.font-body {
+  font-family: var(--font-body);
+}
+
+/* Page titles */
+.text-page-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+@media (max-width: 640px) {
+  .text-page-title { font-size: 26px; }
+}
+
+/* Section titles */
+.text-section-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+/* Card titles */
+.text-card-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+/* Metric values */
+.text-metric {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+/* Metric labels */
+.text-metric-label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ── Page container — max-width for readability ──────────── */
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+@media (min-width: 768px) {
+  .page-container { padding: 0 48px; }
+}
+
+/* ── Section spacing — generous ──────────────────────────── */
+.section-spacing {
+  padding-top: 48px;
+  padding-bottom: 48px;
+}
+@media (min-width: 768px) {
+  .section-spacing {
+    padding-top: 64px;
+    padding-bottom: 64px;
+  }
 }
 
 /* ── Card hover utility ───────────────────────────────────── */

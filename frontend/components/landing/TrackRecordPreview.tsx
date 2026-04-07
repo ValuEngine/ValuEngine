@@ -23,17 +23,17 @@ export default function TrackRecordPreview() {
   if (!summary || summary.total === 0) return null;
 
   return (
-    <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+    <section className="relative z-10 py-20 sm:py-32 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
+        <div className="text-center mb-14">
           <div className="inline-flex items-center gap-2 mb-4">
             <p className="text-xs font-medium tracking-widest uppercase" style={{ color: "var(--accent-primary)" }}>Track Record</p>
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: "var(--color-success)", background: "rgba(0,230,138,0.1)", border: "1px solid rgba(0,230,138,0.2)" }}>
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-0.5 rounded-full" style={{ color: "var(--color-success)", background: "rgba(0,230,138,0.1)", border: "1px solid rgba(0,230,138,0.2)" }}>
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--color-success)" }} /> LIVE
             </span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Nos verdicts, vérifiés en temps réel</h2>
-          <p className="text-sm mt-2" style={{ color: "var(--text-tertiary)" }}>Aucun autre outil ne publie ses performances passées. Nous si.</p>
+          <h2 className="font-display text-2xl sm:text-3xl font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>Nos verdicts, vérifiés en temps réel</h2>
+          <p className="text-[15px] mt-3" style={{ color: "var(--text-tertiary)" }}>Aucun autre outil ne publie ses performances passées. Nous si.</p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
@@ -43,7 +43,7 @@ export default function TrackRecordPreview() {
             { label: "Perf. moyenne", value: `${summary.avg_performance >= 0 ? "+" : ""}${summary.avg_performance.toFixed(1)}%` },
           ].map((s) => (
             <div key={s.label} className="card p-4 text-center">
-              <p className="text-[10px] font-medium uppercase tracking-widest mb-1" style={{ color: "var(--text-tertiary)" }}>{s.label}</p>
+              <p className="text-xs font-medium uppercase tracking-widest mb-1" style={{ color: "var(--text-tertiary)" }}>{s.label}</p>
               <p className="text-xl font-black" style={{ color: "var(--accent-primary)" }}>{s.value}</p>
             </div>
           ))}

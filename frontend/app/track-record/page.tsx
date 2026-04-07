@@ -36,7 +36,7 @@ function VerdictBadge({ verdict }: { verdict: string }) {
   const c = config[verdict] ?? config.HOLD;
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border"
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold border"
       style={{
         color: c.textColor,
         background: c.bgColor,
@@ -179,9 +179,9 @@ export default function TrackRecordPage() {
       <div className="min-h-screen px-4 sm:px-6 md:px-10 py-4 sm:py-8" style={{ color: "var(--text-primary)" }}>
 
         {/* Header */}
-        <div className="mb-8 anim-1">
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+        <div className="mb-12 anim-1">
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="font-display text-3xl font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>
               Track Record
             </h1>
             <span
@@ -226,7 +226,7 @@ export default function TrackRecordPage() {
         </div>
 
         {/* 4 Stat Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8 anim-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-12 anim-2">
           <StatCard
             icon={<Target size={18} style={{ color: "var(--color-success)" }} />}
             label="Win Rate"
@@ -275,7 +275,7 @@ export default function TrackRecordPage() {
               background: "var(--bg-surface)",
             }}
           >
-            <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--text-primary)" }}>
+            <h3 className="font-display text-lg font-semibold mb-6" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
               Performance cumulée des verdicts
             </h3>
             <ResponsiveContainer width="100%" height={220}>
@@ -597,19 +597,17 @@ function StatCard({
   loading: boolean;
 }) {
   return (
-    <div
-      className="card rounded-xl p-4 backdrop-blur-sm"
-    >
-      <div className="flex items-center gap-2 mb-2">
+    <div className="card-stat backdrop-blur-sm">
+      <div className="flex items-center gap-2 mb-2 justify-center">
         {icon}
-        <p className="text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>{label}</p>
+        <p className="text-metric-label">{label}</p>
       </div>
       {loading ? (
-        <div className="skeleton h-7 w-16 rounded mb-1" />
+        <div className="skeleton h-8 w-20 rounded mb-1 mx-auto" />
       ) : (
-        <p className="text-2xl font-black" style={{ color: valueColor }}>{value}</p>
+        <p className="stat-value" style={{ color: valueColor }}>{value}</p>
       )}
-      <p className="text-[13px] font-medium mt-0.5" style={{ color: "var(--text-tertiary)" }}>{sub}</p>
+      <p className="stat-label">{sub}</p>
     </div>
   );
 }

@@ -67,9 +67,9 @@ export default function AnomaliesSection({ ticker, trialPro = false }: { ticker:
 
   if (loading) {
     return (
-      <div className="mb-8">
-        <p className="text-[13px] font-medium mb-4" style={{ color: "var(--accent-primary)" }}>Signaux & Anomalies</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="mb-12">
+        <p className="text-[13px] font-medium mb-4 font-display" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>Signaux & Anomalies</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {[0, 1, 2, 3].map(i => (
             <div key={i} className="rounded-2xl h-28 animate-pulse" style={{ background: "var(--bg-surface)" }} />
           ))}
@@ -80,8 +80,8 @@ export default function AnomaliesSection({ ticker, trialPro = false }: { ticker:
 
   if (error) {
     return (
-      <div className="mb-8">
-        <p className="text-[13px] font-medium mb-4" style={{ color: "var(--accent-primary)" }}>Signaux & Anomalies</p>
+      <div className="mb-12">
+        <p className="text-[13px] font-medium mb-4 font-display" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>Signaux & Anomalies</p>
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400 text-sm">{error}</div>
       </div>
     );
@@ -92,9 +92,9 @@ export default function AnomaliesSection({ ticker, trialPro = false }: { ticker:
   const anomalies = data.anomalies;
 
   return (
-    <div className="mb-8 animate-[fadeIn_0.4s_ease-out]">
+    <div className="mb-12 animate-[fadeIn_0.4s_ease-out]">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-[13px] font-medium" style={{ color: "var(--accent-primary)" }}>
+        <p className="text-[13px] font-medium font-display" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>
           Signaux détectés : {anomalies.length}
         </p>
         <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
@@ -113,7 +113,7 @@ export default function AnomaliesSection({ ticker, trialPro = false }: { ticker:
         </div>
       ) : (
         <div className="relative">
-          <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${!canAccess ? "blur-sm" : ""}`}>
+          <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${!canAccess ? "blur-sm" : ""}`}>
             {anomalies.map((a, i) => {
               const style = SIGNAL_STYLES[a.signal] || SIGNAL_STYLES.ATTENTION;
               return (

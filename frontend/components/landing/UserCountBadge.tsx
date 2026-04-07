@@ -19,7 +19,7 @@ export default function UserCountBadge() {
     <div className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
       <div className="flex -space-x-1.5">
         {["T", "S", "M", "K"].map((l, i) => (
-          <div key={i} className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-[9px] font-bold" style={{ background: "rgba(108,92,231,0.15)", borderColor: "var(--bg-base)", color: "var(--accent-primary)" }}>{l}</div>
+          <div key={i} className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold" style={{ background: "rgba(108,92,231,0.15)", borderColor: "var(--bg-base)", color: "var(--accent-primary)" }}>{l}</div>
         ))}
       </div>
       <span className="text-xs" style={{ color: "var(--text-secondary)" }}>

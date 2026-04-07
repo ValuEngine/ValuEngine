@@ -201,7 +201,7 @@ function ModalContent({ onClose }: { onClose: () => void }) {
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-white leading-tight">{f.title}</p>
-                    <p className="text-[11px] text-zinc-500 leading-snug mt-0.5">{f.desc}</p>
+                    <p className="text-xs text-zinc-500 leading-snug mt-0.5">{f.desc}</p>
                   </div>
                 </div>
               ))}

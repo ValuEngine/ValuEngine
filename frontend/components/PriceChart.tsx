@@ -58,7 +58,7 @@ export function PriceChart({ ticker, currentPrice }: Props) {
   return (
     <div className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(108,92,231,0.14)] rounded-2xl p-6">
       <div className="flex items-center justify-between mb-5">
-        <p className="text-[11px] font-bold uppercase tracking-[2px]" style={{ color: "var(--accent-primary)" }}>Cours historique</p>
+        <p className="text-xs font-bold uppercase tracking-[2px]" style={{ color: "var(--accent-primary)" }}>Cours historique</p>
         <div className="flex items-center gap-1">
           {PERIODS.map((p) => (
             <button

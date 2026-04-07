@@ -82,9 +82,9 @@ function KPI({ label, value, sub, color, tooltip }: { label: string; value: stri
 function Section({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="mb-6">
+    <div className="mb-12">
       <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between mb-4 group">
-        <span className="text-lg font-semibold" style={{ color: "var(--accent-primary)" }}>{title}</span>
+        <span className="text-lg font-semibold font-display" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>{title}</span>
         <span className="transition-colors" style={{ color: "var(--text-secondary)" }}>
           {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </span>
@@ -182,15 +182,15 @@ function SkeletonDashboard({ ticker }: { ticker: string }) {
       </div>
 
       {/* Skeleton cards */}
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-12">
         <div className="space-y-2">
           <SkeletonCard className="h-8 w-56" />
           <SkeletonCard className="h-4 w-36" />
         </div>
         <SkeletonCard className="h-10 w-28" />
       </div>
-      <SkeletonCard className="h-36 w-full mb-8" />
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      <SkeletonCard className="h-36 w-full mb-12" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 mb-6">
         {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} className="h-24" />)}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -275,7 +275,7 @@ function SwotSection({ ticker }: { ticker: string }) {
         className="rounded-2xl p-6 mb-6 border"
         style={{ background: "rgba(19,32,50,0.8)", borderColor: "rgba(108,92,231,0.14)" }}
       >
-        <p className="text-lg font-semibold mb-4" style={{ color: "var(--accent-primary)" }}>Analyse SWOT</p>
+        <p className="text-lg font-semibold mb-4 font-display" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>Analyse SWOT</p>
         {error && <p className="text-sm mb-4" style={{ color: "var(--color-danger)" }}>{error}</p>}
         <button
           onClick={generate}
@@ -298,7 +298,7 @@ function SwotSection({ ticker }: { ticker: string }) {
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-lg font-semibold" style={{ color: "var(--accent-primary)" }}>Analyse SWOT</p>
+        <p className="text-lg font-semibold font-display" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>Analyse SWOT</p>
         <button
           onClick={() => setData(null)}
           className="text-xs transition-colors"
@@ -309,7 +309,7 @@ function SwotSection({ ticker }: { ticker: string }) {
           Régénérer
         </button>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {quadrants.map(({ key, label, items, border, bg }) => (
           <div key={key} className="rounded-2xl p-5" style={{ background: bg, border: `1px solid ${border}40` }}>
             <p className="text-[13px] font-medium uppercase tracking-wider mb-3" style={{ color: border }}>{label}</p>
@@ -358,7 +358,7 @@ function PestleSection({ ticker }: { ticker: string }) {
         className="rounded-2xl p-6 border"
         style={{ background: "rgba(19,32,50,0.8)", borderColor: "rgba(108,92,231,0.14)" }}
       >
-        <p className="text-lg font-semibold mb-4" style={{ color: "var(--accent-primary)" }}>Analyse PESTLE</p>
+        <p className="text-lg font-semibold mb-4 font-display" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>Analyse PESTLE</p>
         {error && <p className="text-sm mb-4" style={{ color: "var(--color-danger)" }}>{error}</p>}
         <button
           onClick={generate}
@@ -383,7 +383,7 @@ function PestleSection({ ticker }: { ticker: string }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-lg font-semibold" style={{ color: "var(--accent-primary)" }}>Analyse PESTLE</p>
+        <p className="text-lg font-semibold font-display" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>Analyse PESTLE</p>
         <button
           onClick={() => setData(null)}
           className="text-xs transition-colors"
@@ -394,7 +394,7 @@ function PestleSection({ ticker }: { ticker: string }) {
           Régénérer
         </button>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {cards.map(({ key, label, icon, text }) => (
           <div
             key={key}
@@ -858,13 +858,13 @@ function AnalyzePage() {
           {/* ── DCF PARAMS PANEL ──────────────────────────────────────── */}
           {data && showAdvanced && (
             <div
-              className="backdrop-blur-sm rounded-2xl p-6 mb-8 animate-[slideUp_0.3s_ease-out] border"
+              className="backdrop-blur-sm rounded-2xl p-6 mb-12 animate-[slideUp_0.3s_ease-out] border"
               style={{
                 background: "rgba(19,32,50,0.8)",
                 borderColor: "rgba(108,92,231,0.18)",
               }}
             >
-              <p className="text-lg font-semibold mb-5" style={{ color: "var(--accent-primary)" }}>
+              <p className="text-lg font-semibold mb-5 font-display" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>
                 Hypothèses DCF — modifiez et relancez l&apos;analyse
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -935,7 +935,7 @@ function AnalyzePage() {
                 borderColor: "rgba(255,84,112,0.2)",
               }}
             >
-              <p className="font-bold text-lg mb-3" style={{ color: "var(--color-danger)" }}>Connexion impossible</p>
+              <p className="font-bold text-lg mb-3 font-display" style={{ color: "var(--color-danger)", letterSpacing: "-0.02em" }}>Connexion impossible</p>
               <p className="text-sm leading-relaxed mb-1" style={{ color: "var(--text-secondary)" }}>{error}</p>
               <p className="text-xs mb-5" style={{ color: "var(--text-tertiary)" }}>Le serveur peut mettre quelques secondes à se réveiller lors de la première requête.</p>
               <button
@@ -959,7 +959,7 @@ function AnalyzePage() {
               >
                 <Search size={24} style={{ color: "var(--accent-primary)" }} />
               </div>
-              <h2 className="text-xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>Entre un ticker pour commencer</h2>
+              <h2 className="text-xl font-bold mb-2 font-display" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>Entre un ticker pour commencer</h2>
               <p className="text-sm max-w-xs" style={{ color: "var(--text-secondary)" }}>
                 Exemples :{" "}
                 {["AAPL", "MC.PA", "TSLA", "TTE.PA", "NVDA"].map((t, i) => (
@@ -1007,7 +1007,7 @@ function AnalyzePage() {
               <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
                 <div>
                   <div className="flex items-center gap-3 flex-wrap">
-                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ color: "var(--text-primary)" }}>{data.company.name}</h1>
+                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight font-display" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>{data.company.name}</h1>
                     <span className="text-xl font-light" style={{ color: "var(--text-tertiary)" }}>·</span>
                     <span className="text-xl font-mono" style={{ color: "var(--text-secondary)" }}>{data.company.ticker}</span>
                     <span
@@ -1085,7 +1085,7 @@ function AnalyzePage() {
                     </p>
                     <VerdictBadge upsidePct={data.dcf.upside_pct} />
                     {data.data_timestamp && (
-                      <p className="text-[11px] mt-2" style={{ color: "var(--text-tertiary)" }}>
+                      <p className="text-xs mt-2" style={{ color: "var(--text-tertiary)" }}>
                         Données mises à jour : {data.data_timestamp}
                       </p>
                     )}
@@ -1150,7 +1150,7 @@ function AnalyzePage() {
 
               {/* ── TAB SYSTEM ─────────────────────────────────────────── */}
               <div
-                className="rounded-xl p-1 mb-8 border"
+                className="rounded-xl p-1 mb-12 border"
                 style={{
                   background: "var(--bg-base)",
                   borderColor: "var(--border-subtle)",
@@ -1168,7 +1168,7 @@ function AnalyzePage() {
                 <div className="animate-fade-in-up">
                   {/* KPI Grid */}
                   <Section title="Fondamentaux clés">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5 sm:gap-6 mb-4">
                       <KPI label="Market Cap"         value={fmt(data.company.market_cap, currencySymbol(data.company.ticker))} tooltip="Capitalisation boursière = prix × nombre d'actions. Reflète la taille de l'entreprise sur le marché." />
                       <KPI label="Chiffre d'affaires" value={fmt(data.company.revenue, currencySymbol(data.company.ticker))} tooltip="Total des ventes de l'entreprise sur les 12 derniers mois (TTM)." />
                       <KPI label="EBITDA"             value={fmt(data.company.ebitda, currencySymbol(data.company.ticker))} tooltip="Bénéfice avant intérêts, impôts, dépréciation et amortissement. Mesure la rentabilité opérationnelle." />
@@ -1180,7 +1180,7 @@ function AnalyzePage() {
                         sub={data.company.free_cash_flow > 0 ? "▲ Génère du cash" : "▼ Consomme du cash"} tooltip="Cash réellement généré par l'activité, après investissements. C'est la base du modèle DCF." />
                       <KPI label="Dette nette"        value={fmt(data.company.net_debt, currencySymbol(data.company.ticker))} tooltip="Dette totale - trésorerie. Si négatif, l'entreprise a plus de cash que de dette." />
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5 sm:gap-6 mb-6">
                       <KPI label="P/E Ratio"   value={data.company.pe_ratio != null ? `${data.company.pe_ratio.toFixed(1)}x` : "N/A"}
                         sub={data.sector_benchmarks?.median_pe
                           ? `Secteur: ${data.sector_benchmarks.median_pe.toFixed(1)}x`
@@ -1212,7 +1212,7 @@ function AnalyzePage() {
 
                   {/* Bull & Bear Case */}
                   <Section title="Bull & Bear Case">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                       {[
                         { key: "bull_case", label: "BULL CASE — Scénario Haussier", color: "var(--color-success)", rawColor: "#00E68A", bg: "rgba(0,230,138,0.05)", border: "rgba(0,230,138,0.2)" },
                         { key: "bear_case", label: "BEAR CASE — Scénario Baissier", color: "var(--color-danger)",  rawColor: "#FF5470", bg: "rgba(255,84,112,0.05)", border: "rgba(255,84,112,0.2)" },
@@ -1259,7 +1259,7 @@ function AnalyzePage() {
                           borderColor: "rgba(108,92,231,0.14)",
                         }}
                       >
-                        <p className="text-lg font-semibold mb-5" style={{ color: "var(--accent-primary)" }}>Modèle DCF</p>
+                        <p className="text-lg font-semibold mb-5 font-display" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>Modèle DCF</p>
                         {[
                           ["Valeur d'entreprise (EV)",   fmt(data.dcf.enterprise_value_dcf, currencySymbol(data.company.ticker)), ""],
                           ["Valeur des fonds propres",    fmt(data.dcf.equity_value, currencySymbol(data.company.ticker)),         ""],
@@ -1315,7 +1315,7 @@ function AnalyzePage() {
                           borderColor: "rgba(108,92,231,0.14)",
                         }}
                       >
-                        <p className="text-lg font-semibold mb-5" style={{ color: "var(--accent-primary)" }}>Projections Free Cash Flow</p>
+                        <p className="text-lg font-semibold mb-5 font-display" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>Projections Free Cash Flow</p>
                         <FCFChart projections={data.dcf.fcf_projections} />
                       </div>
                     </div>
@@ -1366,13 +1366,13 @@ function AnalyzePage() {
                             <span className="text-sm font-bold" style={{ color: "var(--accent-primary)" }}>{(data.suggested_wacc.suggested_wacc * 100).toFixed(1)}%</span>
                             <button
                               onClick={() => { setWacc(Math.round(data.suggested_wacc!.suggested_wacc * 100)); }}
-                              className="text-[11px] px-2 py-1 rounded-lg transition-all hover:opacity-80"
+                              className="text-xs px-2 py-1 rounded-lg transition-all hover:opacity-80"
                               style={{ color: "var(--accent-primary)", border: "1px solid rgba(108,92,231,0.3)" }}
                             >
                               Appliquer
                             </button>
                           </div>
-                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs" style={{ color: "var(--text-tertiary)" }}>
                             <span>Ke (Cost of Equity) = {(data.suggested_wacc.cost_of_equity * 100).toFixed(1)}%</span>
                             <span>Kd (Cost of Debt) = {(data.suggested_wacc.cost_of_debt * 100).toFixed(1)}%</span>
                             <span>E/V = {(data.suggested_wacc.equity_weight * 100).toFixed(0)}%</span>
@@ -1381,7 +1381,7 @@ function AnalyzePage() {
                             <span>β = {data.suggested_wacc.beta_used}</span>
                             <span>ERP = {(data.suggested_wacc.market_risk_premium * 100).toFixed(1)}%</span>
                           </div>
-                          <p className="text-[10px] mt-2" style={{ color: "var(--text-tertiary)" }}>
+                          <p className="text-xs mt-2" style={{ color: "var(--text-tertiary)" }}>
                             WACC = Ke × E/V + Kd × (1-t) × D/V — Ke = Rf + β × ERP
                           </p>
                         </div>
@@ -1455,7 +1455,7 @@ function AnalyzePage() {
                     borderColor: "rgba(240,200,80,0.25)",
                   }}
                 >
-                  <p className="font-bold text-lg mb-2" style={{ color: "var(--accent-gold)" }}>
+                  <p className="font-bold text-lg mb-2 font-display" style={{ color: "var(--accent-gold)", letterSpacing: "-0.02em" }}>
                     Tu viens de voir ValuEngine Pro en action &#10022;
                   </p>
                   <p className="mb-6" style={{ color: "var(--text-secondary)" }}>

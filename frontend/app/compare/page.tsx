@@ -139,13 +139,13 @@ function CompareContent() {
     <AppLayout>
       <div className="min-h-screen px-4 sm:px-6 md:px-10 py-4 sm:py-8" style={{ color: "var(--text-primary)" }}>
 
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ color: "var(--text-primary)" }}>Comparer deux titres</h1>
+        <div className="mb-12">
+          <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>Comparer deux titres</h1>
           <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>Analyse côte à côte avec valorisation DCF</p>
         </div>
 
         {/* Inputs */}
-        <div className="card p-6 mb-6">
+        <div className="card p-6 mb-10">
           <div className="flex flex-col sm:flex-row gap-4 items-end">
             <div className="flex-1">
               <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-secondary)" }}>Ticker 1</label>
@@ -192,7 +192,7 @@ function CompareContent() {
 
         {/* Popular comparisons */}
         {!data1 && !data2 && !loading && (
-          <div className="mb-8">
+          <div className="mb-12">
             <p className="text-sm font-medium mb-3" style={{ color: "var(--text-tertiary)" }}>Comparaisons populaires</p>
             <div className="flex flex-wrap gap-2">
               {POPULAR_PAIRS.map(([a, b]) => (
@@ -263,11 +263,11 @@ function CompareContent() {
                     <div className="px-4 sm:px-6 py-4 text-xs sm:text-sm font-medium" style={{ color: "var(--text-secondary)" }}>{row.label}</div>
                     <div className="px-4 sm:px-6 py-4 text-xs sm:text-sm font-bold" style={{ color: better === 1 ? "var(--accent-primary)" : "var(--text-primary)" }}>
                       {v1 != null ? row.format(v1) : "N/A"}
-                      {better === 1 && <span className="ml-1 text-[10px] font-black" style={{ color: "var(--accent-primary)" }}>&#9733;</span>}
+                      {better === 1 && <span className="ml-1 text-xs font-black" style={{ color: "var(--accent-primary)" }}>&#9733;</span>}
                     </div>
                     <div className="px-4 sm:px-6 py-4 text-xs sm:text-sm font-bold" style={{ color: better === 2 ? "var(--accent-primary)" : "var(--text-primary)", borderLeft: "1px solid var(--border-subtle)" }}>
                       {v2 != null ? row.format(v2) : "N/A"}
-                      {better === 2 && <span className="ml-1 text-[10px] font-black" style={{ color: "var(--accent-primary)" }}>&#9733;</span>}
+                      {better === 2 && <span className="ml-1 text-xs font-black" style={{ color: "var(--accent-primary)" }}>&#9733;</span>}
                     </div>
                   </div>
                 );
@@ -285,8 +285,8 @@ function CompareContent() {
             <div className="card p-6 mb-6 relative overflow-hidden">
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-lg">&#129302;</span>
-                <h3 className="text-base font-bold" style={{ color: "var(--text-primary)" }}>Analyse comparative IA</h3>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(240,200,80,0.15)", color: "var(--accent-gold)", border: "1px solid rgba(240,200,80,0.3)" }}>PRO</span>
+                <h3 className="font-display text-base font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>Analyse comparative IA</h3>
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(240,200,80,0.15)", color: "var(--accent-gold)", border: "1px solid rgba(240,200,80,0.3)" }}>PRO</span>
               </div>
 
               {aiLoading ? (
@@ -317,7 +317,7 @@ function CompareContent() {
             </div>
 
             {/* CTA — Analyse complète */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <button
                 onClick={() => router.push(`/analyze?ticker=${data1.company.ticker}`)}
                 className="flex items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-bold transition-all"

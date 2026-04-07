@@ -1,23 +1,9 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { getAdminClient } from "@/lib/supabase";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
-const CACHE_TTL = 10 * 60 * 1000; // 10 min
-
-interface RawAnalysis {
-  id: string;
-  ticker: string;
-  ticker_name: string | null;
-  company_name: string | null;
-  verdict: string;
-  price_at_analysis: number | null;
-  price: number | null;
-  price_now: number | null;
-  performance_pct: number | null;
-  created_at: string;
-}
+const CACHE_TTL = 5 * 60 * 1000; // 5 min
 
 export interface TrackRecordEntry {
   id: string;
@@ -43,7 +29,7 @@ export interface TrackRecordResponse {
   is_demo: boolean;
 }
 
-/* ── Demo data (shown when < 10 real analyses exist) ──────────────────── */
+/* ── Demo data (shown only when 0 real analyses exist) ──────────────── */
 
 const DEMO_ENTRIES: TrackRecordEntry[] = [
   { id: "demo-1",  ticker: "NVDA",   name: "NVIDIA Corporation",   verdict: "BUY",  price_entry: 487.20, price_now: 721.50, performance_pct: 48.10,  created_at: "2024-09-14T10:00:00Z" },
@@ -83,7 +69,6 @@ function computeSummary(entries: TrackRecordEntry[]): TrackRecordResponse["summa
     ? +(allWithPerf.reduce((s, e) => s + (e.performance_pct ?? 0), 0) / allWithPerf.length).toFixed(2)
     : 0;
 
-  // Best performing entry (for BUY: highest gain, for SELL: most negative = best short)
   let best_ticker = "";
   let best_performance = 0;
   for (const e of entries) {
@@ -105,86 +90,37 @@ export async function GET() {
     return NextResponse.json(_cache.data);
   }
 
-  const sb = getAdminClient();
-
-  const { data: analyses, error } = await sb
-    .from("analyses")
-    .select("id, ticker, ticker_name, company_name, verdict, price_at_analysis, price, price_now, performance_pct, created_at")
-    .not("verdict", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(50);
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  // If fewer than 10 real analyses, return demo data
-  if (!analyses || analyses.length < 10) {
-    const demoResult: TrackRecordResponse = {
-      entries: DEMO_ENTRIES,
-      summary: computeSummary(DEMO_ENTRIES),
-      is_demo: true,
-    };
-    _cache = { data: demoResult, ts: Date.now() };
-    return NextResponse.json(demoResult);
-  }
-
-  // Collect unique tickers that have an entry price
-  const withPrice = (analyses as RawAnalysis[]).filter(
-    (a) => (a.price_at_analysis ?? a.price) != null
-  );
-  const uniqueTickers = Array.from(new Set(withPrice.map((a) => a.ticker)));
-
-  // Batch fetch live prices from FastAPI
-  const priceMap: Record<string, number> = {};
-  if (uniqueTickers.length > 0 && API_BASE) {
+  // Try fetching from backend (which does live price updates)
+  if (API_BASE) {
     try {
-      const r = await fetch(
-        `${API_BASE}/api/quotes?tickers=${uniqueTickers.join(",")}`,
-        { signal: AbortSignal.timeout(8000) }
-      );
+      const r = await fetch(`${API_BASE}/api/track-record/entries`, {
+        signal: AbortSignal.timeout(10000),
+      });
       if (r.ok) {
-        const quotes: Array<{ ticker: string; price: number }> = await r.json();
-        for (const q of quotes) priceMap[q.ticker] = q.price;
+        const backendData: { entries: TrackRecordEntry[]; summary: { total: number; wins: number; win_rate: number; avg_performance: number } } = await r.json();
+
+        if (backendData.entries && backendData.entries.length > 0) {
+          const fullSummary = computeSummary(backendData.entries);
+          const result: TrackRecordResponse = {
+            entries: backendData.entries,
+            summary: fullSummary,
+            is_demo: false,
+          };
+          _cache = { data: result, ts: Date.now() };
+          return NextResponse.json(result);
+        }
       }
-    } catch { /* fall back to stored price_now */ }
-  }
-
-  // Compute performance, build entries + update batch
-  const updates: Array<{ id: string; price_now: number; performance_pct: number }> = [];
-  const entries: TrackRecordEntry[] = [];
-
-  for (const a of analyses as RawAnalysis[]) {
-    const priceEntry = a.price_at_analysis ?? a.price;
-    const priceNow = priceMap[a.ticker] ?? a.price_now ?? null;
-    let perf = a.performance_pct ?? null;
-
-    if (priceEntry && priceNow) {
-      perf = +((priceNow - priceEntry) / priceEntry * 100).toFixed(2);
-      updates.push({ id: a.id, price_now: priceNow, performance_pct: perf });
+    } catch (e) {
+      console.error("[TrackRecord] Backend fetch failed, falling back:", e);
     }
-
-    entries.push({
-      id: a.id,
-      ticker: a.ticker,
-      name: a.ticker_name ?? a.company_name ?? a.ticker,
-      verdict: a.verdict,
-      price_entry: priceEntry ?? null,
-      price_now: priceNow,
-      performance_pct: perf,
-      created_at: a.created_at,
-    });
   }
 
-  // Fire-and-forget Supabase update
-  if (updates.length > 0) {
-    void sb.from("analyses").upsert(updates, { onConflict: "id" });
-  }
-
-  const result: TrackRecordResponse = {
-    entries,
-    summary: computeSummary(entries),
-    is_demo: false,
+  // Fallback to demo data only when no real data exists
+  const demoResult: TrackRecordResponse = {
+    entries: DEMO_ENTRIES,
+    summary: computeSummary(DEMO_ENTRIES),
+    is_demo: true,
   };
-
-  _cache = { data: result, ts: Date.now() };
-  return NextResponse.json(result);
+  _cache = { data: demoResult, ts: Date.now() };
+  return NextResponse.json(demoResult);
 }

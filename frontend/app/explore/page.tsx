@@ -54,7 +54,7 @@ function TrendsTab() {
   return (
     <div className="space-y-6 animate-in">
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-6">
         {[
           { icon: Users, value: data.stats.total_users, label: "Utilisateurs" },
           { icon: BarChart3, value: data.stats.total_analyses, label: "Analyses" },
@@ -95,7 +95,7 @@ function RankList({ title, icon, items, valueKey, valueSuffix, color, onClickTic
     <div className="card">
       <div className="flex items-center gap-2 mb-5">
         <span style={{ color }}>{icon}</span>
-        <h3 className="text-[15px] font-semibold" style={{ color: "var(--text-primary)" }}>{title}</h3>
+        <h3 className="font-display text-[15px] font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{title}</h3>
       </div>
       {items.length > 0 ? (
         <div className="space-y-3">
@@ -154,7 +154,7 @@ function ScreenerTab() {
       <div className="card-highlight">
         <div className="flex items-center gap-2 mb-4">
           <Search size={18} style={{ color: "var(--accent-primary)" }} />
-          <h3 className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>Screener IA</h3>
+          <h3 className="font-display text-lg font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>Screener IA</h3>
           <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "var(--accent-gold-muted)", color: "var(--accent-gold)", border: "1px solid rgba(240,200,80,0.2)" }}>Pro</span>
         </div>
         <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>
@@ -186,7 +186,7 @@ function ScreenerTab() {
       </div>
 
       {results.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {results.map((r) => (
             <div key={r.ticker} className="card-interactive" onClick={() => router.push(`/analyze?ticker=${r.ticker}`)}>
               <div className="flex items-center justify-between mb-2">
@@ -197,7 +197,7 @@ function ScreenerTab() {
               <p className="text-xs mb-2" style={{ color: "var(--text-secondary)" }}>{r.raison}</p>
               <div className="flex gap-2 flex-wrap">
                 {r.points_forts.slice(0, 2).map((p, i) => (
-                  <span key={i} className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "rgba(0,230,138,0.1)", color: "var(--color-success)" }}>{p}</span>
+                  <span key={i} className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(0,230,138,0.1)", color: "var(--color-success)" }}>{p}</span>
                 ))}
               </div>
             </div>
@@ -266,7 +266,7 @@ function EarningsTab() {
                   <div className="flex items-center gap-3">
                     <span className="font-bold text-sm" style={{ color: "var(--accent-primary)" }}>{e.symbol}</span>
                     {e.in_portfolio && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                      <span className="text-xs font-bold px-1.5 py-0.5 rounded-full"
                         style={{ background: "rgba(0,230,138,0.1)", color: "var(--color-success)" }}>Portfolio</span>
                     )}
                   </div>
@@ -298,8 +298,8 @@ export default function ExplorePage() {
   return (
     <AppLayout>
       <div className="min-h-screen px-4 sm:px-6 md:px-10 py-6 sm:py-8 max-w-5xl">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+        <div className="mb-10">
+          <h1 className="font-display text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>
             Explorer
           </h1>
           <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
@@ -307,7 +307,7 @@ export default function ExplorePage() {
           </p>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-10">
           <Tabs tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
         </div>
 

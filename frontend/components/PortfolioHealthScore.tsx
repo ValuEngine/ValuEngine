@@ -151,7 +151,7 @@ export default function PortfolioHealthScore({
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-2xl font-black" style={{ color: "var(--text-primary)" }}>{healthData.score}</span>
-                <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>/100</span>
+                <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>/100</span>
               </div>
             </div>
             <div>

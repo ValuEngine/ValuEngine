@@ -182,7 +182,7 @@ export default async function TickerSEOPage(
                   { label: "Secteur",      value: profile.sector || "N/A" },
                 ].map(({ label, value }) => (
                   <div key={label} className="bg-[#18181b] border border-[#27272a] rounded-xl p-4 hover:border-[#3f3f46] transition-colors">
-                    <p className="text-[10px] font-bold uppercase tracking-[1.6px] text-zinc-500 mb-2">{label}</p>
+                    <p className="text-xs font-bold uppercase tracking-[1.6px] text-zinc-500 mb-2">{label}</p>
                     <p className="text-lg font-bold text-white leading-tight">{value}</p>
                   </div>
                 ))}

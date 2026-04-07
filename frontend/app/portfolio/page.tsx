@@ -305,9 +305,9 @@ export default function PortfolioPage() {
       >
 
         {/* ── HEADER ─────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-12">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ color: "var(--text-primary)" }}>
+            <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>
               Portefeuille
             </h1>
             <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
@@ -348,7 +348,7 @@ export default function PortfolioPage() {
 
         {/* ── HERO CARD — always visible ──────────────────────────────── */}
         {positions.length > 0 && (
-          <div className="card-highlight p-6 mb-6">
+          <div className="card-highlight p-6 mb-10">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div>
                 <p className="text-[13px] font-medium mb-1" style={{ color: "var(--text-secondary)" }}>
@@ -391,7 +391,7 @@ export default function PortfolioPage() {
 
         {/* ── TABS ────────────────────────────────────────────────────── */}
         {positions.length > 0 && (
-          <div className="mb-6">
+          <div className="mb-10">
             <Tabs
               tabs={PORTFOLIO_TABS}
               activeTab={activeTab}
@@ -411,7 +411,7 @@ export default function PortfolioPage() {
                   <h3 className="text-[13px] font-medium mb-4" style={{ color: "var(--text-secondary)" }}>
                     Ajouter une position
                   </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
                     <input
                       type="text"
                       placeholder="Ticker (ex: AAPL)"
@@ -721,7 +721,7 @@ export default function PortfolioPage() {
                       </h3>
                       <Sparkles size={14} style={{ color: "var(--accent-gold)" }} />
                       <span
-                        className="text-[11px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                        className="text-xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
                         style={{
                           color: "var(--accent-gold)",
                           background: "rgba(240,200,80,0.1)",
@@ -813,7 +813,7 @@ export default function PortfolioPage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
                         <div>
                           <p className="text-[13px] font-medium mb-2" style={{ color: "var(--color-danger)" }}>
                             Risques identifies
@@ -892,7 +892,7 @@ export default function PortfolioPage() {
             >
               <span className="text-3xl">&#128188;</span>
             </div>
-            <h2 className="text-xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>
+            <h2 className="font-display text-xl font-bold mb-2" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
               Ton portefeuille est vide
             </h2>
             <p className="text-sm max-w-xs mb-2" style={{ color: "var(--text-secondary)" }}>
@@ -932,7 +932,7 @@ export default function PortfolioPage() {
               }}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-black" style={{ color: "var(--text-primary)" }}>
+                <h2 className="font-display text-xl font-black" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
                   Ajouter une position
                 </h2>
                 <button

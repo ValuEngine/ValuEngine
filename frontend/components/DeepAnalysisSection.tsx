@@ -151,7 +151,7 @@ export default function DeepAnalysisSection({ ticker, trialPro = false }: { tick
   // Not generated yet — show button
   if (!data) {
     return (
-      <div className="relative mb-8">
+      <div className="relative mb-12">
         <div
           className="backdrop-blur-sm rounded-2xl p-8 border"
           style={{ background: "var(--bg-surface)", borderColor: "var(--border-default)" }}
@@ -203,9 +203,9 @@ export default function DeepAnalysisSection({ ticker, trialPro = false }: { tick
   const bearColor = "var(--color-danger)";
 
   return (
-    <div className="mb-8 animate-[fadeIn_0.4s_ease-out]">
+    <div className="mb-12 animate-[fadeIn_0.4s_ease-out]">
       <div className="flex items-center justify-between mb-5">
-        <p className="text-[13px] font-medium" style={{ color: "var(--accent-primary)" }}>Analyse approfondie IA</p>
+        <p className="text-[13px] font-medium font-display" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>Analyse approfondie IA</p>
         <button
           onClick={() => setData(null)}
           className="text-xs transition-colors"
@@ -216,7 +216,7 @@ export default function DeepAnalysisSection({ ticker, trialPro = false }: { tick
       </div>
 
       {/* Bull & Bear columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {/* Bull Case */}
         <div
           className="backdrop-blur-sm rounded-2xl p-6 border"
@@ -226,7 +226,7 @@ export default function DeepAnalysisSection({ ticker, trialPro = false }: { tick
             <TrendingUp size={16} style={{ color: "var(--color-success)" }} />
             <p className="text-[13px] font-medium" style={{ color: "var(--color-success)" }}>Bull Case</p>
           </div>
-          <p className="font-bold text-lg mb-4" style={{ color: "var(--text-primary)" }}>{data.bull_case.titre}</p>
+          <p className="font-bold text-lg mb-4 font-display" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{data.bull_case.titre}</p>
           <ConfidenceBar score={data.bull_case.score_confiance} color={bullColor} />
 
           <div className="mt-5 space-y-4">
@@ -254,7 +254,7 @@ export default function DeepAnalysisSection({ ticker, trialPro = false }: { tick
             <TrendingDown size={16} style={{ color: "var(--color-danger)" }} />
             <p className="text-[13px] font-medium" style={{ color: "var(--color-danger)" }}>Bear Case</p>
           </div>
-          <p className="font-bold text-lg mb-4" style={{ color: "var(--text-primary)" }}>{data.bear_case.titre}</p>
+          <p className="font-bold text-lg mb-4 font-display" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{data.bear_case.titre}</p>
           <ConfidenceBar score={data.bear_case.score_confiance} color={bearColor} />
 
           <div className="mt-5 space-y-4">
@@ -276,23 +276,23 @@ export default function DeepAnalysisSection({ ticker, trialPro = false }: { tick
 
       {/* Synthèse */}
       <div
-        className="rounded-2xl p-6 mb-6 border"
+        className="rounded-2xl p-6 mb-8 border"
         style={{
           background: "linear-gradient(to right, rgba(99,102,241,0.08), rgba(99,102,241,0.03))",
           borderColor: "rgba(99,102,241,0.2)",
         }}
       >
-        <p className="text-[13px] font-medium mb-3" style={{ color: "var(--accent-primary)" }}>Synthèse</p>
+        <p className="text-[13px] font-medium mb-3 font-display" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>Synthèse</p>
         <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{data.synthese}</p>
       </div>
 
       {/* Catalyseurs & Risques */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div
           className="backdrop-blur-sm rounded-2xl p-5 border"
           style={{ background: "var(--bg-surface)", borderColor: "var(--border-default)" }}
         >
-          <p className="text-[13px] font-medium mb-4" style={{ color: "var(--color-success)" }}>Catalyseurs positifs</p>
+          <p className="text-[13px] font-medium mb-4 font-display" style={{ color: "var(--color-success)", letterSpacing: "-0.02em" }}>Catalyseurs positifs</p>
           <ul className="space-y-2.5">
             {data.catalyseurs_positifs.map((c, i) => (
               <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "var(--text-secondary)" }}>
@@ -306,7 +306,7 @@ export default function DeepAnalysisSection({ ticker, trialPro = false }: { tick
           className="backdrop-blur-sm rounded-2xl p-5 border"
           style={{ background: "var(--bg-surface)", borderColor: "var(--border-default)" }}
         >
-          <p className="text-[13px] font-medium mb-4" style={{ color: "var(--color-danger)" }}>Risques majeurs</p>
+          <p className="text-[13px] font-medium mb-4 font-display" style={{ color: "var(--color-danger)", letterSpacing: "-0.02em" }}>Risques majeurs</p>
           <ul className="space-y-2.5">
             {data.risques_majeurs.map((r, i) => (
               <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "var(--text-secondary)" }}>

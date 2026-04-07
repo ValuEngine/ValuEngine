@@ -186,13 +186,13 @@ export default function EarningsPage() {
                       {formatDate(date)}
                     </h2>
                     {days <= 2 && days >= 0 && (
-                      <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                      <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
                         style={{ color: "var(--color-danger)", background: "rgba(248,81,73,0.1)", border: "1px solid rgba(248,81,73,0.25)" }}>
                         {days === 0 ? "Aujourd'hui" : days === 1 ? "Demain" : "Dans 2j"}
                       </span>
                     )}
                     {days > 2 && days <= 7 && (
-                      <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                      <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
                         style={{ color: "#fb923c", background: "rgba(251,146,60,0.1)", border: "1px solid rgba(251,146,60,0.25)" }}>
                         Dans {days}j
                       </span>
@@ -218,21 +218,21 @@ export default function EarningsPage() {
                               <Briefcase size={10} style={{ color: "var(--accent-primary)" }} />
                             )}
                             {e.time && (
-                              <span className="text-[11px] flex items-center gap-0.5" style={{ color: "var(--text-tertiary)" }}>
+                              <span className="text-xs flex items-center gap-0.5" style={{ color: "var(--text-tertiary)" }}>
                                 <Clock size={8} />
                                 {e.time === "bmo" ? "Avant marche" : e.time === "amc" ? "Apres marche" : e.time}
                               </span>
                             )}
                           </div>
                           {e.fiscal_period && (
-                            <p className="text-[11px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>{e.fiscal_period}</p>
+                            <p className="text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>{e.fiscal_period}</p>
                           )}
                         </div>
 
                         <div className="text-right flex-shrink-0">
                           {e.eps_estimated !== null && (
                             <div>
-                              <p className="text-[11px] uppercase" style={{ color: "var(--text-tertiary)" }}>BPA est.</p>
+                              <p className="text-xs uppercase" style={{ color: "var(--text-tertiary)" }}>BPA est.</p>
                               <p className="text-sm font-semibold text-white">
                                 ${e.eps_estimated?.toFixed(2)}
                               </p>
@@ -243,7 +243,7 @@ export default function EarningsPage() {
                         <div className="text-right flex-shrink-0">
                           {e.revenue_estimated !== null && (
                             <div>
-                              <p className="text-[11px] uppercase" style={{ color: "var(--text-tertiary)" }}>CA est.</p>
+                              <p className="text-xs uppercase" style={{ color: "var(--text-tertiary)" }}>CA est.</p>
                               <p className="text-sm font-semibold text-white">
                                 {formatRevenue(e.revenue_estimated)}
                               </p>

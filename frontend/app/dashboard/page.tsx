@@ -69,7 +69,7 @@ function FirstRunHero({ onAnalyze }: { onAnalyze: (ticker: string) => void }) {
       </div>
 
       {/* Title */}
-      <h2 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>
+      <h2 className="font-display text-xl sm:text-2xl font-bold mb-3" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
         Analyse ta première action en 60 secondes
       </h2>
       <p className="text-sm mb-7 max-w-md" style={{ color: "var(--text-secondary)" }}>
@@ -130,15 +130,15 @@ function FirstRunHero({ onAnalyze }: { onAnalyze: (ticker: string) => void }) {
       <div className="flex gap-8 mt-8 text-center">
         <div>
           <div className="font-bold text-lg" style={{ color: "var(--accent-primary)" }}>60s</div>
-          <div className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>Analyse complète</div>
+          <div className="text-xs" style={{ color: "var(--text-tertiary)" }}>Analyse complète</div>
         </div>
         <div>
           <div className="font-bold text-lg" style={{ color: "var(--accent-primary)" }}>5 ans</div>
-          <div className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>Données financières</div>
+          <div className="text-xs" style={{ color: "var(--text-tertiary)" }}>Données financières</div>
         </div>
         <div>
           <div className="font-bold text-lg" style={{ color: "var(--accent-primary)" }}>IA</div>
-          <div className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>Bull/Bear réel</div>
+          <div className="text-xs" style={{ color: "var(--text-tertiary)" }}>Bull/Bear réel</div>
         </div>
       </div>
     </div>
@@ -340,15 +340,15 @@ export default function DashboardPage() {
       >
 
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+        <div className="mb-12">
+          <h1 className="font-display text-3xl font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>
             Bonjour {firstName}
           </h1>
-          <p className="text-sm mt-1 capitalize" style={{ color: "var(--text-tertiary)" }}>{today}</p>
+          <p className="text-[15px] mt-2 capitalize" style={{ color: "var(--text-tertiary)" }}>{today}</p>
         </div>
 
         {/* Quick search — card-highlight */}
-        <div className="card-highlight p-5 mb-8">
+        <div className="card-highlight mb-12">
           <div className="flex items-center justify-between mb-4">
             <p className="text-[13px] font-medium" style={{ color: "var(--accent-primary)" }}>
               Analyser un titre
@@ -366,7 +366,7 @@ export default function DashboardPage() {
                     />
                   ))}
                 </div>
-                <span className="text-[11px] font-medium" style={{ color: usage.used >= usage.limit ? "var(--color-danger)" : "var(--text-tertiary)" }}>
+                <span className="text-xs font-medium" style={{ color: usage.used >= usage.limit ? "var(--color-danger)" : "var(--text-tertiary)" }}>
                   {usage.used >= usage.limit
                     ? "Limite atteinte"
                     : `${usage.limit - usage.used} analyse${usage.limit - usage.used > 1 ? "s" : ""} restante${usage.limit - usage.used > 1 ? "s" : ""}`}
@@ -374,19 +374,19 @@ export default function DashboardPage() {
               </div>
             )}
             {usage?.is_pro && (
-              <span className="text-[11px] font-medium px-2 py-0.5 rounded-full" style={{ background: "rgba(240,200,80,0.12)", color: "var(--accent-gold)", border: "1px solid rgba(240,200,80,0.25)" }}>
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: "rgba(240,200,80,0.12)", color: "var(--accent-gold)", border: "1px solid rgba(240,200,80,0.25)" }}>
                 Pro · Illimité
               </span>
             )}
           </div>
           {/* Achievement hint */}
           {recent.length >= 3 && recent.length < 10 && (
-            <p className="text-[11px] mt-1" style={{ color: "var(--text-tertiary)" }}>
+            <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
               🎯 Encore {10 - recent.length} analyses pour débloquer le badge &quot;Analyste confirmé&quot;
             </p>
           )}
           {recent.length >= 10 && (
-            <p className="text-[11px] mt-1" style={{ color: "var(--accent-gold)" }}>
+            <p className="text-xs mt-1" style={{ color: "var(--accent-gold)" }}>
               🏆 Badge &quot;Analyste confirmé&quot; débloqué !
             </p>
           )}
@@ -415,8 +415,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent analyses */}
-        <div className="mb-8">
-          <p className="text-lg font-semibold mb-4" style={{ color: "var(--text-primary)" }}>
+        <div className="mb-12">
+          <p className="font-display text-xl font-semibold mb-6" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
             Analyses récentes
           </p>
           {recent.length === 0 ? (
@@ -466,14 +466,14 @@ export default function DashboardPage() {
         </div>
 
         {/* Market overview */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <p className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <p className="font-display text-xl font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
               Marchés aujourd&apos;hui
             </p>
             {marketLoading ? (
               <span
-                className="text-[11px] px-2 py-0.5 rounded-full"
+                className="text-xs px-2 py-0.5 rounded-full"
                 style={{
                   border: "1px solid var(--border-subtle)",
                   color: "var(--text-tertiary)",
@@ -483,7 +483,7 @@ export default function DashboardPage() {
               </span>
             ) : (
               <span
-                className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full"
+                className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
                 style={{
                   border: "1px solid rgba(0,230,138,0.25)",
                   color: "var(--color-success)",
@@ -520,8 +520,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Popular tickers */}
-        <div className="mb-8">
-          <p className="text-lg font-semibold mb-4" style={{ color: "var(--text-primary)" }}>
+        <div className="mb-12">
+          <p className="font-display text-xl font-semibold mb-6" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
             Tickers populaires
           </p>
           <div className="flex flex-wrap gap-2">
@@ -552,8 +552,8 @@ export default function DashboardPage() {
 
         {/* Watchlist section */}
         <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-display text-xl font-semibold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
               Ma Watchlist
             </h2>
             <button
@@ -698,7 +698,7 @@ export default function DashboardPage() {
                     )}
                     {item.verdict && (
                       <span
-                        className="hidden sm:inline text-[11px] font-bold px-2 py-0.5 rounded-full"
+                        className="hidden sm:inline text-xs font-bold px-2 py-0.5 rounded-full"
                         style={verdictColor(item.verdict)}
                       >
                         {verdictLabel(item.verdict)}

@@ -69,7 +69,7 @@ function ScenarioCard({
       </div>
 
       {/* Prix cible */}
-      <p className="text-3xl font-black mb-1" style={{ color: "var(--text-primary)" }}>
+      <p className="text-3xl font-black mb-1 font-display" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
         {cs}{scenario.prix_cible.toFixed(2)}
       </p>
       <p
@@ -157,12 +157,12 @@ export default function DCFScenariosSection({ ticker, trialPro = false }: { tick
 
   if (!data) {
     return (
-      <div className="relative mb-8">
+      <div className="relative mb-12">
         <div
           className="backdrop-blur-sm rounded-2xl p-8 border"
           style={{ background: "var(--bg-surface)", borderColor: "var(--border-default)" }}
         >
-          <p className="text-[13px] font-medium mb-2" style={{ color: "var(--accent-primary)" }}>
+          <p className="text-[13px] font-medium mb-2 font-display" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>
             Scénarios DCF
           </p>
           <p className="text-sm mb-5" style={{ color: "var(--text-secondary)" }}>
@@ -213,9 +213,9 @@ export default function DCFScenariosSection({ ticker, trialPro = false }: { tick
   }
 
   return (
-    <div className="mb-8 animate-[fadeIn_0.4s_ease-out]">
+    <div className="mb-12 animate-[fadeIn_0.4s_ease-out]">
       <div className="flex items-center justify-between mb-5">
-        <p className="text-[13px] font-medium" style={{ color: "var(--accent-primary)" }}>Scénarios DCF</p>
+        <p className="text-[13px] font-medium font-display" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>Scénarios DCF</p>
         <div className="flex items-center gap-3">
           <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>vs cours actuel : {cs}{data.prix_actuel.toFixed(2)}</span>
           <button onClick={() => setData(null)} className="text-xs transition-colors" style={{ color: "var(--text-secondary)" }}>
@@ -225,7 +225,7 @@ export default function DCFScenariosSection({ ticker, trialPro = false }: { tick
       </div>
 
       {/* 3 columns desktop, stack mobile */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <ScenarioCard name="bear" scenario={data.bear} ticker={ticker} />
         <ScenarioCard name="base" scenario={data.base} ticker={ticker} isCenter />
         <ScenarioCard name="bull" scenario={data.bull} ticker={ticker} />
@@ -240,7 +240,7 @@ export default function DCFScenariosSection({ ticker, trialPro = false }: { tick
             borderColor: "rgba(99,102,241,0.2)",
           }}
         >
-          <p className="text-[13px] font-medium mb-3" style={{ color: "var(--accent-primary)" }}>Conclusion</p>
+          <p className="text-[13px] font-medium mb-3 font-display" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>Conclusion</p>
           <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{data.conclusion}</p>
         </div>
       )}

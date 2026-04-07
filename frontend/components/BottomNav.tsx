@@ -73,7 +73,7 @@ export default function BottomNav() {
                 style={{ color: isActive ? "var(--accent-primary)" : "var(--text-tertiary)" }}
               />
               <span
-                className="text-[10px] font-medium"
+                className="text-xs font-medium"
                 style={{ color: isActive ? "var(--accent-primary)" : "var(--text-tertiary)" }}
               >
                 {label}
@@ -96,7 +96,7 @@ export default function BottomNav() {
             style={{ color: showMore ? "var(--accent-primary)" : "var(--text-tertiary)" }}
           />
           <span
-            className="text-[10px] font-medium"
+            className="text-xs font-medium"
             style={{ color: showMore ? "var(--accent-primary)" : "var(--text-tertiary)" }}
           >
             Plus

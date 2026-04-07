@@ -37,7 +37,7 @@ export default function PricingSection() {
       {/* Urgency banner */}
       <div className="flex items-center justify-center gap-3 mb-8 px-4 py-3 rounded-xl mx-auto max-w-lg" style={{ background: "rgba(255,184,77,0.08)", border: "1px solid rgba(255,184,77,0.2)" }}>
         <span className="text-sm font-semibold" style={{ color: "var(--accent-gold)" }}>Offre de lancement &mdash; 99&euro;/an au lieu de 149&euro;</span>
-        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: "var(--accent-gold)", color: "var(--bg-base)" }}>&Eacute;conomise 50&euro;</span>
+        <span className="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: "var(--accent-gold)", color: "var(--bg-base)" }}>&Eacute;conomise 50&euro;</span>
       </div>
 
       {/* Cards */}
@@ -60,7 +60,7 @@ export default function PricingSection() {
           >
             {isSignedIn ? "Aller au Dashboard" : "Créer un compte gratuit"}
           </button>
-          <p className="text-[11px] text-center mt-3" style={{ color: "var(--text-tertiary)" }}>&#10003; Gratuit &middot; &#10003; Sans carte bancaire &middot; &#10003; Résultats en 60 secondes</p>
+          <p className="text-xs text-center mt-3" style={{ color: "var(--text-tertiary)" }}>&#10003; Gratuit &middot; &#10003; Sans carte bancaire &middot; &#10003; Résultats en 60 secondes</p>
         </div>
 
         {/* Pro */}
@@ -113,7 +113,7 @@ export default function PricingSection() {
             Passer Pro <ChevronRight size={16} />
           </button>
           {checkoutErr && <p className="text-xs text-center mt-2" style={{ color: "var(--color-danger)" }}>{checkoutErr}</p>}
-          <p className="text-[11px] text-center mt-3" style={{ color: "var(--text-tertiary)" }}>Annulable &agrave; tout moment &middot; Remboursement 30 jours</p>
+          <p className="text-xs text-center mt-3" style={{ color: "var(--text-tertiary)" }}>Annulable &agrave; tout moment &middot; Remboursement 30 jours</p>
           <div className="flex items-center justify-center gap-2 flex-wrap text-xs mt-3" style={{ color: "var(--text-tertiary)" }}>
             <span>Paiement sécurisé par Stripe</span>
             <span style={{ color: "var(--border-subtle)" }}>&middot;</span>

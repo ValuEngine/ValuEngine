@@ -106,7 +106,7 @@ export default function Sidebar() {
             style={{ background: "var(--accent-primary-muted)", border: "1px solid rgba(108,92,231,0.25)" }}>
             <span className="font-black text-sm leading-none" style={{ color: "var(--accent-primary)" }}>V</span>
           </div>
-          <span className="font-bold text-sm tracking-tight" style={{ color: "var(--text-primary)" }}>ValuEngine</span>
+          <span className="font-display font-bold text-sm" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>ValuEngine</span>
         </div>
 
         {/* Main nav */}
@@ -157,7 +157,7 @@ export default function Sidebar() {
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold truncate" style={{ color: "var(--text-primary)" }}>{firstName}</p>
                 {isPro && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                  <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full"
                     style={{
                       background: "var(--accent-gold-muted)",
                       color: "var(--accent-gold)",

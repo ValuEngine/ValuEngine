@@ -101,7 +101,7 @@ export default function LandingPage() {
       {/* ── LIVE TICKER TAPE ─────────────────────────────────────────── */}
       <div className="relative z-10 overflow-hidden py-2" style={{ background: "rgba(255,255,255,0.02)", borderBottom: "1px solid var(--border-subtle)" }}>
         <div className="flex items-center">
-          <span className="flex-shrink-0 text-[10px] font-medium uppercase tracking-widest px-4" style={{ color: "var(--text-tertiary)" }}>Marchés</span>
+          <span className="flex-shrink-0 text-xs font-medium uppercase tracking-widest px-4" style={{ color: "var(--text-tertiary)" }}>Marchés</span>
           <TickerTape />
         </div>
       </div>
@@ -113,7 +113,7 @@ export default function LandingPage() {
             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "var(--bg-base)", border: "1px solid rgba(108,92,231,0.4)" }}>
               <span className="font-black text-sm leading-none" style={{ color: "var(--accent-primary)" }}>V</span>
             </div>
-            <span className="text-base font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>ValuEngine</span>
+            <span className="font-display text-base font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}>ValuEngine</span>
           </div>
           <div className="flex items-center gap-2">
             <Link href="/track-record" className="text-sm transition-colors px-3 py-2 hidden sm:block" style={{ color: "var(--text-secondary)" }}>Track Record</Link>
@@ -133,20 +133,20 @@ export default function LandingPage() {
             1ER OUTIL DE VALORISATION DCF EN FRANÇAIS
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-center leading-[1.1] tracking-tight mb-4" style={{ color: "var(--text-primary)" }}>
+          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-center leading-[1.05] mb-6" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>
             Prends de meilleures<br />décisions d&apos;investissement,{" "}
             <span style={{ background: "linear-gradient(135deg, var(--accent-primary), #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               plus vite
             </span>
           </h1>
-          <p className="text-base sm:text-lg font-semibold text-center mb-6" style={{ color: "var(--text-secondary)" }}>
+          <p className="text-lg sm:text-xl font-medium text-center mb-4" style={{ color: "var(--text-secondary)", letterSpacing: "-0.01em" }}>
             Investis avec une thèse, pas une intuition.
           </p>
 
-          <p className="text-base sm:text-lg md:text-xl font-medium text-center max-w-xl mx-auto mb-2" style={{ color: "var(--accent-primary)" }}>
+          <p className="font-display text-base sm:text-lg md:text-xl font-semibold text-center max-w-xl mx-auto mb-2" style={{ color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>
             L&apos;analyse fondamentale que font les pros — en français, en 60 secondes.
           </p>
-          <p className="text-sm sm:text-base text-center max-w-xl mx-auto mb-10" style={{ color: "var(--text-secondary)" }}>
+          <p className="text-sm sm:text-base text-center max-w-xl mx-auto mb-12" style={{ color: "var(--text-secondary)" }}>
             Valorisation DCF, arguments Bull &amp; Bear par IA, matrice de sensibilité — gratuit, sans carte bancaire.
           </p>
 
@@ -165,20 +165,20 @@ export default function LandingPage() {
       </section>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
-      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+      <section className="relative z-10 py-20 sm:py-32 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-14">
+          <div className="text-center mb-16">
             <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: "var(--accent-primary)" }}>Comment ça marche</p>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Une analyse complète en 3 étapes.</h2>
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>Une analyse complète en 3 étapes.</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {HOW_IT_WORKS.map(({ n, title, desc }) => (
               <div key={n} className="flex flex-col items-center text-center">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}>
-                  <span className="text-2xl font-black" style={{ color: "var(--accent-primary)" }}>{n}</span>
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}>
+                  <span className="font-display text-2xl font-black" style={{ color: "var(--accent-primary)" }}>{n}</span>
                 </div>
-                <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>{title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: "var(--text-tertiary)" }}>{desc}</p>
+                <h3 className="font-display text-lg font-bold mb-3" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>{title}</h3>
+                <p className="text-[15px] leading-relaxed" style={{ color: "var(--text-tertiary)" }}>{desc}</p>
               </div>
             ))}
           </div>
@@ -189,40 +189,40 @@ export default function LandingPage() {
       <TrackRecordPreview />
 
       {/* ── FEATURES ─────────────────────────────────────────────────── */}
-      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+      <section className="relative z-10 py-20 sm:py-32 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: "var(--accent-primary)" }}>Ce que tu obtiens</p>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>
               6 outils d&apos;analyse professionnels,<br /><span style={{ color: "var(--text-tertiary)" }}>accessibles en un clic.</span>
             </h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map((f) => (
-              <div key={f.title} className="card-interactive relative p-6">
+              <div key={f.title} className="card-interactive relative">
                 {f.pro && (
-                  <span className="absolute top-3 right-3 text-[10px] font-black tracking-wider px-2.5 py-0.5 rounded-full" style={{ background: "var(--accent-gold)", color: "var(--bg-base)" }}>PRO</span>
+                  <span className="absolute top-4 right-4 text-xs font-black tracking-wider px-2.5 py-0.5 rounded-full" style={{ background: "var(--accent-gold)", color: "var(--bg-base)" }}>PRO</span>
                 )}
-                <h3 className="text-sm font-bold mb-1.5" style={{ color: "var(--text-primary)" }}>{f.title}</h3>
-                <p className="text-xs leading-relaxed" style={{ color: "var(--text-tertiary)" }}>{f.desc}</p>
+                <h3 className="font-display text-base font-bold mb-2" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>{f.title}</h3>
+                <p className="text-[15px] leading-relaxed" style={{ color: "var(--text-tertiary)" }}>{f.desc}</p>
               </div>
             ))}
           </div>
-          <p className="text-xs text-center mt-6 max-w-xl mx-auto" style={{ color: "var(--text-tertiary)" }}>
+          <p className="text-sm text-center mt-8 max-w-xl mx-auto" style={{ color: "var(--text-tertiary)" }}>
             Ces analyses sont éducatives et ne constituent pas des conseils en investissement au sens de la directive MIF II.
           </p>
         </div>
       </section>
 
       {/* ── INTERFACE PREVIEW ───────────────────────────────────────── */}
-      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 overflow-hidden" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+      <section className="relative z-10 py-20 sm:py-32 px-4 sm:px-6 overflow-hidden" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
+          <div className="text-center mb-16">
             <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: "var(--accent-primary)" }}>Aperçu</p>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3" style={{ color: "var(--text-primary)" }}>Une analyse complète en un coup d&apos;œil</h2>
-            <p className="text-sm max-w-lg mx-auto" style={{ color: "var(--text-tertiary)" }}>Verdict DCF, analyse IA Bull &amp; Bear, et matrice de sensibilité — tout ce dont tu as besoin pour prendre une décision éclairée.</p>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold mb-4" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>Une analyse complète en un coup d&apos;œil</h2>
+            <p className="text-[15px] max-w-lg mx-auto" style={{ color: "var(--text-tertiary)" }}>Verdict DCF, analyse IA Bull &amp; Bear, et matrice de sensibilité — tout ce dont tu as besoin pour prendre une décision éclairée.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
             <div className="flex justify-center max-w-full overflow-hidden"><MockupVerdict /></div>
             <div className="flex justify-center max-w-full overflow-hidden"><MockupBullBear /></div>
             <div className="flex justify-center max-w-full overflow-hidden"><MockupSensitivity /></div>
@@ -231,35 +231,35 @@ export default function LandingPage() {
       </section>
 
       {/* ── WHY VALUENGINE ─────────────────────────────────────────── */}
-      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+      <section className="relative z-10 py-20 sm:py-32 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-14">
+          <div className="text-center mb-16">
             <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: "var(--accent-primary)" }}>Pourquoi ValuEngine</p>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Ce qui nous différencie</h2>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>Ce qui nous différencie</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="card p-6 text-center">
-              <h3 className="text-sm font-bold mb-2" style={{ color: "var(--text-primary)" }}>Transparence totale</h3>
-              <p className="text-xs leading-relaxed" style={{ color: "var(--text-tertiary)" }}>Nous publions notre Track Record en temps réel. Chaque verdict est vérifiable. Aucun autre outil ne fait ça.</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="card text-center">
+              <h3 className="font-display text-base font-bold mb-3" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>Transparence totale</h3>
+              <p className="text-[15px] leading-relaxed" style={{ color: "var(--text-tertiary)" }}>Nous publions notre Track Record en temps réel. Chaque verdict est vérifiable. Aucun autre outil ne fait ça.</p>
             </div>
-            <div className="card p-6 text-center">
-              <h3 className="text-sm font-bold mb-2" style={{ color: "var(--text-primary)" }}>60 secondes</h3>
-              <p className="text-xs leading-relaxed" style={{ color: "var(--text-tertiary)" }}>Une analyse DCF complète prend 2-3 heures sur Excel. ValuEngine la génère en moins d&apos;une minute.</p>
+            <div className="card text-center">
+              <h3 className="font-display text-base font-bold mb-3" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>60 secondes</h3>
+              <p className="text-[15px] leading-relaxed" style={{ color: "var(--text-tertiary)" }}>Une analyse DCF complète prend 2-3 heures sur Excel. ValuEngine la génère en moins d&apos;une minute.</p>
             </div>
-            <div className="card p-6 text-center">
-              <h3 className="text-sm font-bold mb-2" style={{ color: "var(--text-primary)" }}>100% en français</h3>
-              <p className="text-xs leading-relaxed" style={{ color: "var(--text-tertiary)" }}>Le seul outil de valorisation DCF + IA conçu pour les investisseurs francophones. Actions US et européennes.</p>
+            <div className="card text-center">
+              <h3 className="font-display text-base font-bold mb-3" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>100% en français</h3>
+              <p className="text-[15px] leading-relaxed" style={{ color: "var(--text-tertiary)" }}>Le seul outil de valorisation DCF + IA conçu pour les investisseurs francophones. Actions US et européennes.</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* ── COMMUNAUTÉ ──────────────────────────────────────────────── */}
-      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+      <section className="relative z-10 py-20 sm:py-32 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: "var(--accent-primary)" }}>Communauté</p>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4" style={{ color: "var(--text-primary)" }}>Rejoint par des investisseurs particuliers partout en France</h2>
-          <p className="text-sm mb-8" style={{ color: "var(--text-secondary)" }}>
+          <h2 className="font-display text-2xl sm:text-3xl font-bold mb-6" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>Rejoint par des investisseurs particuliers partout en France</h2>
+          <p className="text-[15px] mb-10" style={{ color: "var(--text-secondary)" }}>
             Parle-nous de ton expérience :{" "}
             <a href="mailto:contact@valuengine.fr" className="hover:underline" style={{ color: "var(--accent-primary)" }}>contact@valuengine.fr</a>
           </p>
@@ -285,43 +285,43 @@ export default function LandingPage() {
       </section>
 
       {/* ── POUR QUI ? ─────────────────────────────────────────────── */}
-      <section className="relative z-10 py-16 sm:py-20 px-4" style={{ borderTop: "1px solid var(--border-subtle)" }}>
-        <div className="max-w-5xl mx-auto text-center mb-12">
-          <h2 className="text-2xl sm:text-3xl font-black" style={{ color: "var(--text-primary)" }}>Pour qui ?</h2>
-          <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>ValuEngine s&apos;adapte à ton niveau d&apos;expérience</p>
+      <section className="relative z-10 py-20 sm:py-32 px-4" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+        <div className="max-w-5xl mx-auto text-center mb-14">
+          <h2 className="font-display text-2xl sm:text-3xl font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>Pour qui ?</h2>
+          <p className="text-[15px] mt-3" style={{ color: "var(--text-secondary)" }}>ValuEngine s&apos;adapte à ton niveau d&apos;expérience</p>
         </div>
-        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-8">
           {[
             { emoji: "🎯", title: "Débutant curieux", desc: "Tu veux comprendre si une action est chère ou pas. ValuEngine t\u2019explique tout, sans jargon inutile." },
             { emoji: "📊", title: "Investisseur actif", desc: "Tu fais tes propres analyses. ValuEngine automatise le DCF, le SWOT et les comparables sectoriels en 60 secondes." },
             { emoji: "👥", title: "Club d\u2019investissement", desc: "Partagez des analyses professionnelles entre membres. Exportez en PDF, comparez vos thèses d\u2019investissement." },
           ].map(p => (
-            <div key={p.title} className="card p-6 text-center">
-              <div className="text-3xl mb-3">{p.emoji}</div>
-              <h3 className="font-bold text-base mb-2" style={{ color: "var(--text-primary)" }}>{p.title}</h3>
-              <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{p.desc}</p>
+            <div key={p.title} className="card text-center">
+              <div className="text-4xl mb-4">{p.emoji}</div>
+              <h3 className="font-display font-bold text-lg mb-3" style={{ color: "var(--text-primary)", letterSpacing: "-0.01em" }}>{p.title}</h3>
+              <p className="text-[15px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>{p.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* ── PRICING (client island for toggle + Stripe checkout) ───── */}
-      <section id="pricing" className="relative z-10 py-16 sm:py-24 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+      <section id="pricing" className="relative z-10 py-20 sm:py-32 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-10">
+          <div className="text-center mb-14">
             <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: "var(--accent-primary)" }}>Tarifs</p>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-6" style={{ color: "var(--text-primary)" }}>Simple. Transparent. Sans engagement.</h2>
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-6" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>Simple. Transparent. Sans engagement.</h2>
           </div>
           <PricingSection />
         </div>
       </section>
 
       {/* ── FAQ (static HTML with <details> for SEO — no JS needed) ── */}
-      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+      <section className="relative z-10 py-20 sm:py-32 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-14">
             <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: "var(--accent-primary)" }}>Questions fréquentes</p>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Tout ce que tu veux savoir</h2>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold" style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}>Tout ce que tu veux savoir</h2>
           </div>
           <div>
             {FAQ.map((item) => (

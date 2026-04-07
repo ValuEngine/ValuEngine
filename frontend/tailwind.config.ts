@@ -26,7 +26,8 @@ const config: Config = {
         info:      "var(--color-info)",
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
+        sans: ["var(--font-body)", "Inter", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "Plus Jakarta Sans", "Inter", "system-ui", "sans-serif"],
       },
       borderRadius: {
         "2xl": "16px",

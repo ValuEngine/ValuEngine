@@ -129,10 +129,10 @@ function BacktestContent() {
         style={{ color: "var(--text-primary)" }}
       >
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-12">
           <h1
-            className="text-2xl sm:text-3xl font-black tracking-tight"
-            style={{ color: "var(--text-primary)" }}
+            className="font-display text-2xl sm:text-3xl font-black tracking-tight"
+            style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}
           >
             Backtest de Conviction
           </h1>
@@ -142,8 +142,8 @@ function BacktestContent() {
         </div>
 
         {/* Input form */}
-        <div className="card p-6 mb-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="card p-6 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <label
                 className="block text-[13px] font-medium mb-2"
@@ -349,7 +349,7 @@ function BacktestContent() {
             )}
 
             {/* Stats grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
               {/* Prix achat */}
               <div className="card p-4">
                 <div className="flex items-center gap-1.5 mb-1">
@@ -420,7 +420,7 @@ function BacktestContent() {
             </div>
 
             {/* Risk metrics — Max Drawdown + Volatility */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-6">
               <div className="card p-4">
                 <p className="text-[13px] font-medium mb-1" style={{ color: "var(--text-secondary)" }}>
                   Max Drawdown
@@ -572,8 +572,8 @@ function BacktestContent() {
               <TrendingUp size={28} style={{ color: "var(--accent-primary)" }} />
             </div>
             <h2
-              className="text-lg font-bold mb-2"
-              style={{ color: "var(--text-primary)" }}
+              className="font-display text-lg font-bold mb-2"
+              style={{ color: "var(--text-primary)", letterSpacing: "-0.02em" }}
             >
               Simule tes decisions passees
             </h2>

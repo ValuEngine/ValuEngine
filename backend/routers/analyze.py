@@ -222,11 +222,30 @@ def analyze(request: Request, req: AnalyzeRequest):
         "intrinsic_value": dcf.intrinsic_value,
         "upside_pct": dcf.upside_pct,
         "share_id": share_id,
+        # Track Record fields
+        "price_at_analysis": price,
+        "ticker_name": company.name,
+        "wacc_used": req.wacc,
+        "growth_rate_used": req.growth_rate,
     }
     if user_id:
         analysis_record["user_id"] = user_id
+
     try:
-        _sb_post("analyses", analysis_record)
+        # Deduplication: check if same ticker was already analyzed today
+        today = datetime.utcnow().strftime("%Y-%m-%d")
+        existing = _sb_get(
+            "analyses",
+            f"ticker=eq.{ticker}&created_at=gte.{today}T00:00:00Z&created_at=lt.{today}T23:59:59Z&select=id&limit=1"
+        )
+        if existing:
+            # Update existing record instead of creating duplicate
+            existing_id = existing[0]["id"]
+            _sb_patch("analyses", f"id=eq.{existing_id}", analysis_record)
+            logger.info(f"[TrackRecord] Updated existing analysis for {ticker} (id={existing_id})")
+        else:
+            _sb_post("analyses", analysis_record)
+            logger.info(f"[TrackRecord] Logged new analysis for {ticker} @ ${price}")
     except Exception as e:
         logger.error(f"[Analyze] Erreur sauvegarde analyse: {e}")
 

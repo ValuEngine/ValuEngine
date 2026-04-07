@@ -10,7 +10,7 @@ export function MockupVerdict() {
         <div>
           <p className="text-[13px] font-medium uppercase tracking-widest text-zinc-500 mb-1">Verdict DCF</p>
           <div className="flex items-center gap-2">
-            <span className="text-xl font-black text-white">LVMH</span>
+            <span className="font-display text-xl font-black text-white" style={{ letterSpacing: "-0.02em" }}>LVMH</span>
             <span className="text-sm text-zinc-400">MC.PA</span>
           </div>
         </div>
@@ -91,7 +91,7 @@ export function MockupBullBear() {
             "Expansion Asie-Pacifique en forte reprise post-Covid",
             "Marge opérationnelle stable >25% malgré l'inflation",
           ].map((p, i) => (
-            <p key={i} className="text-[11px] text-zinc-400 leading-relaxed flex items-start gap-2">
+            <p key={i} className="text-xs text-zinc-400 leading-relaxed flex items-start gap-2">
               <span className="w-1 h-1 rounded-full mt-1.5 flex-shrink-0" style={{ background: "rgba(var(--color-success-rgb,63,185,80),0.6)" }} />
               {p}
             </p>
@@ -113,7 +113,7 @@ export function MockupBullBear() {
             "Multiples de valorisation tendus (P/E >24x)",
             "Risque de ralentissement du marché du luxe en Europe",
           ].map((p, i) => (
-            <p key={i} className="text-[11px] text-zinc-400 leading-relaxed flex items-start gap-2">
+            <p key={i} className="text-xs text-zinc-400 leading-relaxed flex items-start gap-2">
               <span className="w-1 h-1 rounded-full mt-1.5 flex-shrink-0" style={{ background: "rgba(var(--color-danger-rgb,248,81,73),0.6)" }} />
               {p}
             </p>
@@ -144,7 +144,7 @@ export function MockupSensitivity() {
       <p className="text-[13px] font-medium text-zinc-600 mb-4">Valeur intrinsèque selon WACC × Croissance</p>
 
       <div className="overflow-hidden rounded-lg">
-        <table className="w-full text-[10px]">
+        <table className="w-full text-xs">
           <thead>
             <tr>
               <th className="px-1.5 py-1.5 text-zinc-600 bg-zinc-900/50 text-left">WACC↓ / g→</th>
@@ -176,7 +176,7 @@ export function MockupSensitivity() {
         </table>
       </div>
 
-      <div className="flex items-center gap-3 mt-3 text-[9px] text-zinc-600">
+      <div className="flex items-center gap-3 mt-3 text-xs text-zinc-600">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm" style={{ background: "rgba(var(--color-success-rgb,63,185,80),0.2)" }} /> Sous-évalué</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-yellow-500/15" /> Juste valeur</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm" style={{ background: "rgba(var(--color-danger-rgb,248,81,73),0.2)" }} /> Surévalué</span>

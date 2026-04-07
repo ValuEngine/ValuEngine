@@ -54,12 +54,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 pb-20 md:pb-0">
+        <main className="flex-1 pb-20 md:pb-0 page-container">
           {children}
         </main>
 
         <footer
-          className="mt-auto px-3 py-2 md:px-6 md:py-3 text-[11px] text-center hidden md:block"
+          className="mt-auto px-3 py-2 md:px-6 md:py-3 text-xs text-center hidden md:block"
           style={{ color: "var(--text-tertiary)", borderTop: "1px solid var(--border-subtle)" }}
         >
           © 2026 ValuEngine — Outil d&apos;analyse éducatif.{" "}

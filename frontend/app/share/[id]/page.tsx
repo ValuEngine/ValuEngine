@@ -195,15 +195,15 @@ export default function AnalyseSharePage({ params }: { params: { id: string } })
           {/* KPIs */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
             <div className="bg-[#09090b]/60 border border-[#27272a] rounded-xl p-4">
-              <p className="text-[10px] font-bold uppercase tracking-[1.6px] text-zinc-500 mb-1">Cours actuel</p>
+              <p className="text-xs font-bold uppercase tracking-[1.6px] text-zinc-500 mb-1">Cours actuel</p>
               <p className="text-xl font-bold">${d.price.toFixed(2)}</p>
             </div>
             <div className="bg-[#09090b]/60 border border-[#27272a] rounded-xl p-4">
-              <p className="text-[10px] font-bold uppercase tracking-[1.6px] text-zinc-500 mb-1">Valeur intrinsèque</p>
+              <p className="text-xs font-bold uppercase tracking-[1.6px] text-zinc-500 mb-1">Valeur intrinsèque</p>
               <p className="text-xl font-bold">${d.intrinsic_value.toFixed(2)}</p>
             </div>
             <div className="bg-[#09090b]/60 border border-[#27272a] rounded-xl p-4">
-              <p className="text-[10px] font-bold uppercase tracking-[1.6px] text-zinc-500 mb-1">Upside DCF</p>
+              <p className="text-xs font-bold uppercase tracking-[1.6px] text-zinc-500 mb-1">Upside DCF</p>
               <p className="text-xl font-bold" style={{ color: upsideColor }}>
                 {d.upside_pct > 0 ? "+" : ""}{d.upside_pct.toFixed(1)}%
               </p>

@@ -31,10 +31,24 @@ create index if not exists analyses_user_id_idx on public.analyses(user_id);
 create index if not exists analyses_created_at_idx on public.analyses(created_at desc);
 
 -- 2b. ANALYSES — colonnes Track Record (migration)
--- ALTER TABLE public.analyses ADD COLUMN IF NOT EXISTS price_at_analysis FLOAT;
--- ALTER TABLE public.analyses ADD COLUMN IF NOT EXISTS price_now FLOAT;
--- ALTER TABLE public.analyses ADD COLUMN IF NOT EXISTS performance_pct FLOAT;
--- ALTER TABLE public.analyses ADD COLUMN IF NOT EXISTS ticker_name TEXT;
+-- Exécute ces lignes MANUELLEMENT dans l'éditeur SQL Supabase :
+ALTER TABLE public.analyses ADD COLUMN IF NOT EXISTS price_at_analysis FLOAT;
+ALTER TABLE public.analyses ADD COLUMN IF NOT EXISTS price_now FLOAT;
+ALTER TABLE public.analyses ADD COLUMN IF NOT EXISTS performance_pct FLOAT;
+ALTER TABLE public.analyses ADD COLUMN IF NOT EXISTS ticker_name TEXT;
+ALTER TABLE public.analyses ADD COLUMN IF NOT EXISTS wacc_used FLOAT;
+ALTER TABLE public.analyses ADD COLUMN IF NOT EXISTS growth_rate_used FLOAT;
+ALTER TABLE public.analyses ADD COLUMN IF NOT EXISTS share_id TEXT;
+
+-- Index pour le track record (dédup par ticker + jour)
+CREATE UNIQUE INDEX IF NOT EXISTS analyses_ticker_day_idx
+  ON public.analyses (ticker, (created_at::date))
+  WHERE user_id IS NOT NULL;
+
+-- Index pour requêtes track record publiques
+CREATE INDEX IF NOT EXISTS analyses_verdict_perf_idx
+  ON public.analyses (verdict, performance_pct)
+  WHERE verdict IS NOT NULL;
 
 -- 3. WATCHLIST
 create table if not exists public.watchlist (
