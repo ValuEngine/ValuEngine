@@ -3,11 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, useAuth } from "@clerk/nextjs";
-import { Trash2, Plus, X, Loader2, Sparkles } from "lucide-react";
+import { Trash2, Plus, X, Loader2, Sparkles, Upload } from "lucide-react";
 import { searchTicker, authedFetch } from "@/lib/api";
 import { gtmEvents } from "@/lib/analytics";
 import { useProStatus } from "@/hooks/useProStatus";
 import AppLayout from "@/components/AppLayout";
+import ImportPortfolioModal from "@/components/ImportPortfolioModal";
+import PortfolioHealthScore from "@/components/PortfolioHealthScore";
+import SmartAlerts from "@/components/SmartAlerts";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -58,6 +61,7 @@ export default function PortfolioPage() {
   const [addingPosition, setAddingPosition] = useState(false);
 
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   // Load from Supabase
   useEffect(() => {
@@ -288,15 +292,23 @@ export default function PortfolioPage() {
               Suis tes positions et ton P&amp;L en temps reel
             </p>
           </div>
-          <button
-            onClick={() => {
-              setShowModal(true);
-              setModalError(null);
-            }}
-            className="flex items-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold px-5 py-2.5 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all"
-          >
-            <Plus size={16} /> Ajouter
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowImportModal(true)}
+              className="flex items-center gap-2 border border-[#C9A84C]/40 text-[#C9A84C] hover:bg-[#C9A84C]/10 font-semibold px-4 py-2.5 rounded-xl transition-all text-sm"
+            >
+              <Upload size={14} /> Importer CSV
+            </button>
+            <button
+              onClick={() => {
+                setShowModal(true);
+                setModalError(null);
+              }}
+              className="flex items-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold px-5 py-2.5 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all"
+            >
+              <Plus size={16} /> Ajouter
+            </button>
+          </div>
         </div>
 
         {/* ── LOAD ERROR ───────────────────────────────────────────── */}
@@ -544,6 +556,20 @@ export default function PortfolioPage() {
               </div>
             )}
 
+            {/* ── SMART ALERTS ─────────────────────────────────────────── */}
+            <SmartAlerts
+              positions={positions}
+              currentPrices={currentPrices}
+              isPro={isPro}
+            />
+
+            {/* ── HEALTH SCORE ──────────────────────────────────────────── */}
+            <PortfolioHealthScore
+              positions={positions}
+              currentPrices={currentPrices}
+              isPro={isPro}
+            />
+
             {/* ── AI INSIGHT ─────────────────────────────────────────────── */}
             <div className="bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-2xl p-6 mb-8 relative">
               <div className="flex items-center justify-between mb-4">
@@ -688,12 +714,20 @@ export default function PortfolioPage() {
             <p className="text-[#4a6070] text-xs mb-6">
               Exemple : 10 actions AAPL achetees a 185$
             </p>
-            <button
-              onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold px-6 py-3 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all"
-            >
-              <Plus size={16} /> Ajouter une position
-            </button>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <button
+                onClick={() => setShowModal(true)}
+                className="flex items-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold px-6 py-3 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all"
+              >
+                <Plus size={16} /> Ajouter une position
+              </button>
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="flex items-center gap-2 border border-[#C9A84C]/40 text-[#C9A84C] hover:bg-[#C9A84C]/10 font-semibold px-5 py-3 rounded-xl transition-all text-sm"
+              >
+                <Upload size={14} /> Importer mon PEA
+              </button>
+            </div>
           </div>
         )}
 
@@ -775,6 +809,32 @@ export default function PortfolioPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* ── IMPORT MODAL ────────────────────────────────────────────── */}
+        {showImportModal && (
+          <ImportPortfolioModal
+            onClose={() => setShowImportModal(false)}
+            onImported={() => {
+              // Reload positions from DB
+              fetch("/api/db/portfolio")
+                .then((r) => r.json())
+                .then((rows: Array<{ id: string; ticker: string; shares: number; avg_price: number; sector?: string }>) => {
+                  if (Array.isArray(rows)) {
+                    setPositions(
+                      rows.map((r) => ({
+                        id: r.id,
+                        ticker: r.ticker,
+                        shares: r.shares,
+                        avgPrice: r.avg_price,
+                        sector: r.sector || undefined,
+                      }))
+                    );
+                  }
+                })
+                .catch(() => {});
+            }}
+          />
         )}
       </div>
     </AppLayout>

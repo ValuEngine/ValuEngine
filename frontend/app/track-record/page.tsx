@@ -80,6 +80,13 @@ export default function TrackRecordPage() {
   const [loading, setLoading] = useState(true);
   const [verdictFilter, setVerdictFilter] = useState<VerdictFilter>("all");
   const [perfFilter, setPerfFilter] = useState<PerfFilter>("all");
+  const [verifiedStats, setVerifiedStats] = useState<{
+    win_rate: number;
+    avg_performance: number;
+    total_analyses: number;
+    by_verdict: Record<string, { count: number; win_rate: number; avg_performance: number }>;
+    is_verified: boolean;
+  } | null>(null);
 
   useEffect(() => {
     fetch("/api/track-record")
@@ -87,6 +94,13 @@ export default function TrackRecordPage() {
       .then((d) => { if (d) setData(d); })
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    // Fetch server-verified stats
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || "";
+    fetch(`${apiBase}/api/track-record/stats`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d) setVerifiedStats(d); })
+      .catch(() => {});
   }, []);
 
   const s = data?.summary;
@@ -135,6 +149,19 @@ export default function TrackRecordPage() {
           <p className="text-sm text-zinc-500">
             Performances historiques de nos analyses — actualisées en temps réel
           </p>
+          {verifiedStats?.is_verified && verifiedStats.total_analyses > 0 && (
+            <div className="flex items-center gap-2 mt-2">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full border border-[#C9A84C]/30 text-[#C9A84C] bg-[rgba(201,168,76,0.05)]">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 0L6.12 3.09L9.51 3.09L6.69 5L7.82 8.09L5 6.18L2.18 8.09L3.31 5L0.49 3.09L3.88 3.09L5 0Z" fill="#C9A84C"/></svg>
+                VERIFIED — {verifiedStats.total_analyses} analyses server-side
+              </span>
+              {verifiedStats.by_verdict.BUY && (
+                <span className="text-[10px] text-zinc-600">
+                  BUY: {verifiedStats.by_verdict.BUY.win_rate}% win | SELL: {verifiedStats.by_verdict.SELL?.win_rate ?? 0}% win
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 4 Stat Cards */}

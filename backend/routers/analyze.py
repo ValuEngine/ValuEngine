@@ -469,6 +469,94 @@ async def screener_search(request: Request):
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
+@router.post("/api/portfolio/smart-alerts")
+@limiter.limit("5/minute")
+async def portfolio_smart_alerts(request: Request):
+    """Generate smart contextual alerts for a portfolio. AI enrichment for Pro."""
+    token_user_id = await verify_clerk_token(request)
+
+    try:
+        body = await request.json()
+        positions = body.get("positions", [])
+    except Exception:
+        raise HTTPException(status_code=400, detail="Donnees de portefeuille invalides")
+
+    if not positions:
+        return {"alerts": [], "ai_alerts": []}
+
+    from services.smart_alerts import generate_smart_alerts, build_smart_alerts_ai_prompt
+
+    # Deterministic alerts
+    alerts = generate_smart_alerts(positions)
+
+    # AI enrichment for Pro
+    ai_alerts = []
+    is_pro = _is_user_pro(token_user_id)
+    if is_pro and len(positions) >= 2:
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if api_key:
+            try:
+                prompt = build_smart_alerts_ai_prompt(positions, alerts)
+                client = _Anthropic(api_key=api_key)
+                msg = client.messages.create(
+                    model="claude-haiku-4-5-20251001",
+                    max_tokens=600,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                result = _parse_json_response(msg.content[0].text)
+                ai_alerts = result.get("ai_alerts", [])
+            except Exception as e:
+                logger.error(f"[SmartAlerts] AI enrichment failed: {e}")
+
+    return {"alerts": alerts, "ai_alerts": ai_alerts}
+
+
+@router.post("/api/portfolio/health-score")
+@limiter.limit("5/minute")
+async def portfolio_health_score(request: Request):
+    """Calculate portfolio health score (0-100) with optional AI recommendations. Pro only for AI."""
+    token_user_id = await verify_clerk_token(request)
+
+    try:
+        body = await request.json()
+        positions = body.get("positions", [])
+    except Exception:
+        raise HTTPException(status_code=400, detail="Donnees de portefeuille invalides")
+
+    if not positions or len(positions) < 1:
+        raise HTTPException(status_code=400, detail="Au moins 1 position requise")
+
+    from services.portfolio_health import calculate_health_score, build_health_ai_prompt
+
+    # Always calculate deterministic score
+    score_data = calculate_health_score(positions)
+
+    # If Pro, enrich with AI recommendations
+    is_pro = _is_user_pro(token_user_id)
+    if is_pro and len(positions) >= 2:
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if api_key:
+            try:
+                prompt = build_health_ai_prompt(score_data, positions)
+                client = _Anthropic(api_key=api_key)
+                msg = client.messages.create(
+                    model="claude-haiku-4-5-20251001",
+                    max_tokens=800,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                ai_result = _parse_json_response(msg.content[0].text)
+                score_data["ai_recommendations"] = ai_result
+            except Exception as e:
+                logger.error(f"[HealthScore] AI enrichment failed: {e}")
+                score_data["ai_recommendations"] = None
+        else:
+            score_data["ai_recommendations"] = None
+    else:
+        score_data["ai_recommendations"] = None
+
+    return score_data
+
+
 @router.post("/api/portfolio/ai-insight")
 @limiter.limit("3/minute")
 async def portfolio_ai_insight(request: Request):

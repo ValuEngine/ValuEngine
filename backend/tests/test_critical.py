@@ -591,3 +591,328 @@ class TestAICostMonitoring:
         assert summary["totals"]["calls"] >= 1
         assert summary["totals"]["input_tokens"] >= 100
         assert summary["totals"]["cost_usd"] > 0
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PORTFOLIO CSV IMPORT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestPortfolioImport:
+    def test_detect_boursorama_format(self):
+        """detect_broker_format identifies Boursorama CSV (semicolon, ISIN header)."""
+        from services.portfolio_import import detect_broker_format
+        csv = "Code ISIN;Libellé;Quantité;PRU\nFR0000120271;Total;10;45.50"
+        assert detect_broker_format(csv) == "boursorama"
+
+    def test_parse_boursorama_csv(self):
+        """parse_portfolio_csv correctly parses Boursorama format with ISIN."""
+        from services.portfolio_import import parse_portfolio_csv
+        csv = "Code ISIN;Libellé;Quantité;PRU\nUS0378331005;Apple Inc;10;185.00"
+        # Note: ISIN conversion requires FMP key, so it will fail and produce an error
+        result = parse_portfolio_csv(csv, broker="boursorama")
+        assert result["broker_detected"] == "boursorama"
+        # Without FMP key, ISIN rows go to errors
+        assert result["summary"]["total_positions"] > 0
+
+    def test_parse_degiro_csv(self):
+        """parse_portfolio_csv correctly parses Degiro format with ticker symbols."""
+        from services.portfolio_import import parse_portfolio_csv
+        csv = "Symbol,Product,Quantity,Average Price\nAAPL,Apple Inc,10,185.00\nMSFT,Microsoft,5,380.50"
+        result = parse_portfolio_csv(csv, broker="degiro")
+        assert result["broker_detected"] == "degiro"
+        assert len(result["positions"]) == 2
+        assert result["positions"][0]["ticker"] == "AAPL"
+        assert result["positions"][0]["shares"] == 10
+        assert result["positions"][0]["avg_price"] == 185.00
+        assert result["positions"][1]["ticker"] == "MSFT"
+
+    def test_parse_generic_csv(self):
+        """parse_portfolio_csv handles generic CSV with Ticker/Shares/Price columns."""
+        from services.portfolio_import import parse_portfolio_csv
+        csv = "Ticker,Name,Shares,Avg Price\nTSLA,Tesla,3,250.00\nNVDA,Nvidia,8,800.00"
+        result = parse_portfolio_csv(csv, broker="generic")
+        assert len(result["positions"]) == 2
+        assert result["positions"][0]["ticker"] == "TSLA"
+        assert result["positions"][1]["shares"] == 8
+
+    def test_parse_invalid_csv(self):
+        """parse_portfolio_csv handles empty/invalid CSV gracefully."""
+        from services.portfolio_import import parse_portfolio_csv
+        result = parse_portfolio_csv("", broker="auto")
+        assert result["positions"] == []
+        assert len(result["errors"]) > 0
+
+    def test_parse_number_european_format(self):
+        """_parse_number handles European 1.234,56 format."""
+        from services.portfolio_import import _parse_number
+        assert _parse_number("1.234,56") == 1234.56
+        assert _parse_number("1,234.56") == 1234.56
+        assert _parse_number("42") == 42.0
+        assert _parse_number("12,5") == 12.5
+        assert _parse_number("") is None
+
+    def test_is_isin(self):
+        """_is_isin correctly validates ISIN codes."""
+        from services.portfolio_import import _is_isin
+        assert _is_isin("US0378331005") is True
+        assert _is_isin("FR0000120271") is True
+        assert _is_isin("AAPL") is False
+        assert _is_isin("") is False
+
+    def test_import_endpoint_requires_auth(self):
+        """POST /api/portfolio/import must reject unauthenticated requests."""
+        resp = client.post("/api/portfolio/import")
+        assert resp.status_code in (401, 422)
+
+    def test_import_confirm_requires_auth(self):
+        """POST /api/portfolio/import/confirm must reject unauthenticated requests."""
+        resp = client.post("/api/portfolio/import/confirm", json={"positions": []})
+        assert resp.status_code == 401
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PORTFOLIO HEALTH SCORE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestPortfolioHealthScore:
+    def test_health_score_calculation_basic(self):
+        """calculate_health_score returns a valid score for a simple portfolio."""
+        from services.portfolio_health import calculate_health_score
+        positions = [
+            {"ticker": "AAPL", "shares": 10, "avg_price": 150, "current_price": 180, "current_value": 1800, "pnl_pct": 20, "sector": "Technology"},
+            {"ticker": "MSFT", "shares": 5, "avg_price": 300, "current_price": 350, "current_value": 1750, "pnl_pct": 16.7, "sector": "Technology"},
+            {"ticker": "JNJ", "shares": 8, "avg_price": 160, "current_price": 170, "current_value": 1360, "pnl_pct": 6.25, "sector": "Healthcare"},
+        ]
+        result = calculate_health_score(positions)
+        assert 0 <= result["score"] <= 100
+        assert result["grade"] in ("A", "B", "C", "D", "F")
+        assert "breakdown" in result
+        assert "diversification" in result["breakdown"]
+        assert "performance" in result["breakdown"]
+        assert "risk" in result["breakdown"]
+        assert "balance" in result["breakdown"]
+
+    def test_health_score_single_position(self):
+        """Single position should have low diversification score."""
+        from services.portfolio_health import calculate_health_score
+        positions = [
+            {"ticker": "AAPL", "shares": 100, "avg_price": 150, "current_price": 180, "current_value": 18000, "pnl_pct": 20, "sector": "Technology"},
+        ]
+        result = calculate_health_score(positions)
+        assert result["score"] < 60  # single position can't score great
+        assert result["breakdown"]["diversification"]["score"] < 15  # low diversification
+
+    def test_health_score_empty_portfolio(self):
+        """Empty portfolio should return zero score."""
+        from services.portfolio_health import calculate_health_score
+        result = calculate_health_score([])
+        assert result["score"] == 0
+        assert result["grade"] == "F"
+
+    def test_health_score_issues_detection(self):
+        """Health score should detect concentration issues."""
+        from services.portfolio_health import calculate_health_score
+        positions = [
+            {"ticker": "AAPL", "shares": 100, "avg_price": 150, "current_price": 180, "current_value": 18000, "pnl_pct": 20, "sector": "Technology"},
+            {"ticker": "MSFT", "shares": 1, "avg_price": 300, "current_price": 350, "current_value": 350, "pnl_pct": 16.7, "sector": "Technology"},
+        ]
+        result = calculate_health_score(positions)
+        issue_messages = [i["message"] for i in result["issues"]]
+        # Should flag AAPL as too concentrated
+        assert any("AAPL" in m for m in issue_messages)
+
+    def test_health_score_endpoint_requires_auth(self):
+        """POST /api/portfolio/health-score must reject unauthenticated requests."""
+        resp = client.post("/api/portfolio/health-score", json={"positions": []})
+        assert resp.status_code == 401
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SMART ALERTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestSmartAlerts:
+    def test_smart_alerts_take_profit(self):
+        """generate_smart_alerts detects take-profit opportunity at +30%."""
+        from services.smart_alerts import generate_smart_alerts
+        positions = [
+            {"ticker": "AAPL", "shares": 10, "avg_price": 100, "current_price": 140, "current_value": 1400, "pnl_pct": 40, "sector": "Technology"},
+            {"ticker": "MSFT", "shares": 5, "avg_price": 300, "current_price": 310, "current_value": 1550, "pnl_pct": 3.3, "sector": "Technology"},
+        ]
+        alerts = generate_smart_alerts(positions)
+        assert any(a["type"] == "take_profit" and a["ticker"] == "AAPL" for a in alerts)
+
+    def test_smart_alerts_stop_loss(self):
+        """generate_smart_alerts detects stop-loss warning at -20%."""
+        from services.smart_alerts import generate_smart_alerts
+        positions = [
+            {"ticker": "AAPL", "shares": 10, "avg_price": 200, "current_price": 150, "current_value": 1500, "pnl_pct": -25, "sector": "Technology"},
+            {"ticker": "MSFT", "shares": 5, "avg_price": 300, "current_price": 310, "current_value": 1550, "pnl_pct": 3.3, "sector": "Technology"},
+        ]
+        alerts = generate_smart_alerts(positions)
+        assert any(a["type"] == "stop_loss" and a["ticker"] == "AAPL" for a in alerts)
+
+    def test_smart_alerts_concentration(self):
+        """generate_smart_alerts detects position concentration >35%."""
+        from services.smart_alerts import generate_smart_alerts
+        positions = [
+            {"ticker": "AAPL", "shares": 100, "avg_price": 150, "current_price": 180, "current_value": 18000, "pnl_pct": 20, "sector": "Technology"},
+            {"ticker": "MSFT", "shares": 1, "avg_price": 300, "current_price": 350, "current_value": 350, "pnl_pct": 16.7, "sector": "Technology"},
+        ]
+        alerts = generate_smart_alerts(positions)
+        assert any(a["type"] == "concentration" for a in alerts)
+
+    def test_smart_alerts_empty_portfolio(self):
+        """generate_smart_alerts returns empty list for empty portfolio."""
+        from services.smart_alerts import generate_smart_alerts
+        assert generate_smart_alerts([]) == []
+
+    def test_smart_alerts_endpoint_requires_auth(self):
+        """POST /api/portfolio/smart-alerts must reject unauthenticated requests."""
+        resp = client.post("/api/portfolio/smart-alerts", json={"positions": []})
+        assert resp.status_code == 401
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PEDAGOGY MODE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestPedagogyMode:
+    def test_glossary_returns_terms(self):
+        """GET /api/pedagogy/glossary must return non-empty list of terms."""
+        resp = client.get("/api/pedagogy/glossary")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "terms" in data
+        assert len(data["terms"]) >= 10
+
+    def test_glossary_term_has_structure(self):
+        """Each glossary term must have id, term, simple, category."""
+        resp = client.get("/api/pedagogy/glossary")
+        terms = resp.json()["terms"]
+        for t in terms:
+            assert "id" in t
+            assert "term" in t
+            assert "simple" in t
+            assert "category" in t
+
+    def test_term_detail_dcf(self):
+        """GET /api/pedagogy/term/dcf must return full DCF explanation."""
+        resp = client.get("/api/pedagogy/term/dcf")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "simple" in data
+        assert "technical" in data
+        assert "example" in data
+        assert "DCF" in data["term"]
+
+    def test_term_detail_not_found(self):
+        """GET /api/pedagogy/term/nonexistent must return 404."""
+        resp = client.get("/api/pedagogy/term/nonexistent_term_xyz")
+        assert resp.status_code == 404
+
+    def test_explain_requires_auth(self):
+        """POST /api/pedagogy/explain must reject unauthenticated requests."""
+        resp = client.post("/api/pedagogy/explain", json={"concept": "PE ratio"})
+        assert resp.status_code == 401
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BACKTEST SIMULATOR
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestBacktest:
+    def test_backtest_endpoint_requires_auth(self):
+        """POST /api/backtest must reject unauthenticated requests."""
+        resp = client.post("/api/backtest", json={"ticker": "AAPL", "buy_date": "2023-01-01", "amount": 10000})
+        assert resp.status_code == 401
+
+    def test_backtest_service_future_date(self):
+        """run_backtest rejects future buy dates."""
+        from services.backtest import run_backtest
+        result = run_backtest("AAPL", "2030-01-01", 10000)
+        assert "error" in result
+
+    def test_backtest_service_invalid_date(self):
+        """run_backtest rejects invalid date format."""
+        from services.backtest import run_backtest
+        result = run_backtest("AAPL", "not-a-date", 10000)
+        assert "error" in result
+
+    def test_backtest_service_old_date(self):
+        """run_backtest rejects dates before 2000."""
+        from services.backtest import run_backtest
+        result = run_backtest("AAPL", "1990-01-01", 10000)
+        assert "error" in result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EARNINGS CALENDAR
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestEarningsCalendar:
+    def test_earnings_calendar_requires_auth(self):
+        """POST /api/earnings/calendar must reject unauthenticated requests."""
+        resp = client.post("/api/earnings/calendar", json={})
+        assert resp.status_code == 401
+
+    def test_earnings_ticker_requires_auth(self):
+        """GET /api/earnings/AAPL must reject unauthenticated requests."""
+        resp = client.get("/api/earnings/AAPL")
+        assert resp.status_code == 401
+
+    def test_earnings_calendar_service_structure(self):
+        """get_earnings_calendar returns proper structure even without API keys."""
+        from services.earnings_calendar import get_earnings_calendar
+        result = get_earnings_calendar(tickers=["AAPL"], days_ahead=30)
+        assert "earnings" in result
+        assert "period" in result
+        assert "count" in result
+        assert isinstance(result["earnings"], list)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# COMMUNITY TRENDS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestCommunityTrends:
+    def test_trends_endpoint_returns_200(self):
+        """GET /api/trends must return 200 (public endpoint)."""
+        resp = client.get("/api/trends")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "top_analyzed" in data
+        assert "top_held" in data
+        assert "stats" in data
+
+    def test_trends_stats_structure(self):
+        """Trends stats must contain total_users, total_analyses, total_positions."""
+        resp = client.get("/api/trends")
+        stats = resp.json()["stats"]
+        assert "total_users" in stats
+        assert "total_analyses" in stats
+        assert "total_positions" in stats
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TRACK RECORD
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestTrackRecord:
+    def test_track_record_stats_returns_200(self):
+        """GET /api/track-record/stats must return 200 (public endpoint)."""
+        resp = client.get("/api/track-record/stats")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "total_analyses" in data
+        assert "win_rate" in data
+        assert "avg_performance" in data
+        assert "by_verdict" in data
+
+    def test_track_record_stats_structure(self):
+        """Track record stats must have proper numeric types."""
+        resp = client.get("/api/track-record/stats")
+        data = resp.json()
+        assert isinstance(data["total_analyses"], int)
+        assert isinstance(data["win_rate"], (int, float))
+        assert isinstance(data["avg_performance"], (int, float))

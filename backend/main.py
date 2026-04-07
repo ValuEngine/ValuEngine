@@ -84,6 +84,12 @@ from routers.alerts import router as alerts_router
 from routers.stripe_routes import router as stripe_router
 from routers.user import router as user_router
 from routers.admin import router as admin_router
+from routers.portfolio_import import router as portfolio_import_router
+from routers.pedagogy import router as pedagogy_router
+from routers.backtest import router as backtest_router
+from routers.earnings import router as earnings_router
+from routers.trends import router as trends_router
+from routers.track_record import router as track_record_router
 
 app.include_router(market_router)
 app.include_router(analyze_router)
@@ -91,3 +97,9 @@ app.include_router(alerts_router)
 app.include_router(stripe_router)
 app.include_router(user_router)
 app.include_router(admin_router)
+app.include_router(portfolio_import_router)
+app.include_router(pedagogy_router)
+app.include_router(backtest_router)
+app.include_router(earnings_router)
+app.include_router(trends_router)
+app.include_router(track_record_router)

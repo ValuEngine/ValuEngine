@@ -18,6 +18,9 @@ import {
   X,
   FlaskConical,
   Info,
+  GraduationCap,
+  Calendar,
+  Flame,
 } from "lucide-react";
 
 const MAIN_ITEMS = [
@@ -28,11 +31,15 @@ const MAIN_ITEMS = [
 
 const SECONDARY_ITEMS = [
   { label: "Comparer",       href: "/compare",      icon: GitCompare,  badge: null },
+  { label: "Backtest",       href: "/backtest",     icon: TrendingUp,  badge: null },
+  { label: "Tendances",      href: "/trends",       icon: Flame,       badge: null },
+  { label: "Earnings",       href: "/earnings",     icon: Calendar,    badge: null },
   { label: "Screener IA",    href: "/screener",     icon: Filter,      badge: "Pro" },
   { label: "Track Record",   href: "/track-record", icon: TrendingUp,  badge: null },
 ];
 
 const BOTTOM_ITEMS = [
+  { label: "Apprendre",      href: "/pedagogy",     icon: GraduationCap },
   { label: "Blog",           href: "/blog",         icon: BookOpen },
   { label: "Méthodologie",   href: "/methodology",  icon: FlaskConical },
   { label: "À propos",       href: "/about",        icon: Info },
