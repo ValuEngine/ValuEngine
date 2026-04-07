@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { Loader2, Sparkles, Pin } from "lucide-react";
 import { useProStatus } from "@/hooks/useProStatus";
-import { useUser } from "@clerk/nextjs";
-import { currencySymbol } from "@/lib/api";
+import { useUser, useAuth } from "@clerk/nextjs";
+import { currencySymbol, authedFetch } from "@/lib/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -113,6 +113,7 @@ function ScenarioCard({
 
 export default function DCFScenariosSection({ ticker, trialPro = false }: { ticker: string; trialPro?: boolean }) {
   const { user } = useUser();
+  const { getToken } = useAuth();
   const { isPro } = useProStatus(user?.id);
   const canAccess = isPro || trialPro;
   const [data, setData] = useState<DCFScenariosData | null>(null);
@@ -125,9 +126,8 @@ export default function DCFScenariosSection({ ticker, trialPro = false }: { tick
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/analyze/dcf-scenarios`, {
+      const res = await authedFetch(`${API_BASE}/api/analyze/dcf-scenarios`, getToken, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ticker }),
       });
       if (!res.ok) throw new Error(`Erreur ${res.status}`);

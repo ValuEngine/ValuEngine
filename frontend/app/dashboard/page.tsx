@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
 import { ArrowRight, Plus, X, Loader2, Search, Copy, Check, Users } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import ProWelcomeModal from "@/components/ProWelcomeModal";
 import OnboardingModal from "@/components/OnboardingModal";
 import { shouldShowProWelcome } from "@/hooks/useProStatus";
-import { warmupBackend } from "@/lib/api";
+import { warmupBackend, authedFetch } from "@/lib/api";
 
 interface RecentEntry {
   ticker: string;
@@ -132,6 +132,7 @@ function verdictColor(verdict: string) {
 export default function DashboardPage() {
   const router = useRouter();
   const { isSignedIn, user, isLoaded } = useUser();
+  const { getToken } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [recent, setRecent] = useState<RecentEntry[]>([]);
   const [watchlistItems, setWatchlistItems] = useState<WatchlistItem[]>([]);
@@ -188,11 +189,11 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!user?.id) return;
     const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
-    fetch(`${API_BASE}/api/referral/${user.id}`)
+    authedFetch(`${API_BASE}/api/referral/${user.id}`, getToken)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setReferralCount(d.count ?? 0); })
       .catch(() => {});
-  }, [user?.id]);
+  }, [user?.id, getToken]);
 
   const fetchWatchlist = useCallback(async () => {
     setWatchlistLoading(true);
@@ -544,7 +545,7 @@ export default function DashboardPage() {
           // Mark complete in backend (best-effort)
           if (user?.id) {
             const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
-            fetch(`${API_BASE}/api/user/onboarding-complete/${user.id}`, { method: "POST" }).catch(() => {});
+            authedFetch(`${API_BASE}/api/user/onboarding-complete/${user.id}`, getToken, { method: "POST" }).catch(() => {});
           }
           if (ticker) router.push(`/analyze?ticker=${ticker}`);
         }}
@@ -553,7 +554,7 @@ export default function DashboardPage() {
           setShowOnboarding(false);
           if (user?.id) {
             const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
-            fetch(`${API_BASE}/api/user/onboarding-complete/${user.id}`, { method: "POST" }).catch(() => {});
+            authedFetch(`${API_BASE}/api/user/onboarding-complete/${user.id}`, getToken, { method: "POST" }).catch(() => {});
           }
         }}
       />

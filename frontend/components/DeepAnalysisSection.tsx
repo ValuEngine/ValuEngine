@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { Loader2, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
 import { useProStatus } from "@/hooks/useProStatus";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
+import { authedFetch } from "@/lib/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -62,6 +63,7 @@ function ProGateOverlay({ onUpgrade }: { onUpgrade: () => void }) {
 
 export default function DeepAnalysisSection({ ticker, trialPro = false }: { ticker: string; trialPro?: boolean }) {
   const { user } = useUser();
+  const { getToken } = useAuth();
   const { isPro } = useProStatus(user?.id);
   const canAccess = isPro || trialPro;
   const [data, setData] = useState<DeepAnalysis | null>(null);
@@ -78,17 +80,15 @@ export default function DeepAnalysisSection({ ticker, trialPro = false }: { tick
 
     try {
       // Try SSE streaming first
-      const res = await fetch(`${API_BASE}/api/analyze/deep-analysis/stream`, {
+      const res = await authedFetch(`${API_BASE}/api/analyze/deep-analysis/stream`, getToken, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ticker }),
       });
 
       if (!res.ok || !res.body) {
         // Fallback to non-streaming
-        const fallback = await fetch(`${API_BASE}/api/analyze/deep-analysis`, {
+        const fallback = await authedFetch(`${API_BASE}/api/analyze/deep-analysis`, getToken, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ticker }),
         });
         if (!fallback.ok) throw new Error(`Erreur ${fallback.status}`);
