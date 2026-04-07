@@ -26,7 +26,7 @@ from models import (
     BullBearAnalysis, ExportPDFRequest, ScreenerSearchRequest, PortfolioAIRequest,
     TickerRequest,
 )
-from services.dcf import calculate_dcf, sensitivity_analysis
+from services.dcf import calculate_dcf, sensitivity_analysis, calculate_irr
 from services.ai_analyst import (
     get_bull_bear_analysis, get_deep_analysis, detect_anomalies,
     get_dcf_scenarios, ai_screen_stocks, _parse_json_response,
@@ -113,14 +113,39 @@ def analyze(request: Request, req: AnalyzeRequest):
     except Exception:
         pass
 
+    # ── CAGR historique ────────────────────────────────────────────────
+    cagr_revenue_5y = None
+    try:
+        deep_fin = get_deep_financials(ticker)
+        rev_5y = deep_fin.get("revenue_5y", [])
+        if len(rev_5y) >= 2 and rev_5y[-1] and rev_5y[0] and rev_5y[0] > 0:
+            n_years = len(rev_5y) - 1
+            cagr_revenue_5y = round(((rev_5y[-1] / rev_5y[0]) ** (1 / n_years) - 1) * 100, 1)
+    except Exception:
+        pass
+
+    # ── Dynamic beta ──────────────────────────────────────────────────
+    from services.capm import calculate_capm_wacc, calculate_dynamic_beta
+    beta_info = calculate_dynamic_beta(ticker)
+
     # ── 1b. CAPM-based suggested WACC ──────────────────────────────────
-    from services.capm import calculate_capm_wacc
     capm = calculate_capm_wacc(
         beta=raw.get("beta"),
         market_cap=raw.get("market_cap", 0),
         total_debt=raw.get("total_debt", 0),
         total_cash=raw.get("total_cash", 0),
+        ticker=ticker,
+        beta_info=beta_info if beta_info and beta_info.get("beta") else None,
     )
+
+    # ── Financial company detection ───────────────────────────────────
+    is_financial = raw.get("sector", "").lower() in ("financial services", "financials", "banks", "insurance")
+    financial_warning = None
+    if is_financial:
+        financial_warning = "Les entreprises financières (banques, assurances) ne sont pas bien modélisées par un DCF classique. Un modèle DDM ou P/B ajusté serait plus approprié."
+
+    # ── Data freshness ────────────────────────────────────────────────
+    data_timestamp = time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime())
 
     # ── 2. DCF ──────────────────────────────────────────────────────────
     fcf    = raw["free_cash_flow"]
@@ -178,6 +203,15 @@ def analyze(request: Request, req: AnalyzeRequest):
         except Exception:
             pass
 
+    # ── 6b. IRR calculation ──────────────────────────────────────────────
+    irr = calculate_irr(
+        price=price,
+        fcf_projections=dcf_raw["fcf_projections"],
+        terminal_value_undiscounted=dcf_raw.get("terminal_value_undiscounted", 0),
+        shares_outstanding=shares,
+        net_debt=nd,
+    )
+
     # ── 7. Share ID for public sharing ──────────────────────────────────
     share_id = uuid.uuid4().hex
     analysis_record = {
@@ -201,6 +235,13 @@ def analyze(request: Request, req: AnalyzeRequest):
         analysis=analysis, verdict=verdict, verdict_label=verdict_label,
         suggested_wacc=capm, sector_benchmarks=sector_benchmarks,
         share_id=share_id, is_first_analysis=is_first_analysis,
+        irr=irr,
+        cagr_revenue_5y=cagr_revenue_5y,
+        terminal_value_pct=dcf_raw.get("terminal_value_pct", 0),
+        terminal_growth_warning=dcf_raw.get("terminal_growth_warning", False),
+        financial_warning=financial_warning,
+        data_timestamp=data_timestamp,
+        beta_info=beta_info if beta_info and beta_info.get("beta") else None,
     )
 
 

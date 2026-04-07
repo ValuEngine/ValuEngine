@@ -16,6 +16,10 @@ export default function SignUpPage() {
           <p className="text-[#7a8fa3] text-sm">Crée ton compte gratuit — 3 analyses/jour</p>
         </div>
         <SignUp />
+        <p className="text-xs text-center mt-4 max-w-sm mx-auto leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+          En créant un compte, tu confirmes comprendre que ValuEngine est un outil éducatif
+          et ne constitue pas un conseil en investissement au sens de la directive MIF II.
+        </p>
       </div>
     </main>
   );

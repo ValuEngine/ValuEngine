@@ -205,3 +205,25 @@ export function FreemiumGate({
     />
   ) : null;
 }
+
+/* ── Pro Blur Overlay ──────────────────────────────────────────────── */
+
+export function ProBlurOverlay({ children, featureName }: { children: React.ReactNode; featureName: string }) {
+  return (
+    <div className="relative">
+      <div className="blur-sm pointer-events-none select-none opacity-60">
+        {children}
+      </div>
+      <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+        <div className="card p-6 text-center max-w-xs" style={{ background: "rgba(10,10,15,0.95)", border: "1px solid rgba(240,200,80,0.25)" }}>
+          <span className="text-2xl mb-2 block">🔒</span>
+          <p className="font-bold text-sm mb-1" style={{ color: "var(--text-primary)" }}>{featureName}</p>
+          <p className="text-xs mb-3" style={{ color: "var(--text-secondary)" }}>Disponible avec ValuEngine Pro</p>
+          <a href="/#pricing" className="btn-pro text-xs px-4 py-2 rounded-lg inline-block">
+            Débloquer Pro ✦
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -288,6 +288,35 @@ def get_peers_data(ticker: str, sector: str) -> list[dict]:
     return results
 
 
+# ── Implied valuations from peer medians ──────────────────────────────────────
+
+def calculate_implied_valuations(company_data: dict, peers: list) -> dict:
+    """Calculate implied stock price from peer median multiples."""
+    result = {}
+
+    pe_values = [p["pe_ratio"] for p in peers if p.get("pe_ratio") and 0 < p["pe_ratio"] < 200]
+    ev_ebitda_values = [p["ev_ebitda"] for p in peers if p.get("ev_ebitda") and 0 < p["ev_ebitda"] < 100]
+
+    eps = company_data.get("eps")
+    ebitda = company_data.get("ebitda")
+    shares = company_data.get("shares_outstanding", 1)
+    net_debt = company_data.get("net_debt", 0)
+
+    if pe_values and eps and eps > 0:
+        median_pe = sorted(pe_values)[len(pe_values) // 2]
+        result["implied_pe"] = round(median_pe * eps, 2)
+        result["median_pe"] = round(median_pe, 1)
+
+    if ev_ebitda_values and ebitda and ebitda > 0 and shares > 0:
+        median_ev = sorted(ev_ebitda_values)[len(ev_ebitda_values) // 2]
+        implied_ev = median_ev * ebitda
+        implied_equity = implied_ev - net_debt
+        result["implied_ev_ebitda"] = round(implied_equity / shares, 2) if shares > 0 else None
+        result["median_ev_ebitda"] = round(median_ev, 1)
+
+    return result
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Deep Financials — 5 years + analyst targets + revenue segments
 # ═══════════════════════════════════════════════════════════════════════════════

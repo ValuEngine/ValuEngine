@@ -108,6 +108,7 @@ export default function TrackRecordPage() {
   const [loading, setLoading] = useState(true);
   const [verdictFilter, setVerdictFilter] = useState<VerdictFilter>("all");
   const [perfFilter, setPerfFilter] = useState<PerfFilter>("all");
+  const [periodFilter, setPeriodFilter] = useState("all");
   const [verifiedStats, setVerifiedStats] = useState<{
     win_rate: number;
     avg_performance: number;
@@ -135,7 +136,19 @@ export default function TrackRecordPage() {
 
   const filteredEntries = useMemo(() => {
     if (!data) return [];
+
+    // Filter by period
     let entries = data.entries;
+    if (periodFilter === "6m") {
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      entries = entries.filter(d => new Date(d.created_at) >= sixMonthsAgo);
+    } else if (periodFilter === "1y") {
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      entries = entries.filter(d => new Date(d.created_at) >= oneYearAgo);
+    }
+
     if (verdictFilter !== "all") {
       entries = entries.filter((e) => e.verdict === verdictFilter);
     }
@@ -157,7 +170,7 @@ export default function TrackRecordPage() {
       });
     }
     return entries;
-  }, [data, verdictFilter, perfFilter]);
+  }, [data, verdictFilter, perfFilter, periodFilter]);
 
   const chartData = useMemo(() => data ? buildChartData(data.entries) : [], [data]);
 
@@ -365,30 +378,86 @@ export default function TrackRecordPage() {
               {f === "all" ? "Tous" : f === "winners" ? "Gagnants" : "Perdants"}
             </button>
           ))}
+
+          <span className="mx-1" style={{ color: "var(--border-default)" }}>|</span>
+          <span className="text-[13px] font-medium mr-1" style={{ color: "var(--text-secondary)" }}>
+            Période :
+          </span>
+          <div className="flex gap-2">
+            {["all", "6m", "1y"].map(period => (
+              <button
+                key={period}
+                onClick={() => setPeriodFilter(period)}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                style={periodFilter === period
+                  ? { background: "rgba(108,92,231,0.15)", border: "1px solid rgba(108,92,231,0.4)", color: "var(--accent-primary)" }
+                  : { background: "var(--bg-overlay)", border: "1px solid var(--border-subtle)", color: "var(--text-secondary)" }
+                }
+              >
+                {period === "all" ? "Tout" : period === "6m" ? "6 mois" : "1 an"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Methodology */}
+        <div className="flex items-start gap-3 px-4 py-3 rounded-xl border mb-6" style={{ background: "rgba(108,92,231,0.04)", borderColor: "rgba(108,92,231,0.15)" }}>
+          <span style={{ color: "var(--accent-primary)" }}>ℹ️</span>
+          <div>
+            <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Comment lire le Track Record</p>
+            <p className="text-xs leading-relaxed mt-1" style={{ color: "var(--text-secondary)" }}>
+              Chaque verdict est horodaté et vérifiable côté serveur. Un verdict BUY est &quot;correct&quot; si le prix a progressé depuis,
+              SELL si le prix a baissé. Le taux de succès est calculé sur l&apos;ensemble des verdicts émis avec un minimum de 30 jours d&apos;historique.
+            </p>
+          </div>
         </div>
 
         {/* Table */}
         <div className="anim-3">
           {loading ? (
-            <div className="space-y-2">
+            <div className="rounded-xl border backdrop-blur-sm overflow-hidden" style={{ borderColor: "var(--border-default)", background: "var(--bg-surface)" }}>
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="skeleton h-12 rounded-xl" />
+                <div
+                  key={i}
+                  className="flex items-center gap-4 px-4 py-3"
+                  style={i < 5 ? { borderBottom: "1px solid var(--border-subtle)" } : {}}
+                >
+                  <div className="skeleton h-4 w-14 rounded" />
+                  <div className="skeleton h-4 w-32 rounded hidden md:block" />
+                  <div className="skeleton h-5 w-20 rounded-full" />
+                  <div className="skeleton h-4 w-16 rounded hidden md:block" />
+                  <div className="skeleton h-4 w-16 rounded hidden md:block" />
+                  <div className="skeleton h-4 w-12 rounded" />
+                  <div className="skeleton h-4 w-10 rounded hidden md:block" />
+                  <div className="skeleton h-4 w-16 rounded hidden md:block" />
+                </div>
               ))}
             </div>
           ) : filteredEntries.length === 0 ? (
-            <div
-              className="rounded-xl p-12 border backdrop-blur-sm text-center"
-              style={{
-                borderColor: "var(--border-default)",
-                background: "var(--bg-surface)",
-              }}
-            >
-              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                {verdictFilter !== "all" || perfFilter !== "all"
-                  ? "Aucun résultat pour ces filtres"
-                  : "Les premières analyses apparaîtront ici dès qu'elles seront effectuées"}
-              </p>
-            </div>
+            verdictFilter !== "all" || perfFilter !== "all" || periodFilter !== "all" ? (
+              <div
+                className="rounded-xl p-12 border backdrop-blur-sm text-center"
+                style={{
+                  borderColor: "var(--border-default)",
+                  background: "var(--bg-surface)",
+                }}
+              >
+                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                  Aucun résultat pour ces filtres
+                </p>
+              </div>
+            ) : (
+              <div className="card p-12 text-center">
+                <div className="text-4xl mb-4">📈</div>
+                <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>Track Record en construction</h3>
+                <p className="text-sm mb-4 max-w-md mx-auto" style={{ color: "var(--text-secondary)" }}>
+                  Nos premiers verdicts ont été émis récemment. Le track record se construit au fil du temps — reviens consulter nos performances vérifiées.
+                </p>
+                <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                  Méthodologie : un verdict est considéré correct si le prix rejoint la valeur intrinsèque dans les 12 mois.
+                </p>
+              </div>
+            )
           ) : (
             <div
               className="rounded-xl border backdrop-blur-sm overflow-x-auto"
@@ -492,14 +561,18 @@ export default function TrackRecordPage() {
             onClick={() => router.push("/sign-up")}
             className="btn-primary font-bold px-6 py-2.5 rounded-lg text-sm transition-all"
           >
-            Commencer gratuitement
+            Créer un compte gratuit — 3 analyses/jour
           </button>
         </div>
 
         {/* Disclaimer */}
-        <p className="text-[11px] text-center mt-6" style={{ color: "var(--text-tertiary)" }}>
-          Les performances passées ne préjugent pas des performances futures. Outil éducatif — pas un conseil en investissement au sens de la directive MIF II.
-        </p>
+        <div className="flex items-start gap-2 px-4 py-3 rounded-xl border mt-6" style={{ background: "rgba(255,184,77,0.04)", borderColor: "rgba(255,184,77,0.15)" }}>
+          <span style={{ color: "var(--color-warning)" }}>⚠️</span>
+          <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+            Les performances passées ne préjugent pas des performances futures. Les verdicts ValuEngine sont basés sur un modèle DCF mathématique
+            et ne constituent pas des conseils en investissement au sens de la directive MIF II. Consultez un conseiller agréé avant toute décision.
+          </p>
+        </div>
 
       </div>
     </AppLayout>

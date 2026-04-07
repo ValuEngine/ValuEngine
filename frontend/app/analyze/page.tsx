@@ -31,7 +31,7 @@ function VerdictBadgePremium({ verdict }: { verdict: string }) {
       style={{ background: "rgba(0,230,138,0.1)", color: "var(--color-success)", borderColor: "rgba(0,230,138,0.2)" }}
     >
       <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--color-success)" }} />
-      Sous-évalué
+      Sous-évalué (DCF)
     </span>
   );
   if (verdict === "SELL") return (
@@ -40,7 +40,7 @@ function VerdictBadgePremium({ verdict }: { verdict: string }) {
       style={{ background: "rgba(255,84,112,0.1)", color: "var(--color-danger)", borderColor: "rgba(255,84,112,0.2)" }}
     >
       <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--color-danger)" }} />
-      Surévalué
+      Surévalué (DCF)
     </span>
   );
   return (
@@ -49,7 +49,7 @@ function VerdictBadgePremium({ verdict }: { verdict: string }) {
       style={{ background: "rgba(255,184,77,0.1)", color: "var(--color-warning)", borderColor: "rgba(255,184,77,0.2)" }}
     >
       <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--color-warning)" }} />
-      Juste valeur
+      Juste valeur (DCF)
     </span>
   );
 }
@@ -1084,6 +1084,11 @@ function AnalyzePage() {
                         : `proche de sa valeur intrinsèque (écart ${data.dcf.upside_pct.toFixed(1)}%).`}
                     </p>
                     <VerdictBadge upsidePct={data.dcf.upside_pct} />
+                    {data.data_timestamp && (
+                      <p className="text-[11px] mt-2" style={{ color: "var(--text-tertiary)" }}>
+                        Données mises à jour : {data.data_timestamp}
+                      </p>
+                    )}
                   </div>
                 </div>
                 {/* Price vs intrinsic side by side */}
@@ -1114,9 +1119,18 @@ function AnalyzePage() {
               >
                 <span className="mt-0.5" style={{ color: "var(--color-warning)" }}>&#9888;&#65039;</span>
                 <p className="text-xs leading-relaxed" style={{ color: "rgba(255,220,140,0.7)" }}>
-                  Cette estimation est basée sur un modèle DCF mathématique. Elle ne constitue pas un conseil en investissement au sens de la directive MIF II. Fais tes propres recherches.
+                  Cette estimation est basée selon notre modèle DCF mathématique. Elle ne constitue pas un conseil en investissement au sens de la directive MIF II (2014/65/UE). Fais tes propres recherches et consulte un professionnel agréé avant toute décision.
                 </p>
               </div>
+
+              {data.financial_warning && (
+                <div className="flex items-start gap-2 px-4 py-3 rounded-xl border mb-6" style={{ background: "rgba(255,84,112,0.06)", borderColor: "rgba(255,84,112,0.18)" }}>
+                  <span className="mt-0.5" style={{ color: "var(--color-danger)" }}>🏦</span>
+                  <p className="text-xs leading-relaxed" style={{ color: "rgba(255,150,150,0.8)" }}>
+                    {data.financial_warning}
+                  </p>
+                </div>
+              )}
 
               {/* ── Quick Actions — Backtest / Compare / Add to portfolio */}
               <div className="flex flex-wrap gap-3 mb-6">
@@ -1186,9 +1200,13 @@ function AnalyzePage() {
                           : (data.company.roe != null && data.company.roe > 0.15 ? "var(--color-success)" : undefined)}
                         tooltip="Return on Equity : résultat net / capitaux propres. Mesure l'efficacité à générer du profit pour les actionnaires. >15% = excellent." />
                       <KPI label="Croissance CA" value={data.company.revenue_growth != null ? pct(data.company.revenue_growth) : "N/A"}
+                        sub={data.cagr_revenue_5y != null ? `CAGR 5 ans: ${data.cagr_revenue_5y > 0 ? "+" : ""}${data.cagr_revenue_5y}%` : undefined}
                         color={data.company.revenue_growth != null && data.company.revenue_growth > 0 ? "var(--color-success)" : "var(--color-danger)"} tooltip="Variation du chiffre d'affaires sur 1 an. Indicateur clé de la dynamique commerciale de l'entreprise." />
                       <KPI label="Beta"       value={data.company.beta != null ? data.company.beta.toFixed(2) : "N/A"}
-                        sub={data.company.beta != null ? (data.company.beta > 1.2 ? "Volatil" : data.company.beta < 0.8 ? "Défensif" : "Neutre") : ""} tooltip="Mesure la volatilité de l'action vs le marché. >1 = plus volatil que le marché, <1 = moins volatil." />
+                        sub={data.beta_info?.source === "regression"
+                          ? `Régression ${data.beta_info.period} (R²=${data.beta_info.r_squared})`
+                          : (data.company.beta != null ? (data.company.beta > 1.2 ? "Volatil" : data.company.beta < 0.8 ? "Défensif" : "Neutre") : "")}
+                        tooltip="Mesure la volatilité de l'action vs le marché. >1 = plus volatil que le marché, <1 = moins volatil. Calculé par régression sur les rendements hebdomadaires." />
                     </div>
                   </Section>
 
@@ -1276,6 +1294,19 @@ function AnalyzePage() {
                             </span>
                           </div>
                         ))}
+                        {data.irr != null && (
+                          <div className="flex justify-between items-center py-2.5 border-b last:border-0" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
+                            <span className="text-sm flex items-center gap-1.5" style={{ color: "var(--text-secondary)" }}>
+                              TRI implicite (IRR)
+                              <Tooltip content="Taux de rendement interne : le rendement annualisé que l'investisseur obtiendrait en achetant au prix actuel si les projections DCF se réalisent.">
+                                <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full text-[9px] font-bold cursor-help" style={{ background: "var(--bg-overlay)", color: "var(--text-tertiary)", border: "1px solid var(--border-subtle)" }}>?</span>
+                              </Tooltip>
+                            </span>
+                            <span className="text-sm font-bold" style={{ color: data.irr > 10 ? "var(--color-success)" : data.irr < 5 ? "var(--color-danger)" : "var(--text-primary)" }}>
+                              {data.irr.toFixed(1)}%
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div
                         className="rounded-2xl p-6 border"
@@ -1288,6 +1319,16 @@ function AnalyzePage() {
                         <FCFChart projections={data.dcf.fcf_projections} />
                       </div>
                     </div>
+                    {data.terminal_value_pct != null && data.terminal_value_pct > 80 && (
+                      <div className="flex items-start gap-2 px-4 py-3 rounded-xl border mb-4" style={{ background: "rgba(255,184,77,0.06)", borderColor: "rgba(255,184,77,0.18)" }}>
+                        <span style={{ color: "var(--color-warning)" }}>⚠️</span>
+                        <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                          La valeur terminale représente {data.terminal_value_pct.toFixed(0)}% de la valeur d&apos;entreprise.
+                          Un ratio supérieur à 80% indique une forte dépendance aux hypothèses de croissance à long terme.
+                          Vérifiez vos hypothèses de croissance et de WACC.
+                        </p>
+                      </div>
+                    )}
                   </Section>
 
                   <Section title={`Matrice de sensibilité — Valeur intrinsèque (${currencySymbol(data.company.ticker)})`} defaultOpen={false}>
@@ -1319,19 +1360,30 @@ function AnalyzePage() {
                       }}
                     >
                       {data?.suggested_wacc && (
-                        <div className="flex flex-wrap items-center gap-3 mb-4 px-4 py-3 rounded-xl" style={{ background: "rgba(108,92,231,0.06)", border: "1px solid rgba(108,92,231,0.15)" }}>
-                          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>WACC suggéré (CAPM)</span>
-                          <span className="text-sm font-bold" style={{ color: "var(--accent-primary)" }}>{(data.suggested_wacc.suggested_wacc * 100).toFixed(1)}%</span>
-                          <button
-                            onClick={() => { setWacc(Math.round(data.suggested_wacc!.suggested_wacc * 100)); }}
-                            className="text-[11px] px-2 py-1 rounded-lg transition-all hover:opacity-80"
-                            style={{ color: "var(--accent-primary)", border: "1px solid rgba(108,92,231,0.3)" }}
-                          >
-                            Appliquer
-                          </button>
-                          <span className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-                            Ke={(data.suggested_wacc.cost_of_equity * 100).toFixed(1)}% · β={data.suggested_wacc.beta_used} · E/V={(data.suggested_wacc.equity_weight * 100).toFixed(0)}%
-                          </span>
+                        <div className="mb-4 px-4 py-3 rounded-xl" style={{ background: "rgba(108,92,231,0.06)", border: "1px solid rgba(108,92,231,0.15)" }}>
+                          <div className="flex flex-wrap items-center gap-3 mb-2">
+                            <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>WACC suggéré (CAPM)</span>
+                            <span className="text-sm font-bold" style={{ color: "var(--accent-primary)" }}>{(data.suggested_wacc.suggested_wacc * 100).toFixed(1)}%</span>
+                            <button
+                              onClick={() => { setWacc(Math.round(data.suggested_wacc!.suggested_wacc * 100)); }}
+                              className="text-[11px] px-2 py-1 rounded-lg transition-all hover:opacity-80"
+                              style={{ color: "var(--accent-primary)", border: "1px solid rgba(108,92,231,0.3)" }}
+                            >
+                              Appliquer
+                            </button>
+                          </div>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+                            <span>Ke (Cost of Equity) = {(data.suggested_wacc.cost_of_equity * 100).toFixed(1)}%</span>
+                            <span>Kd (Cost of Debt) = {(data.suggested_wacc.cost_of_debt * 100).toFixed(1)}%</span>
+                            <span>E/V = {(data.suggested_wacc.equity_weight * 100).toFixed(0)}%</span>
+                            <span>D/V = {(data.suggested_wacc.debt_weight * 100).toFixed(0)}%</span>
+                            <span>Rf (Risk-free) = {(data.suggested_wacc.risk_free_rate * 100).toFixed(1)}%</span>
+                            <span>β = {data.suggested_wacc.beta_used}</span>
+                            <span>ERP = {(data.suggested_wacc.market_risk_premium * 100).toFixed(1)}%</span>
+                          </div>
+                          <p className="text-[10px] mt-2" style={{ color: "var(--text-tertiary)" }}>
+                            WACC = Ke × E/V + Kd × (1-t) × D/V — Ke = Rf + β × ERP
+                          </p>
                         </div>
                       )}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -1360,6 +1412,11 @@ function AnalyzePage() {
                       >
                         Relancer avec ces hypothèses
                       </button>
+                      {terminal > 3.5 && (
+                        <p className="text-xs mt-3 flex items-center gap-1.5" style={{ color: "var(--color-warning)" }}>
+                          ⚠️ Un taux de croissance perpétuel supérieur à 3.5% dépasse le PIB nominal à long terme. Vérifiez cette hypothèse.
+                        </p>
+                      )}
                     </div>
                   </Section>
                 </div>

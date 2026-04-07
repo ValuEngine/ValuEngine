@@ -70,14 +70,52 @@ def calculate_dcf(
     # Valeur intrinsèque par action
     intrinsic_value = equity_value / shares_outstanding
 
+    # Terminal value as percentage of total enterprise value
+    tv_pct = round(terminal_value_pv / enterprise_value * 100, 1) if enterprise_value > 0 else 0
+
     return {
         "enterprise_value_dcf": enterprise_value,
         "equity_value":         equity_value,
         "intrinsic_value":      max(intrinsic_value, 0.0),
         "terminal_value_pv":    terminal_value_pv,
+        "terminal_value_undiscounted": terminal_value,
+        "terminal_value_pct":   tv_pct,
+        "terminal_growth_warning": terminal_growth > 0.035,
         "fcf_projections":      fcf_projections,
         "pv_fcfs":              pv_fcfs,
     }
+
+
+def calculate_irr(price: float, fcf_projections: list, terminal_value_undiscounted: float, shares_outstanding: float, net_debt: float) -> float | None:
+    """Calculate the implied IRR (internal rate of return) at the current market price."""
+    try:
+        equity_value_market = price * shares_outstanding
+        ev_market = equity_value_market + net_debt
+
+        # Cash flows: negative initial investment, then FCF projections, last includes terminal value
+        cash_flows = [-ev_market]
+        for i, fcf in enumerate(fcf_projections):
+            if i == len(fcf_projections) - 1:
+                cash_flows.append(fcf + terminal_value_undiscounted)
+            else:
+                cash_flows.append(fcf)
+
+        # Newton-Raphson method for IRR
+        rate = 0.10  # initial guess
+        for _ in range(100):
+            npv = sum(cf / (1 + rate) ** t for t, cf in enumerate(cash_flows))
+            dnpv = sum(-t * cf / (1 + rate) ** (t + 1) for t, cf in enumerate(cash_flows))
+            if abs(dnpv) < 1e-10:
+                break
+            rate = rate - npv / dnpv
+            if abs(npv) < 1e-6:
+                break
+
+        if -0.5 < rate < 2.0:  # sanity check
+            return round(rate * 100, 2)
+        return None
+    except Exception:
+        return None
 
 
 def sensitivity_analysis(

@@ -26,9 +26,14 @@ export default function LegalPage() {
           <p className="leading-relaxed text-sm" style={{ color: "var(--text-secondary)" }}>
             ValuEngine est un outil d&apos;analyse financière à vocation <strong className="text-white">exclusivement éducative</strong>.
             Les modèles DCF, les ratios de valorisation et les indicateurs présentés sont des outils pédagogiques
-            destinés à illustrer des concepts financiers. ValuEngine n&apos;est <strong className="text-white">pas un conseiller en investissement</strong>,
-            ne dispose d&apos;aucun agrément AMF ou CIF, et les informations fournies ne constituent en aucun cas
-            un conseil en investissement au sens de la directive MIF II, ni des recommandations d&apos;achat, de vente ou de conservation de valeurs mobilières.
+            destinés à illustrer des concepts financiers. ValuEngine n&apos;est <strong className="text-white">pas un conseiller en investissement</strong>
+            et les informations fournies ne constituent en aucun cas un conseil en investissement au sens de la
+            directive MIF II, ni des recommandations d&apos;achat, de vente ou de conservation de valeurs mobilières.
+          </p>
+          <p className="leading-relaxed text-sm mt-3 font-semibold" style={{ color: "var(--text-secondary)" }}>
+            <strong className="text-white">ValuEngine ne dispose pas d&apos;agrément de l&apos;Autorité des Marchés Financiers (AMF)
+            et n&apos;est pas enregistré comme Conseiller en Investissements Financiers (CIF)</strong> au sens de
+            l&apos;article L.541-1 du Code monétaire et financier.
           </p>
         </section>
 
@@ -46,18 +51,45 @@ export default function LegalPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-bold mb-3" style={{ color: "var(--accent-primary)" }}>3. Données personnelles</h2>
+          <h2 className="text-lg font-bold mb-3" style={{ color: "var(--accent-primary)" }}>3. Données personnelles & RGPD</h2>
           <p className="leading-relaxed text-sm" style={{ color: "var(--text-secondary)" }}>
             L&apos;authentification est assurée par <strong className="text-white">Clerk</strong> (clerk.com), qui gère de manière
             sécurisée les identifiants et sessions utilisateurs. Les données d&apos;utilisation (portefeuille, analyses,
             alertes) sont stockées dans <strong className="text-white">Supabase</strong> (supabase.com), une plateforme
-            hébergée en Europe. Aucune donnée personnelle n&apos;est revendue à des tiers. Tu peux
-            demander la suppression de tes données à tout moment en contactant{" "}
+            hébergée en Europe. Aucune donnée personnelle n&apos;est revendue à des tiers.
+          </p>
+          <p className="leading-relaxed text-sm mt-3 font-semibold text-white">
+            Vos droits au titre du RGPD (Règlement Général sur la Protection des Données) :
+          </p>
+          <ul className="mt-2 space-y-1.5 text-sm" style={{ color: "var(--text-secondary)" }}>
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "var(--accent-primary)" }} />
+              <span><strong className="text-white">Droit d&apos;accès</strong> — obtenir une copie de l&apos;ensemble de vos données personnelles</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "var(--accent-primary)" }} />
+              <span><strong className="text-white">Droit de rectification</strong> — corriger des données inexactes ou incomplètes</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "var(--accent-primary)" }} />
+              <span><strong className="text-white">Droit à l&apos;effacement</strong> — demander la suppression de vos données personnelles</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "var(--accent-primary)" }} />
+              <span><strong className="text-white">Droit à la portabilité</strong> — recevoir vos données dans un format structuré et lisible par machine</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "var(--accent-primary)" }} />
+              <span><strong className="text-white">Droit d&apos;opposition</strong> — vous opposer au traitement de vos données pour des motifs légitimes</span>
+            </li>
+          </ul>
+          <p className="leading-relaxed text-sm mt-3" style={{ color: "var(--text-secondary)" }}>
+            Pour exercer vos droits, contactez{" "}
             <a href="mailto:contact@valuengine.fr" className="underline hover:opacity-80" style={{ color: "var(--accent-primary)" }}>
               contact@valuengine.fr
-            </a>.
-            Conformément au RGPD, tu disposes d&apos;un droit d&apos;accès, de rectification, d&apos;effacement
-            et de portabilité de tes données.
+            </a>.{" "}
+            <strong className="text-white">Délai de réponse aux demandes RGPD : 30 jours maximum</strong> conformément
+            à l&apos;article 12 du RGPD.
           </p>
         </section>
 
@@ -72,9 +104,19 @@ export default function LegalPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-bold mb-3" style={{ color: "var(--accent-primary)" }}>5. Contact</h2>
+          <h2 className="text-lg font-bold mb-3" style={{ color: "var(--accent-primary)" }}>5. Juridiction</h2>
           <p className="leading-relaxed text-sm" style={{ color: "var(--text-secondary)" }}>
-            Pour toute question relative aux présentes mentions légales, à tes données personnelles
+            <strong className="text-white">Juridiction applicable : Droit français.</strong> En cas de litige relatif
+            à l&apos;interprétation ou à l&apos;exécution des présentes mentions légales et conditions générales
+            d&apos;utilisation, les parties s&apos;efforceront de trouver une solution amiable.
+            A défaut, <strong className="text-white">les Tribunaux de Paris seront seuls compétents</strong>.
+          </p>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="text-lg font-bold mb-3" style={{ color: "var(--accent-primary)" }}>6. Contact</h2>
+          <p className="leading-relaxed text-sm" style={{ color: "var(--text-secondary)" }}>
+            Pour toute question relative aux présentes mentions légales, à vos données personnelles
             ou à l&apos;utilisation du service :{" "}
             <a href="mailto:contact@valuengine.fr" className="underline hover:opacity-80" style={{ color: "var(--accent-primary)" }}>
               contact@valuengine.fr
@@ -83,7 +125,7 @@ export default function LegalPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-bold mb-3" style={{ color: "var(--accent-primary)" }}>6. Cookies</h2>
+          <h2 className="text-lg font-bold mb-3" style={{ color: "var(--accent-primary)" }}>7. Cookies</h2>
           <p className="leading-relaxed text-sm" style={{ color: "var(--text-secondary)" }}>
             ValuEngine utilise uniquement des <strong className="text-white">cookies fonctionnels</strong> strictement
             nécessaires au bon fonctionnement du service : authentification via Clerk et gestion des paiements
@@ -92,7 +134,7 @@ export default function LegalPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-bold mb-3" style={{ color: "var(--accent-primary)" }}>7. Droit de rétractation</h2>
+          <h2 className="text-lg font-bold mb-3" style={{ color: "var(--accent-primary)" }}>8. Droit de rétractation</h2>
           <p className="leading-relaxed text-sm" style={{ color: "var(--text-secondary)" }}>
             Conformément à l&apos;article L221-28 du Code de la consommation, le droit de rétractation
             ne s&apos;applique pas aux contenus numériques dont l&apos;exécution a commencé avec l&apos;accord

@@ -98,6 +98,20 @@ export interface AnalyzeResponse {
   } | null;
   share_id?: string;
   is_first_analysis?: boolean;
+  irr?: number | null;
+  cagr_revenue_5y?: number | null;
+  terminal_value_pct?: number | null;
+  terminal_growth_warning?: boolean;
+  financial_warning?: string | null;
+  data_timestamp?: string | null;
+  beta_info?: {
+    beta: number | null;
+    r_squared: number | null;
+    source: string;
+    period: string | null;
+    data_points?: number;
+    benchmark?: string;
+  } | null;
 }
 
 export interface SearchResult {

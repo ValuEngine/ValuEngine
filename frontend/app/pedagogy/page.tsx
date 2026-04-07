@@ -213,7 +213,7 @@ export default function PedagogyPage() {
         </div>
 
         {/* Glossary by category */}
-        <div className="space-y-6">
+        <div id="glossaire" className="space-y-6 scroll-mt-20">
           {Object.entries(grouped).map(([category, categoryTerms]) => (
             <div key={category}>
               <div className="flex items-center gap-2 mb-3">

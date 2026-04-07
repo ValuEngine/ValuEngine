@@ -142,3 +142,10 @@ class AnalyzeResponse(BaseModel):
     sector_benchmarks: Optional[dict] = None
     share_id: Optional[str] = None
     is_first_analysis: bool = False
+    irr: Optional[float] = None  # Implied IRR at current price
+    cagr_revenue_5y: Optional[float] = None  # 5-year revenue CAGR
+    terminal_value_pct: Optional[float] = None  # TV as % of total EV
+    terminal_growth_warning: bool = False
+    financial_warning: Optional[str] = None
+    data_timestamp: Optional[str] = None
+    beta_info: Optional[dict] = None  # Dynamic beta regression info

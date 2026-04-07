@@ -64,6 +64,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         >
           © 2026 ValuEngine — Outil d&apos;analyse éducatif.{" "}
           Les données ne constituent pas des conseils en investissement (MIF II).{" "}
+          <a href="/methodology" className="underline transition-colors" style={{ color: "var(--text-tertiary)" }}>
+            Méthodologie
+          </a>
+          {" · "}
+          <a href="/pedagogy#glossaire" className="underline transition-colors" style={{ color: "var(--text-tertiary)" }}>
+            Glossaire
+          </a>
+          {" · "}
           <a href="/legal" className="underline transition-colors" style={{ color: "var(--text-tertiary)" }}>
             Mentions légales
           </a>

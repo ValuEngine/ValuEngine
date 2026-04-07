@@ -379,6 +379,17 @@ export default function DashboardPage() {
               </span>
             )}
           </div>
+          {/* Achievement hint */}
+          {recent.length >= 3 && recent.length < 10 && (
+            <p className="text-[11px] mt-1" style={{ color: "var(--text-tertiary)" }}>
+              🎯 Encore {10 - recent.length} analyses pour débloquer le badge &quot;Analyste confirmé&quot;
+            </p>
+          )}
+          {recent.length >= 10 && (
+            <p className="text-[11px] mt-1" style={{ color: "var(--accent-gold)" }}>
+              🏆 Badge &quot;Analyste confirmé&quot; débloqué !
+            </p>
+          )}
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
@@ -411,33 +422,46 @@ export default function DashboardPage() {
           {recent.length === 0 ? (
             <FirstRunHero onAnalyze={(t) => router.push(`/analyze?ticker=${t}`)} />
           ) : (
-            <div className="overflow-x-auto flex gap-3 pb-1 sm:grid sm:grid-cols-2 lg:grid-cols-3">
-              {recent.map((entry) => (
-                <button
-                  key={entry.ticker}
-                  onClick={() => router.push(`/analyze?ticker=${entry.ticker}`)}
-                  className="card-interactive rounded-xl p-4 text-left flex-shrink-0 w-64 sm:w-auto"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="font-bold text-base" style={{ color: "var(--accent-primary)" }}>
-                        {entry.ticker}
-                      </p>
-                      <p className="text-sm truncate max-w-[140px]" style={{ color: "var(--text-secondary)" }}>
-                        {entry.name}
-                      </p>
+            <>
+              <div className="overflow-x-auto flex gap-3 pb-1 sm:grid sm:grid-cols-2 lg:grid-cols-3">
+                {recent.map((entry) => (
+                  <button
+                    key={entry.ticker}
+                    onClick={() => router.push(`/analyze?ticker=${entry.ticker}`)}
+                    className="card-interactive rounded-xl p-4 text-left flex-shrink-0 w-64 sm:w-auto"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-bold text-base" style={{ color: "var(--accent-primary)" }}>
+                          {entry.ticker}
+                        </p>
+                        <p className="text-sm truncate max-w-[140px]" style={{ color: "var(--text-secondary)" }}>
+                          {entry.name}
+                        </p>
+                      </div>
+                      <span
+                        className="text-xs font-bold px-2 py-1 rounded-lg"
+                        style={verdictColor(entry.verdict)}
+                      >
+                        {verdictLabel(entry.verdict)}
+                      </span>
                     </div>
-                    <span
-                      className="text-xs font-bold px-2 py-1 rounded-lg"
-                      style={verdictColor(entry.verdict)}
-                    >
-                      {verdictLabel(entry.verdict)}
-                    </span>
-                  </div>
-                  <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{entry.date}</p>
-                </button>
-              ))}
-            </div>
+                    <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{entry.date}</p>
+                  </button>
+                ))}
+              </div>
+              {recent.length > 0 && (
+                <div className="mt-3">
+                  <button
+                    onClick={() => router.push("/track-record")}
+                    className="text-xs font-medium transition-colors"
+                    style={{ color: "var(--accent-primary)" }}
+                  >
+                    Voir le track record complet →
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
 
