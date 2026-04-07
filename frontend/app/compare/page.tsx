@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { Loader2, Lock, ArrowRight } from "lucide-react";
 import { analyzeStock, authedFetch, fmt, pct, type AnalyzeResponse } from "@/lib/api";
@@ -62,11 +62,12 @@ const ROWS: RowDef[] = [
   { label: "Upside %",            getValue: d => d.dcf.upside_pct,                   format: v => `${v > 0 ? "+" : ""}${v.toFixed(1)}%`, higherIsBetter: true },
 ];
 
-export default function ComparePage() {
+function CompareContent() {
   const router = useRouter();
   const { getToken } = useAuth();
-  const [ticker1, setTicker1] = useState("");
-  const [ticker2, setTicker2] = useState("");
+  const searchParams = useSearchParams();
+  const [ticker1, setTicker1] = useState(searchParams.get("ticker1") || "");
+  const [ticker2, setTicker2] = useState(searchParams.get("ticker2") || "");
   const [data1, setData1] = useState<AnalyzeResponse | null>(null);
   const [data2, setData2] = useState<AnalyzeResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -344,5 +345,13 @@ export default function ComparePage() {
         )}
       </div>
     </AppLayout>
+  );
+}
+
+export default function ComparePage() {
+  return (
+    <Suspense fallback={<AppLayout><div className="flex items-center justify-center min-h-screen"><Loader2 size={24} className="animate-spin" style={{ color: "var(--accent-primary)" }} /></div></AppLayout>}>
+      <CompareContent />
+    </Suspense>
   );
 }

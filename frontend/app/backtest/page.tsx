@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { useSearchParams } from "next/navigation";
 import { Loader2, TrendingUp, TrendingDown, Calendar, DollarSign, Clock } from "lucide-react";
 import { authedFetch } from "@/lib/api";
 import AppLayout from "@/components/AppLayout";
@@ -22,6 +23,8 @@ interface BacktestResult {
   days_held: number;
   annualized_return: number;
   sp500_pnl_pct: number | null;
+  max_drawdown: number;
+  volatility_annual: number | null;
   chart_data: { date: string; price: number; value: number; pnl_pct: number }[];
 }
 
@@ -31,10 +34,11 @@ function formatCurrency(v: number): string {
   return `$${v.toFixed(2)}`;
 }
 
-export default function BacktestPage() {
+function BacktestContent() {
   const { getToken } = useAuth();
+  const searchParams = useSearchParams();
 
-  const [ticker, setTicker] = useState("");
+  const [ticker, setTicker] = useState(searchParams.get("ticker") || "");
   const [buyDate, setBuyDate] = useState("");
   const [amount, setAmount] = useState("");
   const [sellDate, setSellDate] = useState("");
@@ -400,6 +404,30 @@ export default function BacktestPage() {
               </div>
             </div>
 
+            {/* Risk metrics — Max Drawdown + Volatility */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="card p-4">
+                <p className="text-[13px] font-medium mb-1" style={{ color: "var(--text-secondary)" }}>
+                  Max Drawdown
+                </p>
+                <p className="text-lg font-bold" style={{ color: "var(--color-danger)" }}>
+                  {result.max_drawdown.toFixed(1)}%
+                </p>
+                <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>Pire baisse pic-à-creux</p>
+              </div>
+              {result.volatility_annual !== null && (
+                <div className="card p-4">
+                  <p className="text-[13px] font-medium mb-1" style={{ color: "var(--text-secondary)" }}>
+                    Volatilité annualisée
+                  </p>
+                  <p className="text-lg font-bold" style={{ color: "var(--color-info)" }}>
+                    {result.volatility_annual}%
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>Écart-type × √252</p>
+                </div>
+              )}
+            </div>
+
             {/* VS S&P 500 */}
             {result.sp500_pnl_pct !== null && (
               <div className="card p-6">
@@ -521,5 +549,13 @@ export default function BacktestPage() {
         )}
       </div>
     </AppLayout>
+  );
+}
+
+export default function BacktestPage() {
+  return (
+    <Suspense fallback={<AppLayout><div className="flex items-center justify-center min-h-screen"><Loader2 size={24} className="animate-spin" style={{ color: "var(--accent-primary)" }} /></div></AppLayout>}>
+      <BacktestContent />
+    </Suspense>
   );
 }

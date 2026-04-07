@@ -414,8 +414,8 @@ type NewTabId = "overview" | "dcf" | "deep";
 
 const ANALYSIS_TABS: { id: NewTabId; label: string }[] = [
   { id: "overview", label: "Vue d'ensemble" },
-  { id: "dcf",      label: "DCF & Scénarios" },
-  { id: "deep",     label: "Analyse profonde" },
+  { id: "dcf",      label: "DCF & Scénarios \uD83D\uDD12" },
+  { id: "deep",     label: "Analyse profonde \uD83D\uDD12" },
 ];
 
 /* ─────────────── PriceAlertSection ─────────────────────────────────────── */
@@ -1108,6 +1108,22 @@ function AnalyzePage() {
                 <p className="text-xs leading-relaxed" style={{ color: "rgba(255,220,140,0.7)" }}>
                   Cette estimation est basée sur un modèle DCF mathématique. Elle ne constitue pas un conseil en investissement au sens de la directive MIF II. Fais tes propres recherches.
                 </p>
+              </div>
+
+              {/* ── Quick Actions — Backtest / Compare / Add to portfolio */}
+              <div className="flex flex-wrap gap-3 mb-6">
+                <button
+                  onClick={() => router.push(`/backtest?ticker=${data.company.ticker}`)}
+                  className="btn-secondary flex items-center gap-2 text-sm"
+                >
+                  <TrendingUp size={14} /> Backtester {data.company.ticker}
+                </button>
+                <button
+                  onClick={() => router.push(`/compare?ticker1=${data.company.ticker}`)}
+                  className="btn-secondary flex items-center gap-2 text-sm"
+                >
+                  &#8596; Comparer avec un pair
+                </button>
               </div>
 
               {/* ── TAB SYSTEM ─────────────────────────────────────────── */}

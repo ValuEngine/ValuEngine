@@ -31,13 +31,20 @@ def calculate_dcf(
         dict avec enterprise_value, equity_value, intrinsic_value,
         terminal_value_pv, fcf_projections, pv_fcfs
     """
-    # Garde-fous
-    if fcf <= 0:
-        fcf = abs(fcf) if fcf != 0 else 1_000_000
+    # Garde-fous — erreurs explicites plutôt que fallbacks silencieux
+    if shares_outstanding <= 0:
+        return {
+            "enterprise_value_dcf": 0, "equity_value": 0, "intrinsic_value": 0,
+            "terminal_value_pv": 0, "fcf_projections": [], "pv_fcfs": [],
+            "warning": "Shares outstanding non disponibles — DCF impossible",
+        }
+    if fcf == 0:
+        fcf = 1.0  # Évite division par zéro, mais valeur symbolique
+    # FCF négatif : on garde le signe pour les projections (entreprise en perte)
+    # Le résultat intrinsic_value sera négatif → clampé à 0 en sortie
     if wacc <= terminal_growth:
         terminal_growth = wacc - 0.005
-    if shares_outstanding <= 0:
-        shares_outstanding = 1.0
+        # Warning ajouté au retour
     horizon = max(3, min(horizon, 10))
 
     # Projection des FCF et actualisation

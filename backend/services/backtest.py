@@ -121,6 +121,29 @@ def run_backtest(
     except Exception:
         pass
 
+    # Max drawdown & volatility from chart data
+    max_drawdown = 0.0
+    volatility_annual = None
+    try:
+        chart_hist = hist[(hist.index >= actual_buy_date) & (hist.index <= actual_sell_date)]
+        if len(chart_hist) > 5:
+            closes = chart_hist["Close"].values
+            # Max drawdown (peak-to-trough)
+            peak = closes[0]
+            for price_val in closes:
+                if price_val > peak:
+                    peak = price_val
+                dd = (price_val - peak) / peak * 100
+                if dd < max_drawdown:
+                    max_drawdown = dd
+            # Annualized volatility (daily returns * sqrt(252))
+            import numpy as np
+            daily_returns = np.diff(closes) / closes[:-1]
+            if len(daily_returns) > 1:
+                volatility_annual = round(float(np.std(daily_returns) * np.sqrt(252) * 100), 1)
+    except Exception:
+        pass
+
     # Comparison with S&P 500
     sp500_pnl_pct = None
     try:
@@ -149,5 +172,7 @@ def run_backtest(
         "days_held": days_held,
         "annualized_return": round(annualized, 1),
         "sp500_pnl_pct": sp500_pnl_pct,
+        "max_drawdown": round(max_drawdown, 1),
+        "volatility_annual": volatility_annual,
         "chart_data": chart_data,
     }
