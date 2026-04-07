@@ -106,6 +106,22 @@ def analyze(request: Request, req: AnalyzeRequest):
 
     company = CompanyData(**raw)
 
+    # ── Sector benchmarks ──────────────────────────────────────────────
+    sector_benchmarks = None
+    try:
+        sector_benchmarks = get_sector_benchmarks(ticker, raw.get("sector", ""))
+    except Exception:
+        pass
+
+    # ── 1b. CAPM-based suggested WACC ──────────────────────────────────
+    from services.capm import calculate_capm_wacc
+    capm = calculate_capm_wacc(
+        beta=raw.get("beta"),
+        market_cap=raw.get("market_cap", 0),
+        total_debt=raw.get("total_debt", 0),
+        total_cash=raw.get("total_cash", 0),
+    )
+
     # ── 2. DCF ──────────────────────────────────────────────────────────
     fcf    = raw["free_cash_flow"]
     shares = raw["shares_outstanding"]
@@ -183,6 +199,7 @@ def analyze(request: Request, req: AnalyzeRequest):
     return AnalyzeResponse(
         company=company, dcf=dcf, sensitivity=sensitivity,
         analysis=analysis, verdict=verdict, verdict_label=verdict_label,
+        suggested_wacc=capm, sector_benchmarks=sector_benchmarks,
         share_id=share_id, is_first_analysis=is_first_analysis,
     )
 

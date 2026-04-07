@@ -94,6 +94,24 @@ def run_backtest(
     if years_held > 0:
         annualized = ((final_value / amount) ** (1 / years_held) - 1) * 100
 
+    # Dividends received during holding period
+    total_dividends = 0.0
+    dividend_events = []
+    try:
+        chart_hist_div = hist[(hist.index >= actual_buy_date) & (hist.index <= actual_sell_date)]
+        if "Dividends" in chart_hist_div.columns:
+            for idx, row in chart_hist_div.iterrows():
+                div = float(row.get("Dividends", 0))
+                if div > 0:
+                    total_dividends += div * shares
+                    dividend_events.append({
+                        "date": idx.strftime("%Y-%m-%d"),
+                        "per_share": round(div, 4),
+                        "total": round(div * shares, 2),
+                    })
+    except Exception:
+        pass
+
     # Chart data (weekly points for performance)
     chart_data = []
     try:
@@ -174,5 +192,9 @@ def run_backtest(
         "sp500_pnl_pct": sp500_pnl_pct,
         "max_drawdown": round(max_drawdown, 1),
         "volatility_annual": volatility_annual,
+        "total_dividends": round(total_dividends, 2),
+        "dividend_events": dividend_events,
+        "total_return_with_dividends": round(pnl + total_dividends, 2),
+        "total_return_pct_with_dividends": round(((final_value + total_dividends - amount) / amount) * 100, 1) if amount > 0 else 0,
         "chart_data": chart_data,
     }

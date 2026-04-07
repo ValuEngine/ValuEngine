@@ -13,6 +13,7 @@ import { gtmEvents } from "@/lib/analytics";
 import { SensitivityHeatmap } from "@/components/SensitivityHeatmap";
 import { FCFChart } from "@/components/FCFChart";
 import { TradingComps } from "@/components/TradingComps";
+import Tooltip from "@/components/ui/Tooltip";
 import { PriceChart } from "@/components/PriceChart";
 import AppLayout from "@/components/AppLayout";
 import DeepAnalysisSection from "@/components/DeepAnalysisSection";
@@ -59,12 +60,19 @@ function VerdictConfig(verdict: string) {
   return                         { color: "var(--color-warning)", rawColor: "#FFB84D", bg: "rgba(255,184,77,0.06)",  border: "rgba(255,184,77,0.2)",  icon: <Minus        size={20} />, action: "Zone de juste valeur"           };
 }
 
-function KPI({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
+function KPI({ label, value, sub, color, tooltip }: { label: string; value: string; sub?: string; color?: string; tooltip?: string }) {
   return (
     <div
       className="card rounded-xl p-4 transition-colors duration-200"
     >
-      <p className="text-[13px] font-medium mb-2" style={{ color: "var(--text-tertiary)" }}>{label}</p>
+      <p className="text-[13px] font-medium mb-2 flex items-center gap-1.5" style={{ color: "var(--text-tertiary)" }}>
+        {label}
+        {tooltip && (
+          <Tooltip content={tooltip}>
+            <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full text-[9px] font-bold cursor-help" style={{ background: "var(--bg-overlay)", color: "var(--text-tertiary)", border: "1px solid var(--border-subtle)" }}>?</span>
+          </Tooltip>
+        )}
+      </p>
       <p className="text-xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>{value}</p>
       {sub && <p className="text-xs mt-1.5" style={{ color: color || "var(--text-secondary)" }}>{sub}</p>}
     </div>
@@ -1147,28 +1155,40 @@ function AnalyzePage() {
                   {/* KPI Grid */}
                   <Section title="Fondamentaux clés">
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-4">
-                      <KPI label="Market Cap"         value={fmt(data.company.market_cap, currencySymbol(data.company.ticker))} />
-                      <KPI label="Chiffre d'affaires" value={fmt(data.company.revenue, currencySymbol(data.company.ticker))} />
-                      <KPI label="EBITDA"             value={fmt(data.company.ebitda, currencySymbol(data.company.ticker))} />
+                      <KPI label="Market Cap"         value={fmt(data.company.market_cap, currencySymbol(data.company.ticker))} tooltip="Capitalisation boursière = prix × nombre d'actions. Reflète la taille de l'entreprise sur le marché." />
+                      <KPI label="Chiffre d'affaires" value={fmt(data.company.revenue, currencySymbol(data.company.ticker))} tooltip="Total des ventes de l'entreprise sur les 12 derniers mois (TTM)." />
+                      <KPI label="EBITDA"             value={fmt(data.company.ebitda, currencySymbol(data.company.ticker))} tooltip="Bénéfice avant intérêts, impôts, dépréciation et amortissement. Mesure la rentabilité opérationnelle." />
                       <KPI label="Résultat net"       value={fmt(data.company.net_income, currencySymbol(data.company.ticker))}
                         color={data.company.net_income > 0 ? "var(--color-success)" : "var(--color-danger)"}
-                        sub={data.company.net_income > 0 ? "▲ Positif" : "▼ Négatif"} />
+                        sub={data.company.net_income > 0 ? "▲ Positif" : "▼ Négatif"} tooltip="Bénéfice final après toutes les charges. Un résultat négatif signifie que l'entreprise perd de l'argent." />
                       <KPI label="Free Cash Flow"     value={fmt(data.company.free_cash_flow, currencySymbol(data.company.ticker))}
                         color={data.company.free_cash_flow > 0 ? "var(--color-success)" : "var(--color-danger)"}
-                        sub={data.company.free_cash_flow > 0 ? "▲ Génère du cash" : "▼ Consomme du cash"} />
-                      <KPI label="Dette nette"        value={fmt(data.company.net_debt, currencySymbol(data.company.ticker))} />
+                        sub={data.company.free_cash_flow > 0 ? "▲ Génère du cash" : "▼ Consomme du cash"} tooltip="Cash réellement généré par l'activité, après investissements. C'est la base du modèle DCF." />
+                      <KPI label="Dette nette"        value={fmt(data.company.net_debt, currencySymbol(data.company.ticker))} tooltip="Dette totale - trésorerie. Si négatif, l'entreprise a plus de cash que de dette." />
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6">
                       <KPI label="P/E Ratio"   value={data.company.pe_ratio != null ? `${data.company.pe_ratio.toFixed(1)}x` : "N/A"}
-                        sub={data.company.pe_ratio != null ? (data.company.pe_ratio > 30 ? "Élevé" : "Modéré") : ""} />
-                      <KPI label="EV/EBITDA"  value={data.company.ev_ebitda != null ? `${data.company.ev_ebitda.toFixed(1)}x` : "N/A"} />
-                      <KPI label="P/B Ratio"  value={data.company.pb_ratio != null ? `${data.company.pb_ratio.toFixed(1)}x` : "N/A"} />
+                        sub={data.sector_benchmarks?.median_pe
+                          ? `Secteur: ${data.sector_benchmarks.median_pe.toFixed(1)}x`
+                          : (data.company.pe_ratio != null ? (data.company.pe_ratio > 30 ? "Élevé" : "Modéré") : "")}
+                        color={data.company.pe_ratio != null && data.sector_benchmarks?.median_pe
+                          ? (data.company.pe_ratio < data.sector_benchmarks.median_pe ? "var(--color-success)" : "var(--color-danger)")
+                          : undefined}
+                        tooltip="Price-to-Earnings : prix / bénéfice par action. Plus il est élevé, plus l'action est 'chère' vs ses profits." />
+                      <KPI label="EV/EBITDA"  value={data.company.ev_ebitda != null ? `${data.company.ev_ebitda.toFixed(1)}x` : "N/A"} tooltip="Valeur d'entreprise / EBITDA. Multiple de valorisation indépendant de la structure de capital. <10x = modéré." />
+                      <KPI label="P/B Ratio"  value={data.company.pb_ratio != null ? `${data.company.pb_ratio.toFixed(1)}x` : "N/A"} tooltip="Price-to-Book : prix / valeur comptable. <1x signifie que l'action cote en dessous de ses actifs nets." />
                       <KPI label="ROE"        value={data.company.roe != null ? `${(data.company.roe * 100).toFixed(1)}%` : "N/A"}
-                        color={data.company.roe != null && data.company.roe > 0.15 ? "var(--color-success)" : undefined} />
+                        sub={data.sector_benchmarks?.median_roe
+                          ? `Secteur: ${(data.sector_benchmarks.median_roe * 100).toFixed(1)}%`
+                          : undefined}
+                        color={data.company.roe != null && data.sector_benchmarks?.median_roe
+                          ? (data.company.roe > data.sector_benchmarks.median_roe ? "var(--color-success)" : "var(--color-danger)")
+                          : (data.company.roe != null && data.company.roe > 0.15 ? "var(--color-success)" : undefined)}
+                        tooltip="Return on Equity : résultat net / capitaux propres. Mesure l'efficacité à générer du profit pour les actionnaires. >15% = excellent." />
                       <KPI label="Croissance CA" value={data.company.revenue_growth != null ? pct(data.company.revenue_growth) : "N/A"}
-                        color={data.company.revenue_growth != null && data.company.revenue_growth > 0 ? "var(--color-success)" : "var(--color-danger)"} />
+                        color={data.company.revenue_growth != null && data.company.revenue_growth > 0 ? "var(--color-success)" : "var(--color-danger)"} tooltip="Variation du chiffre d'affaires sur 1 an. Indicateur clé de la dynamique commerciale de l'entreprise." />
                       <KPI label="Beta"       value={data.company.beta != null ? data.company.beta.toFixed(2) : "N/A"}
-                        sub={data.company.beta != null ? (data.company.beta > 1.2 ? "Volatil" : data.company.beta < 0.8 ? "Défensif" : "Neutre") : ""} />
+                        sub={data.company.beta != null ? (data.company.beta > 1.2 ? "Volatil" : data.company.beta < 0.8 ? "Défensif" : "Neutre") : ""} tooltip="Mesure la volatilité de l'action vs le marché. >1 = plus volatil que le marché, <1 = moins volatil." />
                     </div>
                   </Section>
 
@@ -1298,6 +1318,22 @@ function AnalyzePage() {
                         borderColor: "rgba(108,92,231,0.18)",
                       }}
                     >
+                      {data?.suggested_wacc && (
+                        <div className="flex flex-wrap items-center gap-3 mb-4 px-4 py-3 rounded-xl" style={{ background: "rgba(108,92,231,0.06)", border: "1px solid rgba(108,92,231,0.15)" }}>
+                          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>WACC suggéré (CAPM)</span>
+                          <span className="text-sm font-bold" style={{ color: "var(--accent-primary)" }}>{(data.suggested_wacc.suggested_wacc * 100).toFixed(1)}%</span>
+                          <button
+                            onClick={() => { setWacc(Math.round(data.suggested_wacc!.suggested_wacc * 100)); }}
+                            className="text-[11px] px-2 py-1 rounded-lg transition-all hover:opacity-80"
+                            style={{ color: "var(--accent-primary)", border: "1px solid rgba(108,92,231,0.3)" }}
+                          >
+                            Appliquer
+                          </button>
+                          <span className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+                            Ke={(data.suggested_wacc.cost_of_equity * 100).toFixed(1)}% · β={data.suggested_wacc.beta_used} · E/V={(data.suggested_wacc.equity_weight * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                      )}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         {[
                           { label: "Croissance FCF",    value: growth,   set: setGrowth,   min: 1, max: 30, suffix: "%" },

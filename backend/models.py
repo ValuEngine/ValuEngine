@@ -138,5 +138,7 @@ class AnalyzeResponse(BaseModel):
     analysis: BullBearAnalysis
     verdict: str          # "BUY" | "HOLD" | "SELL"
     verdict_label: str    # "Sous-évalué" | "Juste valeur" | "Surévalué"
+    suggested_wacc: Optional[dict] = None
+    sector_benchmarks: Optional[dict] = None
     share_id: Optional[str] = None
     is_first_analysis: bool = False

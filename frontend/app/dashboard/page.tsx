@@ -189,6 +189,7 @@ export default function DashboardPage() {
   const [showProWelcome, setShowProWelcome] = useState(false);
   const [referralCount, setReferralCount] = useState(0);
   const [refCopied, setRefCopied] = useState(false);
+  const [usage, setUsage] = useState<{ used: number; limit: number; is_pro: boolean } | null>(null);
 
   // Warmup backend Railway dès l'arrivée sur le dashboard
   useEffect(() => { warmupBackend(); }, []);
@@ -232,6 +233,15 @@ export default function DashboardPage() {
     authedFetch(`${API_BASE}/api/referral/${user.id}`, getToken)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setReferralCount(d.count ?? 0); })
+      .catch(() => {});
+  }, [user?.id, getToken]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+    authedFetch(`${API_BASE}/api/usage/${user.id}`, getToken)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setUsage(d); })
       .catch(() => {});
   }, [user?.id, getToken]);
 
@@ -339,9 +349,36 @@ export default function DashboardPage() {
 
         {/* Quick search — card-highlight */}
         <div className="card-highlight p-5 mb-8">
-          <p className="text-[13px] font-medium mb-4" style={{ color: "var(--accent-primary)" }}>
-            Analyser un titre
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-[13px] font-medium" style={{ color: "var(--accent-primary)" }}>
+              Analyser un titre
+            </p>
+            {usage && !usage.is_pro && (
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  {Array.from({ length: usage.limit }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-2 h-2 rounded-full transition-colors"
+                      style={{
+                        background: i < usage.used ? "var(--accent-primary)" : "var(--border-subtle)",
+                      }}
+                    />
+                  ))}
+                </div>
+                <span className="text-[11px] font-medium" style={{ color: usage.used >= usage.limit ? "var(--color-danger)" : "var(--text-tertiary)" }}>
+                  {usage.used >= usage.limit
+                    ? "Limite atteinte"
+                    : `${usage.limit - usage.used} analyse${usage.limit - usage.used > 1 ? "s" : ""} restante${usage.limit - usage.used > 1 ? "s" : ""}`}
+                </span>
+              </div>
+            )}
+            {usage?.is_pro && (
+              <span className="text-[11px] font-medium px-2 py-0.5 rounded-full" style={{ background: "rgba(240,200,80,0.12)", color: "var(--accent-gold)", border: "1px solid rgba(240,200,80,0.25)" }}>
+                Pro · Illimité
+              </span>
+            )}
+          </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"

@@ -25,6 +25,10 @@ interface BacktestResult {
   sp500_pnl_pct: number | null;
   max_drawdown: number;
   volatility_annual: number | null;
+  total_dividends: number;
+  dividend_events: { date: string; per_share: number; total: number }[];
+  total_return_with_dividends: number;
+  total_return_pct_with_dividends: number;
   chart_data: { date: string; price: number; value: number; pnl_pct: number }[];
 }
 
@@ -311,6 +315,17 @@ function BacktestContent() {
               <p className="text-sm mt-3" style={{ color: "var(--text-secondary)" }}>
                 {formatCurrency(result.amount_invested)} → {formatCurrency(result.final_value)}
               </p>
+              {result.total_dividends > 0 && (
+                <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+                  <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                    dont <span className="font-bold" style={{ color: "var(--color-success)" }}>{formatCurrency(result.total_dividends)}</span> de dividendes
+                    ({result.dividend_events.length} versement{result.dividend_events.length > 1 ? "s" : ""})
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
+                    Rendement total avec dividendes : <span className="font-bold" style={{ color: pnlColorVar }}>{result.total_return_pct_with_dividends >= 0 ? "+" : ""}{result.total_return_pct_with_dividends.toFixed(1)}%</span>
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Chart */}
@@ -427,6 +442,30 @@ function BacktestContent() {
                 </div>
               )}
             </div>
+
+            {/* Dividend details */}
+            {result.dividend_events && result.dividend_events.length > 0 && (
+              <div className="card p-6">
+                <h3 className="text-[13px] font-medium mb-4" style={{ color: "var(--text-secondary)" }}>
+                  Dividendes reçus ({result.dividend_events.length})
+                </h3>
+                <div className="space-y-2">
+                  {result.dividend_events.map((d, i) => (
+                    <div key={i} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: "var(--border-subtle)" }}>
+                      <span className="text-sm" style={{ color: "var(--text-secondary)" }}>{d.date}</span>
+                      <div className="flex items-center gap-4">
+                        <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>${d.per_share}/action</span>
+                        <span className="text-sm font-bold" style={{ color: "var(--color-success)" }}>+{formatCurrency(d.total)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-between mt-3 pt-3" style={{ borderTop: "1px solid var(--border-default)" }}>
+                  <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Total dividendes</span>
+                  <span className="text-sm font-bold" style={{ color: "var(--color-success)" }}>+{formatCurrency(result.total_dividends)}</span>
+                </div>
+              </div>
+            )}
 
             {/* VS S&P 500 */}
             {result.sp500_pnl_pct !== null && (

@@ -78,6 +78,24 @@ export interface AnalyzeResponse {
   analysis: { bull_case: string; bear_case: string };
   verdict: "BUY" | "HOLD" | "SELL";
   verdict_label: string;
+  suggested_wacc?: {
+    suggested_wacc: number;
+    cost_of_equity: number;
+    cost_of_debt: number;
+    equity_weight: number;
+    debt_weight: number;
+    beta_used: number;
+    risk_free_rate: number;
+    market_risk_premium: number;
+  };
+  sector_benchmarks?: {
+    median_pe: number | null;
+    median_gross_margin: number | null;
+    median_net_margin: number | null;
+    median_roe: number | null;
+    peer_count: number;
+    sector: string;
+  } | null;
   share_id?: string;
   is_first_analysis?: boolean;
 }
