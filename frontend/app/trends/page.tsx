@@ -39,25 +39,25 @@ export default function TrendsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const RANK_COLORS = ["#C9A84C", "#a0a0a0", "#cd7f32", "#71717a", "#71717a"];
+  const RANK_COLORS = ["var(--accent-primary)", "#a0a0a0", "#cd7f32", "var(--text-tertiary)", "var(--text-tertiary)"];
 
   return (
     <AppLayout>
-      <div className="min-h-screen text-white px-4 sm:px-6 md:px-10 py-4 sm:py-8 max-w-4xl">
+      <div className="min-h-screen px-4 sm:px-6 md:px-10 py-4 sm:py-8 max-w-4xl" style={{ color: "var(--text-primary)" }}>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <Flame size={24} className="text-[#ff4d6d]" />
+            <Flame size={24} style={{ color: "var(--color-danger)" }} />
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Tendances</h1>
           </div>
-          <p className="text-zinc-500 text-sm">
+          <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
             Ce que la communaute ValuEngine analyse et detient — donnees anonymisees.
           </p>
         </div>
 
         {loading && (
           <div className="flex items-center justify-center py-16">
-            <Loader2 size={24} className="animate-spin text-[#C9A84C]" />
+            <Loader2 size={24} className="animate-spin" style={{ color: "var(--accent-primary)" }} />
           </div>
         )}
 
@@ -65,28 +65,28 @@ export default function TrendsPage() {
           <div className="space-y-8">
             {/* Community Stats */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-xl p-5 text-center">
-                <Users size={20} className="text-[#C9A84C] mx-auto mb-2" />
-                <p className="text-2xl font-black text-white">{data.stats.total_users.toLocaleString()}</p>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mt-1">Utilisateurs</p>
+              <div className="backdrop-blur-sm rounded-xl p-5 text-center border" style={{ background: "var(--bg-surface)", borderColor: "var(--border-default)" }}>
+                <Users size={20} className="mx-auto mb-2" style={{ color: "var(--accent-primary)" }} />
+                <p className="text-2xl font-black" style={{ color: "var(--text-primary)" }}>{data.stats.total_users.toLocaleString()}</p>
+                <p className="text-[13px] font-medium mt-1" style={{ color: "var(--text-tertiary)" }}>Utilisateurs</p>
               </div>
-              <div className="bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-xl p-5 text-center">
-                <BarChart3 size={20} className="text-[#C9A84C] mx-auto mb-2" />
-                <p className="text-2xl font-black text-white">{data.stats.total_analyses.toLocaleString()}</p>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mt-1">Analyses</p>
+              <div className="backdrop-blur-sm rounded-xl p-5 text-center border" style={{ background: "var(--bg-surface)", borderColor: "var(--border-default)" }}>
+                <BarChart3 size={20} className="mx-auto mb-2" style={{ color: "var(--accent-primary)" }} />
+                <p className="text-2xl font-black" style={{ color: "var(--text-primary)" }}>{data.stats.total_analyses.toLocaleString()}</p>
+                <p className="text-[13px] font-medium mt-1" style={{ color: "var(--text-tertiary)" }}>Analyses</p>
               </div>
-              <div className="bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-xl p-5 text-center">
-                <Briefcase size={20} className="text-[#C9A84C] mx-auto mb-2" />
-                <p className="text-2xl font-black text-white">{data.stats.total_positions.toLocaleString()}</p>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mt-1">Positions</p>
+              <div className="backdrop-blur-sm rounded-xl p-5 text-center border" style={{ background: "var(--bg-surface)", borderColor: "var(--border-default)" }}>
+                <Briefcase size={20} className="mx-auto mb-2" style={{ color: "var(--accent-primary)" }} />
+                <p className="text-2xl font-black" style={{ color: "var(--text-primary)" }}>{data.stats.total_positions.toLocaleString()}</p>
+                <p className="text-[13px] font-medium mt-1" style={{ color: "var(--text-tertiary)" }}>Positions</p>
               </div>
             </div>
 
             {/* Top Analyzed */}
-            <div className="bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-2xl p-6">
+            <div className="backdrop-blur-sm rounded-2xl p-6 border" style={{ background: "var(--bg-surface)", borderColor: "var(--border-default)" }}>
               <div className="flex items-center gap-2 mb-5">
-                <TrendingUp size={16} className="text-[#C9A84C]" />
-                <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
+                <TrendingUp size={16} style={{ color: "var(--accent-primary)" }} />
+                <h2 className="text-sm font-bold" style={{ color: "var(--text-secondary)" }}>
                   Les plus analyses
                 </h2>
               </div>
@@ -100,7 +100,7 @@ export default function TrendsPage() {
                       <div
                         key={t.ticker}
                         onClick={() => router.push(`/analyze?ticker=${t.ticker}`)}
-                        className="flex items-center gap-3 cursor-pointer hover:bg-[rgba(255,255,255,0.02)] rounded-lg px-2 py-1.5 transition-colors"
+                        className="flex items-center gap-3 cursor-pointer rounded-lg px-2 py-1.5 transition-colors hover:bg-[rgba(255,255,255,0.02)]"
                       >
                         <span
                           className="text-sm font-black w-6 text-center"
@@ -108,14 +108,14 @@ export default function TrendsPage() {
                         >
                           {t.rank}
                         </span>
-                        <span className="text-sm font-bold text-[#C9A84C] w-20">{t.ticker}</span>
-                        <div className="flex-1 bg-[#27272a] rounded-full h-2">
+                        <span className="text-sm font-bold w-20" style={{ color: "var(--accent-primary)" }}>{t.ticker}</span>
+                        <div className="flex-1 rounded-full h-2" style={{ background: "var(--border-default)" }}>
                           <div
-                            className="h-2 rounded-full bg-[#C9A84C] transition-all"
-                            style={{ width: `${pct}%` }}
+                            className="h-2 rounded-full transition-all"
+                            style={{ width: `${pct}%`, background: "var(--accent-primary)" }}
                           />
                         </div>
-                        <span className="text-xs text-zinc-500 w-16 text-right">
+                        <span className="text-xs w-16 text-right" style={{ color: "var(--text-tertiary)" }}>
                           {t.count} analyses
                         </span>
                       </div>
@@ -123,15 +123,15 @@ export default function TrendsPage() {
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-zinc-600 italic">Pas encore assez de donnees.</p>
+                <p className="text-sm italic" style={{ color: "var(--text-tertiary)" }}>Pas encore assez de donnees.</p>
               )}
             </div>
 
             {/* Most Held */}
-            <div className="bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-2xl p-6">
+            <div className="backdrop-blur-sm rounded-2xl p-6 border" style={{ background: "var(--bg-surface)", borderColor: "var(--border-default)" }}>
               <div className="flex items-center gap-2 mb-5">
-                <Briefcase size={16} className="text-[#00d4aa]" />
-                <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
+                <Briefcase size={16} style={{ color: "var(--color-success)" }} />
+                <h2 className="text-sm font-bold" style={{ color: "var(--text-secondary)" }}>
                   Les plus detenus
                 </h2>
               </div>
@@ -145,7 +145,7 @@ export default function TrendsPage() {
                       <div
                         key={t.ticker}
                         onClick={() => router.push(`/analyze?ticker=${t.ticker}`)}
-                        className="flex items-center gap-3 cursor-pointer hover:bg-[rgba(255,255,255,0.02)] rounded-lg px-2 py-1.5 transition-colors"
+                        className="flex items-center gap-3 cursor-pointer rounded-lg px-2 py-1.5 transition-colors hover:bg-[rgba(255,255,255,0.02)]"
                       >
                         <span
                           className="text-sm font-black w-6 text-center"
@@ -153,14 +153,14 @@ export default function TrendsPage() {
                         >
                           {t.rank}
                         </span>
-                        <span className="text-sm font-bold text-[#00d4aa] w-20">{t.ticker}</span>
-                        <div className="flex-1 bg-[#27272a] rounded-full h-2">
+                        <span className="text-sm font-bold w-20" style={{ color: "var(--color-success)" }}>{t.ticker}</span>
+                        <div className="flex-1 rounded-full h-2" style={{ background: "var(--border-default)" }}>
                           <div
-                            className="h-2 rounded-full bg-[#00d4aa] transition-all"
-                            style={{ width: `${pct}%` }}
+                            className="h-2 rounded-full transition-all"
+                            style={{ width: `${pct}%`, background: "var(--color-success)" }}
                           />
                         </div>
-                        <span className="text-xs text-zinc-500 w-16 text-right">
+                        <span className="text-xs w-16 text-right" style={{ color: "var(--text-tertiary)" }}>
                           {t.holders} users
                         </span>
                       </div>
@@ -168,7 +168,7 @@ export default function TrendsPage() {
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-zinc-600 italic">Pas encore assez de donnees.</p>
+                <p className="text-sm italic" style={{ color: "var(--text-tertiary)" }}>Pas encore assez de donnees.</p>
               )}
             </div>
           </div>

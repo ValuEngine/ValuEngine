@@ -6,7 +6,7 @@ import { useProStatus } from "@/hooks/useProStatus";
 
 const avatarAppearance = {
   elements: {
-    avatarBox: "w-9 h-9 ring-2 ring-[#C9A84C] ring-offset-2 ring-offset-[#0a1628]",
+    avatarBox: "w-9 h-9 ring-2 ring-offset-2 ring-offset-[#0a1628]",
   },
 };
 
@@ -31,13 +31,24 @@ export function NavAuth() {
   return (
     <>
       <SignInButton mode="redirect">
-        <button className="text-sm font-semibold border border-[rgba(201,168,76,0.4)] text-[#C9A84C] px-4 py-2 rounded-lg hover:bg-[rgba(201,168,76,0.08)] transition-all">
+        <button
+          className="text-sm font-semibold px-4 py-2 rounded-lg transition-all"
+          style={{
+            border: "1px solid rgba(108,92,231,0.4)",
+            color: "var(--accent-primary)",
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(108,92,231,0.08)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = ""; }}
+        >
           Se connecter
         </button>
       </SignInButton>
       <button
         onClick={() => router.push("/sign-up")}
-        className="bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold text-sm px-5 py-2.5 rounded-lg hover:shadow-[0_4px_20px_rgba(201,168,76,0.4)] transition-all duration-200"
+        className="text-[#0a1628] font-bold text-sm px-5 py-2.5 rounded-lg transition-all duration-200"
+        style={{ background: "linear-gradient(to right, var(--accent-primary), #8b7cf8)" }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 20px rgba(108,92,231,0.4)"; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = ""; }}
       >
         Commencer gratuitement
       </button>
@@ -53,11 +64,11 @@ export function NavAuthCompact() {
 
     return (
       <div className="flex items-center gap-2">
-        <span className="text-sm text-[#C9A84C] font-medium hidden md:block">
+        <span className="text-sm font-medium hidden md:block" style={{ color: "var(--accent-primary)" }}>
           {user?.firstName}
         </span>
         {isPro && (
-          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#C9A84C] text-[#0a1628]">
+          <span className="text-xs font-bold px-2 py-0.5 rounded-full text-[#0a1628]" style={{ background: "var(--accent-gold, var(--accent-primary))" }}>
             PRO
           </span>
         )}
@@ -68,7 +79,15 @@ export function NavAuthCompact() {
 
   return (
     <SignInButton mode="redirect">
-      <button className="text-xs font-bold border border-[rgba(201,168,76,0.4)] text-[#C9A84C] px-3 py-2 rounded-lg hover:bg-[rgba(201,168,76,0.08)] transition-all whitespace-nowrap">
+      <button
+        className="text-xs font-bold px-3 py-2 rounded-lg transition-all whitespace-nowrap"
+        style={{
+          border: "1px solid rgba(108,92,231,0.4)",
+          color: "var(--accent-primary)",
+        }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(108,92,231,0.08)"; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = ""; }}
+      >
         Se connecter
       </button>
     </SignInButton>

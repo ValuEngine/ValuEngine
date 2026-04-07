@@ -107,10 +107,10 @@ export default function EarningsPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <Calendar size={24} className="text-[#C9A84C]" />
+              <Calendar size={24} style={{ color: "var(--accent-primary)" }} />
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Earnings Calendar</h1>
             </div>
-            <p className="text-zinc-500 text-sm">
+            <p style={{ color: "var(--text-tertiary)" }} className="text-sm">
               Prochaines publications de resultats
             </p>
           </div>
@@ -118,20 +118,29 @@ export default function EarningsPage() {
 
         {/* Filters */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="flex bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden">
+          <div
+            className="flex rounded-xl overflow-hidden"
+            style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}
+          >
             <button
               onClick={() => setFilter("all")}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                filter === "all" ? "bg-[#C9A84C] text-black" : "text-zinc-400 hover:text-white"
-              }`}
+              className="px-4 py-2 text-sm font-medium transition-colors"
+              style={
+                filter === "all"
+                  ? { background: "var(--accent-primary)", color: "#000" }
+                  : { color: "var(--text-secondary)" }
+              }
             >
               Toutes
             </button>
             <button
               onClick={() => setFilter("portfolio")}
-              className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                filter === "portfolio" ? "bg-[#C9A84C] text-black" : "text-zinc-400 hover:text-white"
-              }`}
+              className="px-4 py-2 text-sm font-medium transition-colors flex items-center gap-1.5"
+              style={
+                filter === "portfolio"
+                  ? { background: "var(--accent-primary)", color: "#000" }
+                  : { color: "var(--text-secondary)" }
+              }
             >
               <Briefcase size={12} /> Mon portefeuille
             </button>
@@ -140,7 +149,12 @@ export default function EarningsPage() {
           <select
             value={daysAhead}
             onChange={(e) => setDaysAhead(Number(e.target.value))}
-            className="bg-[#18181b] border border-[#27272a] rounded-xl px-3 py-2 text-sm text-zinc-300 focus:outline-none focus:border-[#C9A84C]/50"
+            className="rounded-xl px-3 py-2 text-sm focus:outline-none"
+            style={{
+              background: "var(--bg-surface)",
+              border: "1px solid var(--border-default)",
+              color: "var(--text-secondary)",
+            }}
           >
             <option value={7}>7 jours</option>
             <option value={14}>14 jours</option>
@@ -153,7 +167,7 @@ export default function EarningsPage() {
         {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-16">
-            <Loader2 size={24} className="animate-spin text-[#C9A84C]" />
+            <Loader2 size={24} className="animate-spin" style={{ color: "var(--accent-primary)" }} />
           </div>
         )}
 
@@ -165,16 +179,21 @@ export default function EarningsPage() {
               return (
                 <div key={date}>
                   <div className="flex items-center gap-3 mb-3">
-                    <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
+                    <h2
+                      className="text-[13px] font-medium"
+                      style={{ color: "var(--text-secondary)" }}
+                    >
                       {formatDate(date)}
                     </h2>
                     {days <= 2 && days >= 0 && (
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-[#ff4d6d] bg-[#ff4d6d]/10 border border-[#ff4d6d]/25 px-2 py-0.5 rounded-full">
+                      <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                        style={{ color: "var(--color-danger)", background: "rgba(248,81,73,0.1)", border: "1px solid rgba(248,81,73,0.25)" }}>
                         {days === 0 ? "Aujourd'hui" : days === 1 ? "Demain" : "Dans 2j"}
                       </span>
                     )}
                     {days > 2 && days <= 7 && (
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-[#fb923c] bg-[#fb923c]/10 border border-[#fb923c]/25 px-2 py-0.5 rounded-full">
+                      <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                        style={{ color: "#fb923c", background: "rgba(251,146,60,0.1)", border: "1px solid rgba(251,146,60,0.25)" }}>
                         Dans {days}j
                       </span>
                     )}
@@ -183,33 +202,37 @@ export default function EarningsPage() {
                     {events.map((e, i) => (
                       <div
                         key={`${e.symbol}-${i}`}
-                        className={`bg-[#18181b]/80 border rounded-xl px-5 py-4 flex items-center gap-4 transition-all hover:bg-[rgba(255,255,255,0.02)] cursor-pointer ${
-                          e.in_portfolio ? "border-[#C9A84C]/30" : "border-[#27272a]"
-                        }`}
+                        className="rounded-xl px-5 py-4 flex items-center gap-4 transition-all cursor-pointer"
+                        style={{
+                          background: "rgba(24,24,27,0.8)",
+                          border: e.in_portfolio
+                            ? "1px solid rgba(108,92,231,0.3)"
+                            : "1px solid var(--border-default)",
+                        }}
                         onClick={() => router.push(`/analyze?ticker=${e.symbol}`)}
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-[#C9A84C]">{e.symbol}</span>
+                            <span className="text-sm font-bold" style={{ color: "var(--accent-primary)" }}>{e.symbol}</span>
                             {e.in_portfolio && (
-                              <Briefcase size={10} className="text-[#C9A84C]" />
+                              <Briefcase size={10} style={{ color: "var(--accent-primary)" }} />
                             )}
                             {e.time && (
-                              <span className="text-[10px] text-zinc-600 flex items-center gap-0.5">
+                              <span className="text-[11px] flex items-center gap-0.5" style={{ color: "var(--text-tertiary)" }}>
                                 <Clock size={8} />
                                 {e.time === "bmo" ? "Avant marche" : e.time === "amc" ? "Apres marche" : e.time}
                               </span>
                             )}
                           </div>
                           {e.fiscal_period && (
-                            <p className="text-[10px] text-zinc-600 mt-0.5">{e.fiscal_period}</p>
+                            <p className="text-[11px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>{e.fiscal_period}</p>
                           )}
                         </div>
 
                         <div className="text-right flex-shrink-0">
                           {e.eps_estimated !== null && (
                             <div>
-                              <p className="text-[10px] text-zinc-600 uppercase">BPA est.</p>
+                              <p className="text-[11px] uppercase" style={{ color: "var(--text-tertiary)" }}>BPA est.</p>
                               <p className="text-sm font-semibold text-white">
                                 ${e.eps_estimated?.toFixed(2)}
                               </p>
@@ -220,7 +243,7 @@ export default function EarningsPage() {
                         <div className="text-right flex-shrink-0">
                           {e.revenue_estimated !== null && (
                             <div>
-                              <p className="text-[10px] text-zinc-600 uppercase">CA est.</p>
+                              <p className="text-[11px] uppercase" style={{ color: "var(--text-tertiary)" }}>CA est.</p>
                               <p className="text-sm font-semibold text-white">
                                 {formatRevenue(e.revenue_estimated)}
                               </p>
@@ -239,14 +262,14 @@ export default function EarningsPage() {
         {/* Empty state */}
         {!loading && filteredEarnings.length === 0 && (
           <div className="text-center py-16">
-            <Calendar size={32} className="text-zinc-600 mx-auto mb-4" />
-            <h2 className="text-lg font-bold text-zinc-400 mb-2">
+            <Calendar size={32} className="mx-auto mb-4" style={{ color: "var(--text-tertiary)" }} />
+            <h2 className="text-lg font-bold mb-2" style={{ color: "var(--text-secondary)" }}>
               {filter === "portfolio"
                 ? "Aucun resultat prevu pour tes positions"
                 : "Aucun resultat prevu dans cette periode"
               }
             </h2>
-            <p className="text-sm text-zinc-600">
+            <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
               {filter === "portfolio"
                 ? "Ajoute des positions a ton portefeuille pour suivre leurs earnings."
                 : "Essaie d'elargir la periode de recherche."

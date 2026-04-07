@@ -112,12 +112,12 @@ function useTypewriter(words: string[], speed = 120, pause = 1600) {
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border-b border-[#27272a]">
+    <div style={{ borderBottom: "1px solid var(--border-subtle)" }}>
       <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between py-5 text-left group">
-        <span className="text-sm font-semibold text-white group-hover:text-[#C9A84C] transition-colors">{q}</span>
-        <ChevronDown size={16} className={`text-zinc-500 transition-transform duration-200 flex-shrink-0 ml-4 ${open ? "rotate-180" : ""}`} />
+        <span className="text-sm font-semibold transition-colors" style={{ color: open ? "var(--accent-primary)" : "var(--text-primary)" }}>{q}</span>
+        <ChevronDown size={16} className={`transition-transform duration-200 flex-shrink-0 ml-4 ${open ? "rotate-180" : ""}`} style={{ color: "var(--text-tertiary)" }} />
       </button>
-      {open && <p className="text-sm text-zinc-400 leading-relaxed pb-5">{a}</p>}
+      {open && <p className="text-sm leading-relaxed pb-5" style={{ color: "var(--text-secondary)" }}>{a}</p>}
     </div>
   );
 }
@@ -220,7 +220,7 @@ export default function LandingPage() {
   const summary = trackData?.summary;
 
   return (
-    <main className="min-h-screen bg-[#09090b] text-white overflow-x-hidden relative">
+    <main className="min-h-screen overflow-x-hidden relative" style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}>
 
       {/* Schema.org structured data */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
@@ -246,23 +246,23 @@ export default function LandingPage() {
       <AnimatedBackground />
 
       {/* ── LIVE TICKER TAPE ─────────────────────────────────────────── */}
-      <div className="relative z-10 overflow-hidden bg-[rgba(255,255,255,0.02)] border-b border-[#27272a] py-2">
+      <div className="relative z-10 overflow-hidden py-2" style={{ background: "rgba(255,255,255,0.02)", borderBottom: "1px solid var(--border-subtle)" }}>
         <div className="flex items-center">
-          <span className="flex-shrink-0 text-[10px] font-bold text-zinc-600 uppercase tracking-widest px-4">Marchés</span>
+          <span className="flex-shrink-0 text-[10px] font-medium uppercase tracking-widest px-4" style={{ color: "var(--text-tertiary)" }}>Marchés</span>
           <div className="flex animate-[tickerScroll_30s_linear_infinite] whitespace-nowrap" style={{ width: "max-content" }}>
             {tapeData.length > 0 ? (
               [...tapeData, ...tapeData, ...tapeData].map((m, i) => (
                 <span key={i} className="inline-flex items-center gap-2 px-6 text-xs font-semibold">
-                  <span className="text-[#C9A84C]">{m.label}</span>
-                  <span className="text-zinc-300">{m.value}</span>
-                  <span className={m.up ? "text-emerald-400" : "text-red-400"}>{m.change}</span>
-                  <span className="text-zinc-700 mx-2">·</span>
+                  <span style={{ color: "var(--accent-primary)" }}>{m.label}</span>
+                  <span style={{ color: "var(--text-primary)" }}>{m.value}</span>
+                  <span style={{ color: m.up ? "var(--color-success)" : "var(--color-danger)" }}>{m.change}</span>
+                  <span className="mx-2" style={{ color: "var(--text-tertiary)" }}>·</span>
                 </span>
               ))
             ) : (
               ["S&P 500", "NASDAQ", "CAC 40", "DAX"].map((t, i) => (
-                <span key={i} className="inline-flex items-center gap-2 px-6 text-xs font-semibold text-zinc-500">
-                  {t}<span className="text-zinc-700 mx-2">·</span>
+                <span key={i} className="inline-flex items-center gap-2 px-6 text-xs font-semibold" style={{ color: "var(--text-tertiary)" }}>
+                  {t}<span className="mx-2" style={{ color: "var(--text-tertiary)" }}>·</span>
                 </span>
               ))
             )}
@@ -271,18 +271,18 @@ export default function LandingPage() {
       </div>
 
       {/* ── NAV ──────────────────────────────────────────────────────── */}
-      <nav className="fixed top-[33px] left-0 right-0 z-50 border-b border-[#27272a] bg-[rgba(9,9,11,0.85)] backdrop-blur-xl">
+      <nav className="fixed top-[33px] left-0 right-0 z-50 backdrop-blur-xl" style={{ borderBottom: "1px solid var(--border-subtle)", background: "rgba(10,10,15,0.85)" }}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-[#09090b] border border-[rgba(201,168,76,0.3)] flex items-center justify-center">
-              <span className="text-[#C9A84C] font-black text-sm leading-none">V</span>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "var(--bg-base)", border: "1px solid rgba(108,92,231,0.4)" }}>
+              <span className="font-black text-sm leading-none" style={{ color: "var(--accent-primary)" }}>V</span>
             </div>
-            <span className="text-base font-bold tracking-tight">ValuEngine</span>
+            <span className="text-base font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>ValuEngine</span>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/track-record" className="text-sm text-zinc-400 hover:text-white transition-colors px-3 py-2 hidden sm:block">Track Record</Link>
-            <Link href="/methodology" className="text-sm text-zinc-400 hover:text-white transition-colors px-3 py-2 hidden sm:block">Méthodologie</Link>
-            <button onClick={() => router.push(isSignedIn ? "/dashboard" : "/analyze")} className="text-sm text-zinc-400 hover:text-white transition-colors px-3 py-2">
+            <Link href="/track-record" className="text-sm transition-colors px-3 py-2 hidden sm:block" style={{ color: "var(--text-secondary)" }}>Track Record</Link>
+            <Link href="/methodology" className="text-sm transition-colors px-3 py-2 hidden sm:block" style={{ color: "var(--text-secondary)" }}>Méthodologie</Link>
+            <button onClick={() => router.push(isSignedIn ? "/dashboard" : "/analyze")} className="text-sm transition-colors px-3 py-2" style={{ color: "var(--text-secondary)" }}>
               {isSignedIn ? "Dashboard" : "Analyser"}
             </button>
             <NavAuth />
@@ -294,22 +294,22 @@ export default function LandingPage() {
       <section className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 text-center">
         <div className="max-w-3xl mx-auto">
 
-          <div className="inline-flex items-center gap-2 text-xs tracking-[0.2em] text-zinc-500 border border-zinc-800 rounded-full px-4 py-1.5 mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="inline-flex items-center gap-2 text-xs tracking-[0.2em] rounded-full px-4 py-1.5 mb-8" style={{ color: "var(--text-tertiary)", border: "1px solid var(--border-subtle)" }}>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--color-success)" }} />
             1ER OUTIL DE VALORISATION DCF EN FRANÇAIS
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center leading-[1.1] tracking-tight mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-center leading-[1.1] tracking-tight mb-6" style={{ color: "var(--text-primary)" }}>
             Prends de meilleures<br />décisions d&apos;investissement,{" "}
-            <span style={{ background: "linear-gradient(135deg, #C9A84C, #f5d78e)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <span style={{ background: "linear-gradient(135deg, var(--accent-primary), #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               plus vite
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg md:text-xl text-[#C9A84C] font-medium text-center max-w-xl mx-auto mb-2">
+          <p className="text-base sm:text-lg md:text-xl font-medium text-center max-w-xl mx-auto mb-2" style={{ color: "var(--accent-primary)" }}>
             L&apos;analyse fondamentale que font les pros — en français, en 60 secondes.
           </p>
-          <p className="text-sm sm:text-base text-zinc-400 text-center max-w-xl mx-auto mb-10">
+          <p className="text-sm sm:text-base text-center max-w-xl mx-auto mb-10" style={{ color: "var(--text-secondary)" }}>
             Valorisation DCF, arguments Bull &amp; Bear par IA, matrice de sensibilité — gratuit, sans carte bancaire.
           </p>
 
@@ -322,68 +322,88 @@ export default function LandingPage() {
                   onChange={(e) => handleTickerChange(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAnalyze("")}
                   placeholder={`Essaie ${typewriterText}|`}
-                  className={`w-full bg-[rgba(255,255,255,0.04)] border rounded-xl px-5 py-3.5 text-white placeholder-zinc-600 text-base sm:text-sm font-semibold focus:outline-none transition-all ${hasError ? "border-red-500/50 focus:border-red-500" : isValid ? "border-emerald-500/50 focus:border-emerald-500" : "border-zinc-800 focus:border-[rgba(201,168,76,0.5)]"}`}
+                  className="w-full rounded-xl px-5 py-3.5 text-base sm:text-sm font-semibold focus:outline-none transition-all"
+                  style={{
+                    background: "var(--bg-surface)",
+                    color: "var(--text-primary)",
+                    border: `1px solid ${hasError ? "var(--color-danger)" : isValid ? "var(--color-success)" : "var(--border-default)"}`,
+                  }}
                 />
-                {searching && <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-t-2 border-[#C9A84C] rounded-full animate-spin" />}
+                {searching && <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-t-2 rounded-full animate-spin" style={{ borderColor: "var(--accent-primary)" }} />}
               </div>
-              <button onClick={() => { gtmEvents.ctaClicked('hero_analyze'); handleAnalyze(""); }} disabled={!ticker || hasError} className="font-bold px-5 py-3.5 rounded-xl bg-[#C9A84C] hover:bg-[#b8943d] text-black transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap w-full sm:w-auto">
+              <button
+                onClick={() => { gtmEvents.ctaClicked('hero_analyze'); handleAnalyze(""); }}
+                disabled={!ticker || hasError}
+                className="btn-primary font-bold px-5 py-3.5 rounded-xl transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap w-full sm:w-auto"
+              >
                 Analyser
               </button>
             </div>
             {searchResult && (
-              <button onClick={() => handleAnalyze(searchResult.ticker)} className="mt-2 w-full bg-[#18181b] border border-[rgba(0,212,170,0.2)] rounded-xl px-4 py-3 flex items-center justify-between hover:border-[rgba(0,212,170,0.4)] transition-all text-left">
+              <button
+                onClick={() => handleAnalyze(searchResult.ticker)}
+                className="mt-2 w-full rounded-xl px-4 py-3 flex items-center justify-between transition-all text-left"
+                style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}
+              >
                 <div>
-                  <span className="text-[#C9A84C] font-bold text-sm mr-2">{searchResult.ticker}</span>
-                  <span className="text-white text-sm">{searchResult.name}</span>
-                  <span className="text-zinc-500 text-xs ml-2">· {searchResult.sector}</span>
+                  <span className="font-bold text-sm mr-2" style={{ color: "var(--accent-primary)" }}>{searchResult.ticker}</span>
+                  <span className="text-sm" style={{ color: "var(--text-primary)" }}>{searchResult.name}</span>
+                  <span className="text-xs ml-2" style={{ color: "var(--text-tertiary)" }}>· {searchResult.sector}</span>
                 </div>
-                <span className="text-white font-bold text-sm">${searchResult.price.toFixed(2)}</span>
+                <span className="font-bold text-sm" style={{ color: "var(--text-primary)" }}>${searchResult.price.toFixed(2)}</span>
               </button>
             )}
-            {hasError && <p className="mt-2 text-red-400 text-xs text-center font-medium">Ticker introuvable. Vérifie le symbole (ex: AAPL, MC.PA).</p>}
+            {hasError && <p className="mt-2 text-xs text-center font-medium" style={{ color: "var(--color-danger)" }}>Ticker introuvable. Vérifie le symbole (ex: AAPL, MC.PA).</p>}
           </div>
 
           <div className="flex items-center justify-center gap-2 flex-wrap mb-6">
-            <span className="text-zinc-600 text-xs mr-1">Populaires :</span>
+            <span className="text-xs mr-1" style={{ color: "var(--text-tertiary)" }}>Populaires :</span>
             {["MC.PA", "AAPL", "TTE.PA", "TSLA", "BNP.PA", "NVDA"].map((t) => (
-              <button key={t} onClick={() => handleAnalyze(t)} className="text-xs font-semibold text-zinc-400 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-lg hover:border-zinc-600 hover:text-white transition-all whitespace-nowrap">{t}</button>
+              <button
+                key={t}
+                onClick={() => handleAnalyze(t)}
+                className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all whitespace-nowrap"
+                style={{ color: "var(--text-secondary)", background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}
+              >
+                {t}
+              </button>
             ))}
           </div>
 
-          <p className="text-zinc-400 text-xs font-medium">✓ Gratuit · ✓ Sans carte bancaire · ✓ 3 analyses/jour</p>
+          <p className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>✓ Gratuit · ✓ Sans carte bancaire · ✓ 3 analyses/jour</p>
 
           {usersCount >= 10 && (
-            <div className="mt-4 inline-flex items-center gap-2 bg-zinc-900/80 border border-zinc-800 rounded-full px-4 py-2">
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
               <div className="flex -space-x-1.5">
                 {["T", "S", "M", "K"].map((l, i) => (
-                  <div key={i} className="w-6 h-6 rounded-full bg-[rgba(201,168,76,0.12)] border-2 border-[#09090b] flex items-center justify-center text-[#C9A84C] text-[9px] font-bold">{l}</div>
+                  <div key={i} className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-[9px] font-bold" style={{ background: "rgba(108,92,231,0.15)", borderColor: "var(--bg-base)", color: "var(--accent-primary)" }}>{l}</div>
                 ))}
               </div>
-              <span className="text-zinc-400 text-xs">
-                Rejoignez les <span className="text-white font-bold">{usersCount.toLocaleString("fr-FR")}</span> investisseurs sur ValuEngine
+              <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                Rejoignez les <span className="font-bold" style={{ color: "var(--text-primary)" }}>{usersCount.toLocaleString("fr-FR")}</span> investisseurs sur ValuEngine
               </span>
             </div>
           )}
         </div>
 
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-zinc-600 animate-bounce"><ArrowDown size={20} /></div>
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce" style={{ color: "var(--text-tertiary)" }}><ArrowDown size={20} /></div>
       </section>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
-      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
+      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Comment ça marche</p>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Une analyse complète en 3 étapes.</h2>
+            <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: "var(--accent-primary)" }}>Comment ça marche</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Une analyse complète en 3 étapes.</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {HOW_IT_WORKS.map(({ n, title, desc }) => (
               <div key={n} className="flex flex-col items-center text-center">
-                <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-5">
-                  <span className="text-2xl font-black text-[#C9A84C]">{n}</span>
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}>
+                  <span className="text-2xl font-black" style={{ color: "var(--accent-primary)" }}>{n}</span>
                 </div>
-                <h3 className="text-lg font-bold mb-2">{title}</h3>
-                <p className="text-sm text-zinc-500 leading-relaxed">{desc}</p>
+                <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>{title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--text-tertiary)" }}>{desc}</p>
               </div>
             ))}
           </div>
@@ -392,17 +412,17 @@ export default function LandingPage() {
 
       {/* ── TRACK RECORD (only shown when real data exists) ──────────── */}
       {summary && summary.total > 0 && (
-        <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
+        <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 mb-4">
-                <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase">Track Record</p>
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> LIVE
+                <p className="text-xs font-medium tracking-widest uppercase" style={{ color: "var(--accent-primary)" }}>Track Record</p>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: "var(--color-success)", background: "rgba(0,230,138,0.1)", border: "1px solid rgba(0,230,138,0.2)" }}>
+                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--color-success)" }} /> LIVE
                 </span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Nos verdicts, vérifiés en temps réel</h2>
-              <p className="text-zinc-500 text-sm mt-2">Aucun autre outil ne publie ses performances passées. Nous si.</p>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Nos verdicts, vérifiés en temps réel</h2>
+              <p className="text-sm mt-2" style={{ color: "var(--text-tertiary)" }}>Aucun autre outil ne publie ses performances passées. Nous si.</p>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
@@ -411,9 +431,9 @@ export default function LandingPage() {
                 { label: "Analyses", value: String(summary.total) },
                 { label: "Perf. moyenne", value: `${summary.avg_performance >= 0 ? "+" : ""}${summary.avg_performance.toFixed(1)}%` },
               ].map((s) => (
-                <div key={s.label} className="bg-[#18181b] border border-[#27272a] rounded-xl p-4 text-center">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">{s.label}</p>
-                  <p className="text-xl font-black text-white">{s.value}</p>
+                <div key={s.label} className="card p-4 text-center">
+                  <p className="text-[10px] font-medium uppercase tracking-widest mb-1" style={{ color: "var(--text-tertiary)" }}>{s.label}</p>
+                  <p className="text-xl font-black" style={{ color: "var(--accent-primary)" }}>{s.value}</p>
                 </div>
               ))}
             </div>
@@ -425,26 +445,36 @@ export default function LandingPage() {
                   const isBuy = entry.verdict === "BUY";
                   const isSell = entry.verdict === "SELL";
                   return (
-                    <Link key={entry.id} href={`/analyse/${entry.ticker}`} className="flex items-center justify-between gap-2 sm:gap-4 bg-[#18181b] border border-[#27272a] hover:border-[#3f3f46] rounded-xl px-3 sm:px-5 py-3 sm:py-4 transition-colors group">
+                    <Link
+                      key={entry.id}
+                      href={`/analyse/${entry.ticker}`}
+                      className="card-interactive flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-5 py-3 sm:py-4 transition-colors group"
+                    >
                       <div className="flex items-center gap-4 min-w-0">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isBuy ? "bg-emerald-500/10 text-emerald-400" : isSell ? "bg-red-500/10 text-red-400" : "bg-yellow-500/10 text-yellow-400"}`}>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{
+                          background: isBuy ? "rgba(0,230,138,0.1)" : isSell ? "rgba(255,84,112,0.1)" : "rgba(255,184,77,0.1)",
+                          color: isBuy ? "var(--color-success)" : isSell ? "var(--color-danger)" : "var(--color-warning)",
+                        }}>
                           {isBuy ? <TrendingUp size={14} /> : isSell ? <TrendingDown size={14} /> : <Minus size={14} />}
                         </div>
                         <div className="min-w-0">
-                          <span className="font-bold text-white text-sm">{entry.ticker}</span>
-                          <span className="text-zinc-500 text-sm ml-2 truncate hidden sm:inline">{entry.name}</span>
+                          <span className="font-bold text-sm" style={{ color: "var(--text-primary)" }}>{entry.ticker}</span>
+                          <span className="text-sm ml-2 truncate hidden sm:inline" style={{ color: "var(--text-tertiary)" }}>{entry.name}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-4 flex-shrink-0">
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isBuy ? "bg-emerald-500/10 text-emerald-400" : isSell ? "bg-red-500/10 text-red-400" : "bg-yellow-500/10 text-yellow-400"}`}>
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{
+                          background: isBuy ? "rgba(0,230,138,0.1)" : isSell ? "rgba(255,84,112,0.1)" : "rgba(255,184,77,0.1)",
+                          color: isBuy ? "var(--color-success)" : isSell ? "var(--color-danger)" : "var(--color-warning)",
+                        }}>
                           {isBuy ? "Sous-évalué" : isSell ? "Surévalué" : "Juste valeur"}
                         </span>
                         {entry.performance_pct != null && (
-                          <span className={`text-sm font-bold w-16 text-right ${isUp ? "text-emerald-400" : "text-red-400"}`}>
+                          <span className="text-sm font-bold w-16 text-right" style={{ color: isUp ? "var(--color-success)" : "var(--color-danger)" }}>
                             {isUp ? "+" : ""}{entry.performance_pct.toFixed(1)}%
                           </span>
                         )}
-                        <span className="text-[#C9A84C] text-xs group-hover:translate-x-0.5 transition-transform">→</span>
+                        <span className="text-xs group-hover:translate-x-0.5 transition-transform" style={{ color: "var(--accent-primary)" }}>→</span>
                       </div>
                     </Link>
                   );
@@ -452,7 +482,7 @@ export default function LandingPage() {
               </div>
             )}
             <div className="text-center">
-              <Link href="/track-record" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 px-5 py-2.5 rounded-lg transition-all">
+              <Link href="/track-record" className="inline-flex items-center gap-2 text-sm px-5 py-2.5 rounded-lg transition-all" style={{ color: "var(--text-secondary)", border: "1px solid var(--border-subtle)" }}>
                 Voir le Track Record complet →
               </Link>
             </div>
@@ -461,23 +491,23 @@ export default function LandingPage() {
       )}
 
       {/* ── FEATURES ─────────────────────────────────────────────────── */}
-      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
+      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Ce que tu obtiens</p>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
-              6 outils d&apos;analyse professionnels,<br /><span className="text-zinc-500">accessibles en un clic.</span>
+            <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: "var(--accent-primary)" }}>Ce que tu obtiens</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+              6 outils d&apos;analyse professionnels,<br /><span style={{ color: "var(--text-tertiary)" }}>accessibles en un clic.</span>
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map((f) => (
-              <div key={f.title} className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 hover:border-[#3f3f46] transition-colors duration-200 relative">
+              <div key={f.title} className="card-interactive relative p-6">
                 {f.pro && (
-                  <span className="absolute top-3 right-3 text-[10px] font-black tracking-wider text-[#09090b] bg-[#C9A84C] px-2.5 py-0.5 rounded-full">PRO</span>
+                  <span className="absolute top-3 right-3 text-[10px] font-black tracking-wider px-2.5 py-0.5 rounded-full" style={{ background: "var(--accent-gold)", color: "var(--bg-base)" }}>PRO</span>
                 )}
-                <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[#C9A84C] mb-4">{f.icon}</div>
-                <h3 className="text-sm font-bold mb-1.5 text-white">{f.title}</h3>
-                <p className="text-xs text-zinc-500 leading-relaxed">{f.desc}</p>
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-4" style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", color: "var(--accent-primary)" }}>{f.icon}</div>
+                <h3 className="text-sm font-bold mb-1.5" style={{ color: "var(--text-primary)" }}>{f.title}</h3>
+                <p className="text-xs leading-relaxed" style={{ color: "var(--text-tertiary)" }}>{f.desc}</p>
               </div>
             ))}
           </div>
@@ -485,12 +515,12 @@ export default function LandingPage() {
       </section>
 
       {/* ── INTERFACE PREVIEW ───────────────────────────────────────── */}
-      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a] overflow-hidden">
+      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 overflow-hidden" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Aperçu</p>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">Une analyse complète en un coup d&apos;œil</h2>
-            <p className="text-sm text-zinc-500 max-w-lg mx-auto">Verdict DCF, analyse IA Bull & Bear, et matrice de sensibilité — tout ce dont tu as besoin pour prendre une décision éclairée.</p>
+            <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: "var(--accent-primary)" }}>Aperçu</p>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3" style={{ color: "var(--text-primary)" }}>Une analyse complète en un coup d&apos;œil</h2>
+            <p className="text-sm max-w-lg mx-auto" style={{ color: "var(--text-tertiary)" }}>Verdict DCF, analyse IA Bull & Bear, et matrice de sensibilité — tout ce dont tu as besoin pour prendre une décision éclairée.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
             <div className="flex justify-center max-w-full overflow-hidden"><MockupVerdict /></div>
@@ -501,112 +531,133 @@ export default function LandingPage() {
       </section>
 
       {/* ── WHY VALUENGINE ─────────────────────────────────────────────── */}
-      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
+      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Pourquoi ValuEngine</p>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Ce qui nous différencie</h2>
+            <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: "var(--accent-primary)" }}>Pourquoi ValuEngine</p>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Ce qui nous différencie</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 text-center">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
-                <Shield size={22} className="text-emerald-400" />
+            <div className="card p-6 text-center">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(0,230,138,0.1)" }}>
+                <Shield size={22} style={{ color: "var(--color-success)" }} />
               </div>
-              <h3 className="text-sm font-bold mb-2">Transparence totale</h3>
-              <p className="text-xs text-zinc-500 leading-relaxed">Nous publions notre Track Record en temps réel. Chaque verdict est vérifiable. Aucun autre outil ne fait ça.</p>
+              <h3 className="text-sm font-bold mb-2" style={{ color: "var(--text-primary)" }}>Transparence totale</h3>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--text-tertiary)" }}>Nous publions notre Track Record en temps réel. Chaque verdict est vérifiable. Aucun autre outil ne fait ça.</p>
             </div>
-            <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 text-center">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mx-auto mb-4">
-                <Zap size={22} className="text-blue-400" />
+            <div className="card p-6 text-center">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(84,184,255,0.1)" }}>
+                <Zap size={22} style={{ color: "var(--color-info)" }} />
               </div>
-              <h3 className="text-sm font-bold mb-2">60 secondes</h3>
-              <p className="text-xs text-zinc-500 leading-relaxed">Une analyse DCF complète prend 2-3 heures sur Excel. ValuEngine la génère en moins d&apos;une minute.</p>
+              <h3 className="text-sm font-bold mb-2" style={{ color: "var(--text-primary)" }}>60 secondes</h3>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--text-tertiary)" }}>Une analyse DCF complète prend 2-3 heures sur Excel. ValuEngine la génère en moins d&apos;une minute.</p>
             </div>
-            <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 text-center">
-              <div className="w-12 h-12 rounded-xl bg-[rgba(201,168,76,0.1)] flex items-center justify-center mx-auto mb-4">
-                <BarChart3 size={22} className="text-[#C9A84C]" />
+            <div className="card p-6 text-center">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(108,92,231,0.1)" }}>
+                <BarChart3 size={22} style={{ color: "var(--accent-primary)" }} />
               </div>
-              <h3 className="text-sm font-bold mb-2">100% en français</h3>
-              <p className="text-xs text-zinc-500 leading-relaxed">Le seul outil de valorisation DCF + IA conçu pour les investisseurs francophones. Actions US et européennes.</p>
+              <h3 className="text-sm font-bold mb-2" style={{ color: "var(--text-primary)" }}>100% en français</h3>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--text-tertiary)" }}>Le seul outil de valorisation DCF + IA conçu pour les investisseurs francophones. Actions US et européennes.</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* ── COMMUNAUTÉ ──────────────────────────────────────────────── */}
-      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
+      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="max-w-3xl mx-auto text-center">
-          <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Communauté</p>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">Rejoint par des investisseurs particuliers partout en France</h2>
-          <p className="text-sm text-zinc-400 mb-8">
+          <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: "var(--accent-primary)" }}>Communauté</p>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4" style={{ color: "var(--text-primary)" }}>Rejoint par des investisseurs particuliers partout en France</h2>
+          <p className="text-sm mb-8" style={{ color: "var(--text-secondary)" }}>
             Parle-nous de ton expérience :{" "}
-            <a href="mailto:contact@valuengine.fr" className="text-[#C9A84C] hover:underline">contact@valuengine.fr</a>
+            <a href="mailto:contact@valuengine.fr" className="hover:underline" style={{ color: "var(--accent-primary)" }}>contact@valuengine.fr</a>
           </p>
           <div className="flex items-center justify-center gap-4 sm:gap-6 flex-wrap">
-            <a href="https://x.com/ValuEngine_" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 px-4 py-2.5 rounded-lg transition-all text-xs font-semibold">
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              @ValuEngine_
-            </a>
-            <a href="https://valuengine.substack.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 px-4 py-2.5 rounded-lg transition-all text-xs font-semibold">
-              Substack
-            </a>
-            <a href="https://reddit.com/r/vosfinances" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 px-4 py-2.5 rounded-lg transition-all text-xs font-semibold">
-              r/vosfinances
-            </a>
+            {[
+              { href: "https://x.com/ValuEngine_", label: "@ValuEngine_", icon: <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
+              { href: "https://valuengine.substack.com", label: "Substack", icon: null },
+              { href: "https://reddit.com/r/vosfinances", label: "r/vosfinances", icon: null },
+            ].map(({ href, label, icon }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all text-xs font-semibold"
+                style={{ color: "var(--text-secondary)", border: "1px solid var(--border-subtle)" }}
+              >
+                {icon}{label}
+              </a>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Section "Ils en parlent" et Presse supprimées — pas de mentions réelles encore */}
-
       {/* ── PRICING ──────────────────────────────────────────────────── */}
-      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
+      <section id="pricing" className="relative z-10 py-16 sm:py-24 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
-            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Tarifs</p>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-6">Simple. Transparent. Sans engagement.</h2>
-            <div className="inline-flex items-center bg-zinc-900 border border-zinc-800 rounded-full p-1">
-              <button onClick={() => setAnnual(false)} className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${!annual ? "bg-[#C9A84C] text-black" : "text-zinc-400 hover:text-white"}`}>Mensuel</button>
-              <button onClick={() => setAnnual(true)} className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${annual ? "bg-[#C9A84C] text-black" : "text-zinc-400 hover:text-white"}`}>
-                Annuel <span className="text-xs font-bold text-emerald-400 ml-1">-17%</span>
+            <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: "var(--accent-primary)" }}>Tarifs</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-6" style={{ color: "var(--text-primary)" }}>Simple. Transparent. Sans engagement.</h2>
+            <div className="inline-flex items-center rounded-full p-1" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
+              <button
+                onClick={() => setAnnual(false)}
+                className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
+                style={{ background: !annual ? "var(--accent-primary)" : "transparent", color: !annual ? "#fff" : "var(--text-secondary)" }}
+              >
+                Mensuel
+              </button>
+              <button
+                onClick={() => setAnnual(true)}
+                className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
+                style={{ background: annual ? "var(--accent-primary)" : "transparent", color: annual ? "#fff" : "var(--text-secondary)" }}
+              >
+                Annuel <span className="text-xs font-bold ml-1" style={{ color: "var(--color-success)" }}>-17%</span>
               </button>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Free */}
-            <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 sm:p-8 hover:border-[#3f3f46] transition-colors">
-              <p className="text-xs font-bold tracking-widest uppercase text-zinc-500 mb-3">Gratuit</p>
-              <p className="text-4xl sm:text-5xl font-black mb-1">0€</p>
-              <p className="text-zinc-500 text-sm mb-8">Pour toujours</p>
+            <div className="card p-6 sm:p-8">
+              <p className="text-xs font-medium tracking-widest uppercase mb-3" style={{ color: "var(--text-tertiary)" }}>Gratuit</p>
+              <p className="text-4xl sm:text-5xl font-black mb-1" style={{ color: "var(--text-primary)" }}>0€</p>
+              <p className="text-sm mb-8" style={{ color: "var(--text-tertiary)" }}>Pour toujours</p>
               <ul className="space-y-3 text-sm mb-8">
                 {["3 analyses par jour", "Verdict DCF (sous-évalué / surévalué)", "Estimation de valeur intrinsèque"].map((item) => (
-                  <li key={item} className="flex items-center gap-3 text-zinc-400"><div className="w-1.5 h-1.5 rounded-full bg-zinc-600 flex-shrink-0" />{item}</li>
+                  <li key={item} className="flex items-center gap-3" style={{ color: "var(--text-secondary)" }}>
+                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "var(--text-tertiary)" }} />{item}
+                  </li>
                 ))}
               </ul>
-              <button onClick={() => router.push(isSignedIn ? "/dashboard" : "/sign-up")} className="w-full border border-zinc-700 text-zinc-300 font-semibold py-3 rounded-lg hover:border-zinc-500 hover:text-white transition-all">
+              <button
+                onClick={() => router.push(isSignedIn ? "/dashboard" : "/sign-up")}
+                className="btn-secondary w-full font-semibold py-3 rounded-lg transition-all"
+              >
                 {isSignedIn ? "Aller au Dashboard" : "Commencer gratuitement"}
               </button>
             </div>
             {/* Pro */}
-            <div className="bg-[#18181b] border-2 border-[#C9A84C] rounded-xl p-6 sm:p-8 relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-[#C9A84C] text-black text-xs font-black px-4 py-1.5 rounded-bl-xl tracking-wider">
+            <div className="card-pro p-6 sm:p-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 text-xs font-black px-4 py-1.5 rounded-bl-xl tracking-wider" style={{ background: "var(--accent-gold)", color: "var(--bg-base)" }}>
                 {annual ? "2 MOIS OFFERTS" : "POPULAIRE"}
               </div>
-              <p className="text-xs font-bold tracking-widest uppercase text-[#C9A84C] mb-3">Pro</p>
+              <p className="text-xs font-medium tracking-widest uppercase mb-3" style={{ color: "var(--accent-gold)" }}>Pro</p>
               {annual ? (
                 <>
-                  <p className="text-4xl sm:text-5xl font-black mb-1">99€</p>
-                  <p className="text-zinc-500 text-sm mb-8">par an · soit 8,25€/mois</p>
+                  <p className="text-4xl sm:text-5xl font-black mb-1" style={{ color: "var(--text-primary)" }}>99€</p>
+                  <p className="text-sm mb-8" style={{ color: "var(--text-tertiary)" }}>par an · soit 8,25€/mois</p>
                 </>
               ) : (
                 <>
-                  <p className="text-4xl sm:text-5xl font-black mb-1">12€</p>
-                  <p className="text-zinc-500 text-sm mb-8">par mois</p>
+                  <p className="text-4xl sm:text-5xl font-black mb-1" style={{ color: "var(--text-primary)" }}>12€</p>
+                  <p className="text-sm mb-8" style={{ color: "var(--text-tertiary)" }}>par mois</p>
                 </>
               )}
               <ul className="space-y-3 text-sm mb-8">
                 {["Analyses illimitées", "DCF interactif complet", "Analyse IA Bull & Bear", "SWOT & PESTLE", "Trading Comps sectoriels", "Matrice de sensibilité", "Watchlist (50 tickers)"].map((item) => (
-                  <li key={item} className="flex items-center gap-3 text-white"><div className="w-1.5 h-1.5 rounded-full bg-[#C9A84C] flex-shrink-0" />{item}</li>
+                  <li key={item} className="flex items-center gap-3" style={{ color: "var(--text-primary)" }}>
+                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "var(--accent-gold)" }} />{item}
+                  </li>
                 ))}
               </ul>
               <button
@@ -630,16 +681,16 @@ export default function LandingPage() {
                     else setCheckoutErr(data.detail || "Erreur lors de la création du paiement.");
                   } catch { setCheckoutErr("Impossible de contacter le serveur de paiement."); }
                 }}
-                className="w-full bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
+                className="btn-pro w-full font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
               >
                 Passer Pro <ChevronRight size={16} />
               </button>
-              {checkoutErr && <p className="text-[#ff4d6d] text-xs text-center mt-2">{checkoutErr}</p>}
-              <div className="flex items-center justify-center gap-2 flex-wrap text-[#7a9bb5] text-xs mt-3">
+              {checkoutErr && <p className="text-xs text-center mt-2" style={{ color: "var(--color-danger)" }}>{checkoutErr}</p>}
+              <div className="flex items-center justify-center gap-2 flex-wrap text-xs mt-3" style={{ color: "var(--text-tertiary)" }}>
                 <span>Paiement sécurisé par Stripe</span>
-                <span className="text-zinc-700">·</span>
+                <span style={{ color: "var(--border-subtle)" }}>·</span>
                 <span>Annulable à tout moment</span>
-                <span className="text-zinc-700">·</span>
+                <span style={{ color: "var(--border-subtle)" }}>·</span>
                 <span>Données hébergées en UE</span>
               </div>
             </div>
@@ -648,11 +699,11 @@ export default function LandingPage() {
       </section>
 
       {/* ── FAQ ───────────────────────────────────────────────────────── */}
-      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 border-t border-[#27272a]">
+      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-xs font-bold text-[#C9A84C] tracking-widest uppercase mb-4">Questions fréquentes</p>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Tout ce que tu veux savoir</h2>
+            <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: "var(--accent-primary)" }}>Questions fréquentes</p>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Tout ce que tu veux savoir</h2>
           </div>
           <div>
             {FAQ.map((item) => (
@@ -663,40 +714,40 @@ export default function LandingPage() {
       </section>
 
       {/* ── TRUST BAR ────────────────────────────────────────────────── */}
-      <section className="relative z-10 py-8 sm:py-12 px-4 sm:px-6 border-t border-[#27272a]">
+      <section className="relative z-10 py-8 sm:py-12 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="max-w-4xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-6 flex-wrap text-zinc-500 text-xs font-medium">
-            <span className="flex items-center gap-1.5"><Shield size={12} className="text-emerald-400" /> Données Financial Modeling Prep</span>
-            <span className="text-zinc-700">·</span>
-            <span className="flex items-center gap-1.5"><Shield size={12} className="text-blue-400" /> IA Anthropic Claude</span>
-            <span className="text-zinc-700">·</span>
-            <span className="flex items-center gap-1.5"><Shield size={12} className="text-[#C9A84C]" /> Hébergé en UE</span>
-            <span className="text-zinc-700">·</span>
-            <span className="border border-zinc-800 px-3 py-1 rounded-full">RGPD Conforme</span>
+          <div className="flex items-center justify-center gap-6 flex-wrap text-xs font-medium" style={{ color: "var(--text-tertiary)" }}>
+            <span className="flex items-center gap-1.5"><Shield size={12} style={{ color: "var(--color-success)" }} /> Données Financial Modeling Prep</span>
+            <span style={{ color: "var(--border-subtle)" }}>·</span>
+            <span className="flex items-center gap-1.5"><Shield size={12} style={{ color: "var(--color-info)" }} /> IA Anthropic Claude</span>
+            <span style={{ color: "var(--border-subtle)" }}>·</span>
+            <span className="flex items-center gap-1.5"><Shield size={12} style={{ color: "var(--accent-primary)" }} /> Hébergé en UE</span>
+            <span style={{ color: "var(--border-subtle)" }}>·</span>
+            <span className="px-3 py-1 rounded-full" style={{ border: "1px solid var(--border-subtle)" }}>RGPD Conforme</span>
           </div>
         </div>
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────────────── */}
-      <footer className="relative z-10 py-6 sm:py-8 px-4 sm:px-6 border-t border-[#27272a]">
+      <footer className="relative z-10 py-6 sm:py-8 px-4 sm:px-6" style={{ borderTop: "1px solid var(--border-subtle)" }}>
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-[#09090b] border border-[rgba(201,168,76,0.3)] flex items-center justify-center">
-              <span className="text-[#C9A84C] font-black text-xs leading-none">V</span>
+            <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: "var(--bg-base)", border: "1px solid rgba(108,92,231,0.3)" }}>
+              <span className="font-black text-xs leading-none" style={{ color: "var(--accent-primary)" }}>V</span>
             </div>
-            <span className="text-sm font-bold">ValuEngine</span>
-            <span className="text-zinc-600 text-sm">© 2026</span>
+            <span className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>ValuEngine</span>
+            <span className="text-sm" style={{ color: "var(--text-tertiary)" }}>© 2026</span>
           </div>
-          <div className="flex items-center gap-3 sm:gap-4 flex-wrap justify-center text-zinc-600 text-xs">
-            <Link href="/legal" className="hover:text-zinc-400 transition-colors">Mentions légales</Link>
-            <span className="hidden sm:inline">·</span>
-            <Link href="/about" className="hover:text-zinc-400 transition-colors">À propos</Link>
-            <span className="hidden sm:inline">·</span>
-            <Link href="/methodology" className="hover:text-zinc-400 transition-colors">Méthodologie</Link>
-            <span className="hidden sm:inline">·</span>
-            <a href="mailto:contact@valuengine.fr" className="hover:text-zinc-400 transition-colors">Contact</a>
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap justify-center text-xs" style={{ color: "var(--text-tertiary)" }}>
+            <Link href="/legal" className="hover:text-white transition-colors">Mentions légales</Link>
+            <span className="hidden sm:inline" style={{ color: "var(--border-subtle)" }}>·</span>
+            <Link href="/about" className="hover:text-white transition-colors">À propos</Link>
+            <span className="hidden sm:inline" style={{ color: "var(--border-subtle)" }}>·</span>
+            <Link href="/methodology" className="hover:text-white transition-colors">Méthodologie</Link>
+            <span className="hidden sm:inline" style={{ color: "var(--border-subtle)" }}>·</span>
+            <a href="mailto:contact@valuengine.fr" className="hover:text-white transition-colors">Contact</a>
           </div>
-          <p className="text-zinc-600 text-xs text-center max-w-sm">
+          <p className="text-xs text-center max-w-sm" style={{ color: "var(--text-tertiary)" }}>
             Outil d&apos;analyse éducatif uniquement. Ne constitue pas un conseil en investissement au sens de la directive MIF II.
           </p>
         </div>
@@ -706,7 +757,7 @@ export default function LandingPage() {
       {showSticky && (
         <button
           onClick={() => { gtmEvents.ctaClicked('sticky_analyze'); router.push("/analyze"); }}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 bg-[#C9A84C] hover:bg-[#b8943d] text-[#09090b] font-bold px-4 py-2 sm:px-5 sm:py-3 rounded-xl shadow-lg shadow-[rgba(201,168,76,0.25)] transition-all hover:scale-105 text-xs sm:text-sm"
+          className="btn-primary fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 font-bold px-4 py-2 sm:px-5 sm:py-3 rounded-xl shadow-lg transition-all hover:scale-105 text-xs sm:text-sm"
         >
           Analyser une action →
         </button>

@@ -65,24 +65,33 @@ function SuccessContent() {
     <div className="text-center space-y-6 max-w-md px-4">
       {status === "activating" && (
         <>
-          <div className="w-10 h-10 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin mx-auto" />
+          <div
+            className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin mx-auto"
+            style={{ borderColor: "var(--accent-primary)", borderTopColor: "transparent" }}
+          />
           <h1 className="text-2xl font-bold text-white">Activation en cours...</h1>
-          <p className="text-[#71717a] text-sm">Paiement reçu, configuration de ton compte Pro.</p>
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Paiement reçu, configuration de ton compte Pro.</p>
         </>
       )}
 
       {status === "ready" && (
         <>
-          <div className="w-16 h-16 rounded-full bg-[rgba(201,168,76,0.15)] border-2 border-[#C9A84C] flex items-center justify-center mx-auto animate-[scaleIn_0.4s_ease-out]">
-            <CheckCircle2 size={32} className="text-[#C9A84C]" />
+          <div
+            className="w-16 h-16 rounded-full border-2 flex items-center justify-center mx-auto animate-[scaleIn_0.4s_ease-out]"
+            style={{
+              background: "rgba(108,92,231,0.15)",
+              borderColor: "var(--accent-primary)",
+            }}
+          >
+            <CheckCircle2 size={32} style={{ color: "var(--accent-primary)" }} />
           </div>
           <h1 className="text-2xl font-bold text-white">
             Bienvenue dans ValuEngine Pro ✦
           </h1>
-          <p className="text-[#a1a1aa]">
+          <p style={{ color: "var(--text-secondary)" }}>
             Ton abonnement est actif. Tu as maintenant accès aux analyses illimitées.
           </p>
-          <p className="text-[#C9A84C] text-sm font-medium animate-pulse">
+          <p className="text-sm font-medium animate-pulse" style={{ color: "var(--accent-primary)" }}>
             Redirection vers le dashboard...
           </p>
         </>
@@ -90,13 +99,19 @@ function SuccessContent() {
 
       {status === "error" && (
         <>
-          <div className="w-16 h-16 rounded-full bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.3)] flex items-center justify-center mx-auto">
-            <CheckCircle2 size={32} className="text-[#C9A84C]" />
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
+            style={{
+              background: "rgba(108,92,231,0.1)",
+              border: "1px solid rgba(108,92,231,0.3)",
+            }}
+          >
+            <CheckCircle2 size={32} style={{ color: "var(--accent-primary)" }} />
           </div>
           <h1 className="text-2xl font-bold text-white">Paiement confirmé</h1>
-          <p className="text-[#a1a1aa]">
+          <p style={{ color: "var(--text-secondary)" }}>
             Si ton compte Pro n&apos;est pas activé dans quelques minutes, contacte-nous à{" "}
-            <a href="mailto:support@valuengine.fr" className="text-[#C9A84C] underline">
+            <a href="mailto:support@valuengine.fr" className="underline" style={{ color: "var(--accent-primary)" }}>
               support@valuengine.fr
             </a>.
           </p>
@@ -105,7 +120,8 @@ function SuccessContent() {
 
       <button
         onClick={() => router.push("/dashboard")}
-        className="text-sm text-[#C9A84C] hover:underline mt-2"
+        className="text-sm hover:underline mt-2"
+        style={{ color: "var(--accent-primary)" }}
       >
         Aller au dashboard →
       </button>
@@ -115,11 +131,14 @@ function SuccessContent() {
 
 export default function SuccessPage() {
   return (
-    <main className="min-h-screen bg-[#09090b] flex items-center justify-center">
+    <main className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-base)" }}>
       <Suspense
         fallback={
           <div className="text-center space-y-6 max-w-md px-4">
-            <div className="w-10 h-10 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin mx-auto" />
+            <div
+              className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin mx-auto"
+              style={{ borderColor: "var(--accent-primary)", borderTopColor: "transparent" }}
+            />
             <h1 className="text-2xl font-bold text-white">Chargement...</h1>
           </div>
         }

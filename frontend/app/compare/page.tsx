@@ -27,18 +27,18 @@ const POPULAR_PAIRS = [
 
 function verdictBadge(verdict: string) {
   if (verdict === "BUY") return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />Sous-evalué
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style={{ background: "rgba(0,230,138,0.1)", color: "var(--color-success)", border: "1px solid rgba(0,230,138,0.2)" }}>
+      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--color-success)" }} />Sous-evalué
     </span>
   );
   if (verdict === "SELL") return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
-      <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />Surévalué
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style={{ background: "rgba(255,84,112,0.1)", color: "var(--color-danger)", border: "1px solid rgba(255,84,112,0.2)" }}>
+      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--color-danger)" }} />Surévalué
     </span>
   );
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
-      <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />Juste valeur
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style={{ background: "rgba(255,184,77,0.1)", color: "var(--color-warning)", border: "1px solid rgba(255,184,77,0.2)" }}>
+      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--color-warning)" }} />Juste valeur
     </span>
   );
 }
@@ -136,59 +136,74 @@ export default function ComparePage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen text-white px-4 sm:px-6 md:px-10 py-4 sm:py-8">
+      <div className="min-h-screen px-4 sm:px-6 md:px-10 py-4 sm:py-8" style={{ color: "var(--text-primary)" }}>
 
         <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Comparer deux titres</h1>
-          <p className="text-[#6b7d91] text-sm mt-1">Analyse côte à côte avec valorisation DCF</p>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ color: "var(--text-primary)" }}>Comparer deux titres</h1>
+          <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>Analyse côte à côte avec valorisation DCF</p>
         </div>
 
         {/* Inputs */}
-        <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.14)] rounded-2xl p-6 mb-6">
+        <div className="card p-6 mb-6">
           <div className="flex flex-col sm:flex-row gap-4 items-end">
             <div className="flex-1">
-              <label className="block text-xs font-bold uppercase tracking-[2px] text-[#C9A84C] mb-2">Ticker 1</label>
+              <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-secondary)" }}>Ticker 1</label>
               <input
                 type="text"
                 value={ticker1}
                 onChange={(e) => setTicker1(e.target.value.toUpperCase())}
                 onKeyDown={(e) => e.key === "Enter" && handleCompare()}
                 placeholder="Ex: AAPL"
-                className="w-full bg-[rgba(27,45,69,0.9)] border border-[rgba(201,168,76,0.25)] rounded-xl px-5 py-3 text-white placeholder-[#304560] text-base sm:text-sm font-semibold focus:outline-none focus:border-[#C9A84C] transition-all"
+                className="w-full rounded-xl px-5 py-3 text-base sm:text-sm font-semibold focus:outline-none transition-all"
+                style={{
+                  background: "var(--bg-base)",
+                  border: "1px solid var(--border-default)",
+                  color: "var(--text-primary)",
+                }}
               />
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-bold uppercase tracking-[2px] text-[#C9A84C] mb-2">Ticker 2</label>
+              <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-secondary)" }}>Ticker 2</label>
               <input
                 type="text"
                 value={ticker2}
                 onChange={(e) => setTicker2(e.target.value.toUpperCase())}
                 onKeyDown={(e) => e.key === "Enter" && handleCompare()}
                 placeholder="Ex: MSFT"
-                className="w-full bg-[rgba(27,45,69,0.9)] border border-[rgba(201,168,76,0.25)] rounded-xl px-5 py-3 text-white placeholder-[#304560] text-base sm:text-sm font-semibold focus:outline-none focus:border-[#C9A84C] transition-all"
+                className="w-full rounded-xl px-5 py-3 text-base sm:text-sm font-semibold focus:outline-none transition-all"
+                style={{
+                  background: "var(--bg-base)",
+                  border: "1px solid var(--border-default)",
+                  color: "var(--text-primary)",
+                }}
               />
             </div>
             <button
               onClick={() => handleCompare()}
               disabled={loading || !ticker1 || !ticker2}
-              className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold px-6 sm:px-8 py-3 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap w-full sm:w-auto min-h-[44px]"
+              className="btn-primary flex items-center justify-center gap-2 font-bold px-6 sm:px-8 py-3 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap w-full sm:w-auto min-h-[44px]"
             >
               {loading ? <><Loader2 size={16} className="animate-spin" /> Analyse...</> : "Comparer"}
             </button>
           </div>
-          {error && <p className="text-[#ff4d6d] text-sm mt-4">{error}</p>}
+          {error && <p className="text-sm mt-4" style={{ color: "var(--color-danger)" }}>{error}</p>}
         </div>
 
         {/* Popular comparisons */}
         {!data1 && !data2 && !loading && (
           <div className="mb-8">
-            <p className="text-xs font-bold uppercase tracking-[2px] text-[#4a6070] mb-3">Comparaisons populaires</p>
+            <p className="text-sm font-medium mb-3" style={{ color: "var(--text-tertiary)" }}>Comparaisons populaires</p>
             <div className="flex flex-wrap gap-2">
               {POPULAR_PAIRS.map(([a, b]) => (
                 <button
                   key={`${a}-${b}`}
                   onClick={() => handleCompare(a, b)}
-                  className="text-xs font-semibold px-4 py-2.5 rounded-lg border border-[rgba(201,168,76,0.2)] bg-[#132032]/60 text-zinc-300 hover:border-[#C9A84C] hover:text-[#C9A84C] transition-all"
+                  className="text-xs font-semibold px-4 py-2.5 rounded-lg transition-all"
+                  style={{
+                    border: "1px solid var(--border-subtle)",
+                    background: "var(--bg-surface)",
+                    color: "var(--text-secondary)",
+                  }}
                 >
                   {a} vs {b}
                 </button>
@@ -198,32 +213,38 @@ export default function ComparePage() {
         )}
 
         {!data1 && !data2 && !loading && !error && (
-          <div className="rounded-2xl border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm p-12 text-center">
-            <p className="text-zinc-400 text-sm mb-2">Entre deux tickers pour lancer la comparaison</p>
-            <p className="text-zinc-600 text-xs">Exemples : AAPL vs MSFT, MC.PA vs OR.PA, TSLA vs RIVN</p>
+          <div className="card rounded-2xl p-12 text-center">
+            <p className="text-sm mb-2" style={{ color: "var(--text-secondary)" }}>Entre deux tickers pour lancer la comparaison</p>
+            <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>Exemples : AAPL vs MSFT, MC.PA vs OR.PA, TSLA vs RIVN</p>
           </div>
         )}
 
         {/* Comparison Table */}
         {data1 && data2 && (
           <>
-            <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.14)] rounded-2xl overflow-x-auto mb-6">
+            <div className="card-highlight rounded-2xl overflow-x-auto mb-6">
               {/* Header */}
-              <div className="grid grid-cols-3 bg-[rgba(201,168,76,0.05)] border-b border-[rgba(201,168,76,0.12)]">
-                <div className="px-4 sm:px-6 py-4 text-xs font-bold uppercase tracking-[2px] text-[#4a6070]">Métrique</div>
+              <div className="grid grid-cols-3" style={{ background: "rgba(108,92,231,0.05)", borderBottom: "1px solid var(--border-subtle)" }}>
+                <div className="px-4 sm:px-6 py-4 text-sm font-medium" style={{ color: "var(--text-tertiary)" }}>Métrique</div>
                 <button
                   onClick={() => router.push(`/analyze?ticker=${data1.company.ticker}`)}
-                  className="px-4 sm:px-6 py-4 text-left hover:bg-[rgba(201,168,76,0.05)] transition-colors"
+                  className="px-4 sm:px-6 py-4 text-left transition-colors"
+                  style={{ background: "transparent" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(108,92,231,0.05)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                 >
-                  <p className="text-[#C9A84C] font-black text-base sm:text-lg">{data1.company.ticker}</p>
-                  <p className="text-white text-xs font-medium truncate hidden sm:block">{data1.company.name}</p>
+                  <p className="font-black text-base sm:text-lg" style={{ color: "var(--accent-primary)" }}>{data1.company.ticker}</p>
+                  <p className="text-xs font-medium truncate hidden sm:block" style={{ color: "var(--text-primary)" }}>{data1.company.name}</p>
                 </button>
                 <button
                   onClick={() => router.push(`/analyze?ticker=${data2.company.ticker}`)}
-                  className="px-4 sm:px-6 py-4 text-left hover:bg-[rgba(201,168,76,0.05)] transition-colors border-l border-[rgba(255,255,255,0.04)]"
+                  className="px-4 sm:px-6 py-4 text-left transition-colors"
+                  style={{ background: "transparent", borderLeft: "1px solid var(--border-subtle)" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(108,92,231,0.05)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                 >
-                  <p className="text-[#C9A84C] font-black text-base sm:text-lg">{data2.company.ticker}</p>
-                  <p className="text-white text-xs font-medium truncate hidden sm:block">{data2.company.name}</p>
+                  <p className="font-black text-base sm:text-lg" style={{ color: "var(--accent-primary)" }}>{data2.company.ticker}</p>
+                  <p className="text-xs font-medium truncate hidden sm:block" style={{ color: "var(--text-primary)" }}>{data2.company.name}</p>
                 </button>
               </div>
 
@@ -233,55 +254,59 @@ export default function ComparePage() {
                 const v1 = row.getValue(data1);
                 const v2 = row.getValue(data2);
                 return (
-                  <div key={row.label} className="grid grid-cols-3 border-b border-[rgba(255,255,255,0.04)] last:border-0 hover:bg-[rgba(255,255,255,0.02)] transition-colors">
-                    <div className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-[#6b7d91] font-medium">{row.label}</div>
-                    <div className={`px-4 sm:px-6 py-4 text-xs sm:text-sm font-bold ${better === 1 ? "text-[#C9A84C]" : "text-white"}`}>
+                  <div
+                    key={row.label}
+                    className="grid grid-cols-3 transition-colors last:border-0"
+                    style={{ borderBottom: "1px solid var(--border-subtle)" }}
+                  >
+                    <div className="px-4 sm:px-6 py-4 text-xs sm:text-sm font-medium" style={{ color: "var(--text-secondary)" }}>{row.label}</div>
+                    <div className="px-4 sm:px-6 py-4 text-xs sm:text-sm font-bold" style={{ color: better === 1 ? "var(--accent-primary)" : "var(--text-primary)" }}>
                       {v1 != null ? row.format(v1) : "N/A"}
-                      {better === 1 && <span className="ml-1 text-[10px] font-black text-[#C9A84C]">&#9733;</span>}
+                      {better === 1 && <span className="ml-1 text-[10px] font-black" style={{ color: "var(--accent-primary)" }}>&#9733;</span>}
                     </div>
-                    <div className={`px-4 sm:px-6 py-4 text-xs sm:text-sm font-bold border-l border-[rgba(255,255,255,0.04)] ${better === 2 ? "text-[#C9A84C]" : "text-white"}`}>
+                    <div className="px-4 sm:px-6 py-4 text-xs sm:text-sm font-bold" style={{ color: better === 2 ? "var(--accent-primary)" : "var(--text-primary)", borderLeft: "1px solid var(--border-subtle)" }}>
                       {v2 != null ? row.format(v2) : "N/A"}
-                      {better === 2 && <span className="ml-1 text-[10px] font-black text-[#C9A84C]">&#9733;</span>}
+                      {better === 2 && <span className="ml-1 text-[10px] font-black" style={{ color: "var(--accent-primary)" }}>&#9733;</span>}
                     </div>
                   </div>
                 );
               })}
 
               {/* Verdict row */}
-              <div className="grid grid-cols-3 bg-[rgba(201,168,76,0.03)] border-t border-[rgba(201,168,76,0.12)]">
-                <div className="px-4 sm:px-6 py-4 text-sm text-[#6b7d91] font-bold uppercase tracking-wider">Verdict</div>
+              <div className="grid grid-cols-3" style={{ background: "rgba(108,92,231,0.03)", borderTop: "1px solid var(--border-subtle)" }}>
+                <div className="px-4 sm:px-6 py-4 text-sm font-bold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>Verdict</div>
                 <div className="px-4 sm:px-6 py-4">{verdictBadge(data1.verdict)}</div>
-                <div className="px-4 sm:px-6 py-4 border-l border-[rgba(255,255,255,0.04)]">{verdictBadge(data2.verdict)}</div>
+                <div className="px-4 sm:px-6 py-4" style={{ borderLeft: "1px solid var(--border-subtle)" }}>{verdictBadge(data2.verdict)}</div>
               </div>
             </div>
 
             {/* AI Comparative Analysis */}
-            <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.14)] rounded-2xl p-6 mb-6 relative overflow-hidden">
+            <div className="card p-6 mb-6 relative overflow-hidden">
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-lg">&#129302;</span>
-                <h3 className="text-base font-bold text-white">Analyse comparative IA</h3>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[rgba(201,168,76,0.15)] text-[#C9A84C] border border-[rgba(201,168,76,0.3)]">PRO</span>
+                <h3 className="text-base font-bold" style={{ color: "var(--text-primary)" }}>Analyse comparative IA</h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(240,200,80,0.15)", color: "var(--accent-gold)", border: "1px solid rgba(240,200,80,0.3)" }}>PRO</span>
               </div>
 
               {aiLoading ? (
                 <div className="flex items-center gap-3 py-4">
-                  <Loader2 size={16} className="animate-spin text-[#C9A84C]" />
-                  <p className="text-sm text-zinc-400">Génération de l&apos;analyse comparative...</p>
+                  <Loader2 size={16} className="animate-spin" style={{ color: "var(--accent-primary)" }} />
+                  <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Génération de l&apos;analyse comparative...</p>
                 </div>
               ) : aiComparison && isPro ? (
-                <p className="text-sm text-zinc-300 leading-relaxed">{aiComparison}</p>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{aiComparison}</p>
               ) : (
                 <div className="relative">
-                  <p className="text-sm text-zinc-500 leading-relaxed blur-[6px] select-none pointer-events-none">
+                  <p className="text-sm leading-relaxed blur-[6px] select-none pointer-events-none" style={{ color: "var(--text-tertiary)" }}>
                     L&apos;analyse comparative IA met en perspective les forces et faiblesses relatives de {data1.company.ticker} et {data2.company.ticker} en termes de valorisation, croissance et rentabilité. Elle identifie le titre le mieux positionné selon les métriques fondamentales et fournit une recommandation argumentée basée sur les données financières réelles.
                   </p>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <Lock size={20} className="text-[#C9A84C] mb-2" />
-                    <p className="text-sm font-bold text-white mb-1">Fonctionnalité Pro</p>
-                    <p className="text-xs text-zinc-400 mb-3">Débloquez l&apos;analyse comparative IA</p>
+                    <Lock size={20} className="mb-2" style={{ color: "var(--accent-gold)" }} />
+                    <p className="text-sm font-bold mb-1" style={{ color: "var(--text-primary)" }}>Fonctionnalité Pro</p>
+                    <p className="text-xs mb-3" style={{ color: "var(--text-secondary)" }}>Débloquez l&apos;analyse comparative IA</p>
                     <button
                       onClick={() => router.push("/#pricing")}
-                      className="text-xs font-bold px-4 py-2 rounded-lg bg-[#C9A84C] text-black hover:bg-[#b8943d] transition-all"
+                      className="btn-pro text-xs font-bold px-4 py-2 rounded-lg transition-all"
                     >
                       Passer Pro
                     </button>
@@ -294,13 +319,23 @@ export default function ComparePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <button
                 onClick={() => router.push(`/analyze?ticker=${data1.company.ticker}`)}
-                className="flex items-center justify-center gap-2 bg-[#132032]/80 border border-[rgba(201,168,76,0.2)] rounded-xl px-5 py-3.5 text-sm font-bold text-[#C9A84C] hover:border-[#C9A84C] hover:bg-[rgba(201,168,76,0.05)] transition-all"
+                className="flex items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-bold transition-all"
+                style={{
+                  background: "var(--bg-surface)",
+                  border: "1px solid var(--border-default)",
+                  color: "var(--accent-primary)",
+                }}
               >
                 Analyse complète {data1.company.ticker} <ArrowRight size={14} />
               </button>
               <button
                 onClick={() => router.push(`/analyze?ticker=${data2.company.ticker}`)}
-                className="flex items-center justify-center gap-2 bg-[#132032]/80 border border-[rgba(201,168,76,0.2)] rounded-xl px-5 py-3.5 text-sm font-bold text-[#C9A84C] hover:border-[#C9A84C] hover:bg-[rgba(201,168,76,0.05)] transition-all"
+                className="flex items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-bold transition-all"
+                style={{
+                  background: "var(--bg-surface)",
+                  border: "1px solid var(--border-default)",
+                  color: "var(--accent-primary)",
+                }}
               >
                 Analyse complète {data2.company.ticker} <ArrowRight size={14} />
               </button>

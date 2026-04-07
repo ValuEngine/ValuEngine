@@ -89,7 +89,14 @@ function ModalContent({ onClose }: { onClose: () => void }) {
       style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)" }}
       onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
-      <div className="bg-gradient-to-b from-[#1a2d45] to-[#0f1a2b] border border-[rgba(201,168,76,0.35)] rounded-2xl max-w-lg w-full shadow-2xl shadow-[rgba(201,168,76,0.15)] overflow-hidden">
+      <div
+        className="rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden"
+        style={{
+          background: "linear-gradient(to bottom, #1a2d45, #0f1a2b)",
+          border: "1px solid rgba(108,92,231,0.35)",
+          boxShadow: "0 25px 50px -12px rgba(108,92,231,0.15)",
+        }}
+      >
 
         {step === 0 && (
           <div className="p-8 text-center">
@@ -100,8 +107,14 @@ function ModalContent({ onClose }: { onClose: () => void }) {
 
             {/* Animated icon */}
             <div className="relative mx-auto mb-6 w-20 h-20">
-              <div className="absolute inset-0 rounded-full bg-[rgba(201,168,76,0.15)] animate-ping" style={{ animationDuration: "2s" }} />
-              <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-[#C9A84C] to-[#e8c55a] flex items-center justify-center shadow-lg shadow-[rgba(201,168,76,0.4)]">
+              <div className="absolute inset-0 rounded-full animate-ping" style={{ background: "rgba(108,92,231,0.15)", animationDuration: "2s" }} />
+              <div
+                className="relative w-20 h-20 rounded-full flex items-center justify-center shadow-lg"
+                style={{
+                  background: "linear-gradient(to bottom right, var(--accent-primary), #8b7cf8)",
+                  boxShadow: "0 10px 25px rgba(108,92,231,0.4)",
+                }}
+              >
                 <Sparkles size={36} className="text-[#0a1628]" />
               </div>
             </div>
@@ -109,7 +122,7 @@ function ModalContent({ onClose }: { onClose: () => void }) {
             <h1 className="text-2xl sm:text-3xl font-black text-white mb-2">
               Bienvenue dans Pro
             </h1>
-            <p className="text-[#C9A84C] font-bold text-lg mb-4">
+            <p className="font-bold text-lg mb-4" style={{ color: "var(--accent-primary)" }}>
               Tu fais partie des investisseurs qui prennent les meilleures decisions.
             </p>
             <p className="text-zinc-400 text-sm mb-8 max-w-sm mx-auto">
@@ -118,23 +131,28 @@ function ModalContent({ onClose }: { onClose: () => void }) {
 
             {/* Quick stats */}
             <div className="grid grid-cols-3 gap-3 mb-8">
-              <div className="bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.2)] rounded-xl p-3">
-                <p className="text-2xl font-black text-[#C9A84C]">&infin;</p>
-                <p className="text-[10px] text-zinc-400 uppercase tracking-wider mt-1">Analyses</p>
+              <div className="rounded-xl p-3" style={{ background: "rgba(108,92,231,0.08)", border: "1px solid rgba(108,92,231,0.2)" }}>
+                <p className="text-2xl font-black" style={{ color: "var(--accent-primary)" }}>&infin;</p>
+                <p className="text-[13px] font-medium text-zinc-400 uppercase tracking-wider mt-1">Analyses</p>
               </div>
-              <div className="bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.2)] rounded-xl p-3">
-                <p className="text-2xl font-black text-[#C9A84C]">8</p>
-                <p className="text-[10px] text-zinc-400 uppercase tracking-wider mt-1">Outils Pro</p>
+              <div className="rounded-xl p-3" style={{ background: "rgba(108,92,231,0.08)", border: "1px solid rgba(108,92,231,0.2)" }}>
+                <p className="text-2xl font-black" style={{ color: "var(--accent-primary)" }}>8</p>
+                <p className="text-[13px] font-medium text-zinc-400 uppercase tracking-wider mt-1">Outils Pro</p>
               </div>
-              <div className="bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.2)] rounded-xl p-3">
-                <p className="text-2xl font-black text-[#C9A84C]">0</p>
-                <p className="text-[10px] text-zinc-400 uppercase tracking-wider mt-1">Limites</p>
+              <div className="rounded-xl p-3" style={{ background: "rgba(108,92,231,0.08)", border: "1px solid rgba(108,92,231,0.2)" }}>
+                <p className="text-2xl font-black" style={{ color: "var(--accent-primary)" }}>0</p>
+                <p className="text-[13px] font-medium text-zinc-400 uppercase tracking-wider mt-1">Limites</p>
               </div>
             </div>
 
             <button
               onClick={() => setStep(1)}
-              className="w-full py-3.5 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold rounded-xl text-base hover:shadow-[0_4px_20px_rgba(201,168,76,0.4)] transition-all flex items-center justify-center gap-2"
+              className="w-full py-3.5 text-[#0a1628] font-bold rounded-xl text-base transition-all flex items-center justify-center gap-2"
+              style={{
+                background: "linear-gradient(to right, var(--accent-primary), #8b7cf8)",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 20px rgba(108,92,231,0.4)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = ""; }}
             >
               Voir ce que tu as debloque <ChevronRight size={18} />
             </button>
@@ -159,18 +177,27 @@ function ModalContent({ onClose }: { onClose: () => void }) {
               {PRO_FEATURES.map((f) => (
                 <div
                   key={f.title}
-                  className={`flex items-start gap-3 p-3 rounded-xl border transition-colors ${
-                    f.highlight
-                      ? "bg-[rgba(201,168,76,0.1)] border-[rgba(201,168,76,0.3)]"
-                      : "bg-[rgba(255,255,255,0.02)] border-[rgba(255,255,255,0.06)] hover:border-[rgba(201,168,76,0.2)]"
-                  }`}
+                  className="flex items-start gap-3 p-3 rounded-xl border transition-colors"
+                  style={f.highlight ? {
+                    background: "rgba(108,92,231,0.1)",
+                    borderColor: "rgba(108,92,231,0.3)",
+                  } : {
+                    background: "rgba(255,255,255,0.02)",
+                    borderColor: "rgba(255,255,255,0.06)",
+                  }}
+                  onMouseEnter={!f.highlight ? (e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(108,92,231,0.2)"; } : undefined}
+                  onMouseLeave={!f.highlight ? (e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.06)"; } : undefined}
                 >
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    f.highlight
-                      ? "bg-gradient-to-br from-[#C9A84C] to-[#e8c55a]"
-                      : "bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.2)]"
-                  }`}>
-                    <f.icon size={16} className={f.highlight ? "text-[#0a1628]" : "text-[#C9A84C]"} />
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={f.highlight ? {
+                      background: "linear-gradient(to bottom right, var(--accent-primary), #8b7cf8)",
+                    } : {
+                      background: "rgba(108,92,231,0.1)",
+                      border: "1px solid rgba(108,92,231,0.2)",
+                    }}
+                  >
+                    <f.icon size={16} style={{ color: f.highlight ? "#0a1628" : "var(--accent-primary)" }} />
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-white leading-tight">{f.title}</p>
@@ -183,7 +210,10 @@ function ModalContent({ onClose }: { onClose: () => void }) {
             {/* CTA */}
             <button
               onClick={handleExplore}
-              className="w-full py-3.5 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold rounded-xl text-base hover:shadow-[0_4px_20px_rgba(201,168,76,0.4)] transition-all flex items-center justify-center gap-2"
+              className="w-full py-3.5 text-[#0a1628] font-bold rounded-xl text-base transition-all flex items-center justify-center gap-2"
+              style={{ background: "linear-gradient(to right, var(--accent-primary), #8b7cf8)" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 20px rgba(108,92,231,0.4)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = ""; }}
             >
               Lancer ma premiere analyse Pro <ChevronRight size={18} />
             </button>

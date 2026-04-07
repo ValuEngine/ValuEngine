@@ -10,15 +10,43 @@ import type { TrackRecordEntry, TrackRecordResponse } from "@/app/api/track-reco
 /* ── Verdict Badge ──────────────────────────────────────────────────── */
 
 function VerdictBadge({ verdict }: { verdict: string }) {
-  const config: Record<string, { label: string; dot: string; text: string; bg: string; border: string }> = {
-    BUY:  { label: "Sous-évalué", dot: "bg-emerald-400", text: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
-    SELL: { label: "Surévalué",   dot: "bg-red-400",     text: "text-red-400",     bg: "bg-red-500/10",     border: "border-red-500/20" },
-    HOLD: { label: "Juste valeur", dot: "bg-yellow-400",  text: "text-yellow-400",  bg: "bg-yellow-500/10",  border: "border-yellow-500/20" },
+  const config: Record<string, { label: string; dotColor: string; textColor: string; bgColor: string; borderColor: string }> = {
+    BUY:  {
+      label: "Sous-évalué",
+      dotColor: "var(--color-success)",
+      textColor: "var(--color-success)",
+      bgColor: "rgba(0,230,138,0.08)",
+      borderColor: "rgba(0,230,138,0.2)",
+    },
+    SELL: {
+      label: "Surévalué",
+      dotColor: "var(--color-danger)",
+      textColor: "var(--color-danger)",
+      bgColor: "rgba(255,84,112,0.08)",
+      borderColor: "rgba(255,84,112,0.2)",
+    },
+    HOLD: {
+      label: "Juste valeur",
+      dotColor: "var(--color-warning)",
+      textColor: "var(--color-warning)",
+      bgColor: "rgba(255,184,77,0.08)",
+      borderColor: "rgba(255,184,77,0.2)",
+    },
   };
   const c = config[verdict] ?? config.HOLD;
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${c.bg} ${c.text} border ${c.border}`}>
-      <span className={`w-1 h-1 rounded-full ${c.dot}`} />
+    <span
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border"
+      style={{
+        color: c.textColor,
+        background: c.bgColor,
+        borderColor: c.borderColor,
+      }}
+    >
+      <span
+        className="w-1 h-1 rounded-full"
+        style={{ background: c.dotColor }}
+      />
       {c.label}
     </span>
   );
@@ -27,12 +55,12 @@ function VerdictBadge({ verdict }: { verdict: string }) {
 /* ── Performance Badge ──────────────────────────────────────────────── */
 
 function PerfBadge({ pct, verdict }: { pct: number | null; verdict: string }) {
-  if (pct == null) return <span className="text-zinc-600 text-sm">—</span>;
+  if (pct == null) return <span className="text-sm" style={{ color: "var(--text-tertiary)" }}>—</span>;
   // For SELL, a negative move is a win
   const isWin = verdict === "SELL" ? pct < 0 : pct > 0;
-  const color = isWin ? "text-emerald-400" : "text-red-400";
+  const color = isWin ? "var(--color-success)" : "var(--color-danger)";
   return (
-    <span className={`text-sm font-bold ${color}`}>
+    <span className="text-sm font-bold" style={{ color }}>
       {pct >= 0 ? "+" : ""}{pct.toFixed(1)}%
     </span>
   );
@@ -135,28 +163,48 @@ export default function TrackRecordPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen text-white px-4 sm:px-6 md:px-10 py-4 sm:py-8">
+      <div className="min-h-screen px-4 sm:px-6 md:px-10 py-4 sm:py-8" style={{ color: "var(--text-primary)" }}>
 
         {/* Header */}
         <div className="mb-8 anim-1">
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-bold tracking-tight">Track Record</h1>
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-500/20 text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              LIVE
+            <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+              Track Record
+            </h1>
+            <span
+              className="inline-flex items-center gap-1.5 text-[13px] font-medium px-2.5 py-1 rounded-full border"
+              style={{
+                color: "var(--color-success)",
+                borderColor: "rgba(0,230,138,0.2)",
+              }}
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full animate-pulse"
+                style={{ background: "var(--color-success)" }}
+              />
+              Live
             </span>
           </div>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
             Performances historiques de nos analyses — actualisées en temps réel
           </p>
           {verifiedStats?.is_verified && verifiedStats.total_analyses > 0 && (
             <div className="flex items-center gap-2 mt-2">
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full border border-[#C9A84C]/30 text-[#C9A84C] bg-[rgba(201,168,76,0.05)]">
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 0L6.12 3.09L9.51 3.09L6.69 5L7.82 8.09L5 6.18L2.18 8.09L3.31 5L0.49 3.09L3.88 3.09L5 0Z" fill="#C9A84C"/></svg>
-                VERIFIED — {verifiedStats.total_analyses} analyses server-side
+              <span
+                className="inline-flex items-center gap-1.5 text-[13px] font-medium px-2.5 py-1 rounded-full border"
+                style={{
+                  color: "var(--accent-gold)",
+                  borderColor: "rgba(240,200,80,0.3)",
+                  background: "rgba(240,200,80,0.05)",
+                }}
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <path d="M5 0L6.12 3.09L9.51 3.09L6.69 5L7.82 8.09L5 6.18L2.18 8.09L3.31 5L0.49 3.09L3.88 3.09L5 0Z" fill="var(--accent-gold)" />
+                </svg>
+                Verified — {verifiedStats.total_analyses} analyses server-side
               </span>
               {verifiedStats.by_verdict.BUY && (
-                <span className="text-[10px] text-zinc-600">
+                <span className="text-[13px] font-medium" style={{ color: "var(--text-tertiary)" }}>
                   BUY: {verifiedStats.by_verdict.BUY.win_rate}% win | SELL: {verifiedStats.by_verdict.SELL?.win_rate ?? 0}% win
                 </span>
               )}
@@ -167,68 +215,85 @@ export default function TrackRecordPage() {
         {/* 4 Stat Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8 anim-2">
           <StatCard
-            icon={<Target size={18} className="text-emerald-400" />}
+            icon={<Target size={18} style={{ color: "var(--color-success)" }} />}
             label="Win Rate"
             value={loading ? "—" : s ? `${s.win_rate}%` : "—"}
             sub="Verdicts corrects"
-            color="text-emerald-400"
+            valueColor="var(--color-success)"
             loading={loading}
           />
           <StatCard
-            icon={<BarChart3 size={18} className="text-[#C9A84C]" />}
+            icon={<BarChart3 size={18} style={{ color: "var(--accent-primary)" }} />}
             label="Analyses totales"
             value={loading ? "—" : s && s.total > 0 ? String(s.total) : "—"}
             sub="Depuis le lancement"
-            color="text-[#C9A84C]"
+            valueColor="var(--accent-primary)"
             loading={loading}
           />
           <StatCard
-            icon={<TrendingUp size={18} className={s && s.avg_performance >= 0 ? "text-emerald-400" : "text-red-400"} />}
+            icon={
+              <TrendingUp
+                size={18}
+                style={{ color: s && s.avg_performance >= 0 ? "var(--color-success)" : "var(--color-danger)" }}
+              />
+            }
             label="Perf. moyenne"
             value={loading ? "—" : s ? `${s.avg_performance >= 0 ? "+" : ""}${s.avg_performance}%` : "—"}
             sub="Par analyse"
-            color={s && s.avg_performance >= 0 ? "text-emerald-400" : "text-red-400"}
+            valueColor={s && s.avg_performance >= 0 ? "var(--color-success)" : "var(--color-danger)"}
             loading={loading}
           />
           <StatCard
-            icon={<Trophy size={18} className="text-[#C9A84C]" />}
+            icon={<Trophy size={18} style={{ color: "var(--accent-gold)" }} />}
             label="Meilleure analyse"
             value={loading ? "—" : s?.best_ticker || "—"}
             sub={loading ? "" : s ? `+${s.best_performance.toFixed(1)}%` : ""}
-            color="text-[#C9A84C]"
+            valueColor="var(--accent-gold)"
             loading={loading}
           />
         </div>
 
         {/* Performance Chart */}
         {!loading && chartData.length > 2 && (
-          <div className="mb-8 rounded-xl border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm p-5 anim-3">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4">
+          <div
+            className="mb-8 rounded-xl border backdrop-blur-sm p-5 anim-3"
+            style={{
+              borderColor: "var(--border-default)",
+              background: "var(--bg-surface)",
+            }}
+          >
+            <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--text-primary)" }}>
               Performance cumulée des verdicts
             </h3>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="perfGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#C9A84C" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#C9A84C" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--accent-primary)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--accent-primary)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <XAxis
                   dataKey="date"
-                  tick={{ fill: "#71717a", fontSize: 11 }}
-                  axisLine={{ stroke: "#27272a" }}
+                  tick={{ fill: "var(--text-tertiary)", fontSize: 11 }}
+                  axisLine={{ stroke: "var(--border-default)" }}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: "#71717a", fontSize: 11 }}
+                  tick={{ fill: "var(--text-tertiary)", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                   tickFormatter={(v) => `${v > 0 ? "+" : ""}${v}%`}
                 />
                 <Tooltip
-                  contentStyle={{ background: "#18181b", border: "1px solid #27272a", borderRadius: "8px", fontSize: 12 }}
-                  labelStyle={{ color: "#71717a" }}
+                  contentStyle={{
+                    background: "var(--bg-elevated)",
+                    border: "1px solid var(--border-default)",
+                    borderRadius: "8px",
+                    fontSize: 12,
+                    color: "var(--text-primary)",
+                  }}
+                  labelStyle={{ color: "var(--text-secondary)" }}
                   formatter={(value: number, _name: string, props: { payload?: { ticker?: string } }) => [
                     `${value > 0 ? "+" : ""}${value}%`,
                     props.payload?.ticker ?? "Cumul",
@@ -237,7 +302,7 @@ export default function TrackRecordPage() {
                 <Area
                   type="monotone"
                   dataKey="performance"
-                  stroke="#C9A84C"
+                  stroke="var(--accent-primary)"
                   strokeWidth={2}
                   fill="url(#perfGrad)"
                 />
@@ -248,32 +313,54 @@ export default function TrackRecordPage() {
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2 mb-4 anim-3">
-          <span className="text-xs text-zinc-500 font-medium mr-1">Verdict :</span>
+          <span className="text-[13px] font-medium mr-1" style={{ color: "var(--text-secondary)" }}>
+            Verdict :
+          </span>
           {(["all", "BUY", "SELL", "HOLD"] as VerdictFilter[]).map((f) => (
             <button
               key={f}
               onClick={() => setVerdictFilter(f)}
-              className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+              className="text-[13px] font-medium px-3 py-1.5 rounded-lg transition-colors border"
+              style={
                 verdictFilter === f
-                  ? "bg-[#C9A84C]/15 text-[#C9A84C] border border-[#C9A84C]/30"
-                  : "bg-[#18181b] text-zinc-400 border border-[#27272a] hover:border-zinc-600"
-              }`}
+                  ? {
+                      background: "rgba(108,92,231,0.12)",
+                      color: "var(--accent-primary)",
+                      borderColor: "rgba(108,92,231,0.3)",
+                    }
+                  : {
+                      background: "var(--bg-surface)",
+                      color: "var(--text-secondary)",
+                      borderColor: "var(--border-subtle)",
+                    }
+              }
             >
               {f === "all" ? "Tous" : f === "BUY" ? "Sous-évalué" : f === "SELL" ? "Surévalué" : "Juste valeur"}
             </button>
           ))}
 
-          <span className="text-zinc-700 mx-1">|</span>
-          <span className="text-xs text-zinc-500 font-medium mr-1">Perf :</span>
+          <span className="mx-1" style={{ color: "var(--border-default)" }}>|</span>
+          <span className="text-[13px] font-medium mr-1" style={{ color: "var(--text-secondary)" }}>
+            Perf :
+          </span>
           {(["all", "winners", "losers"] as PerfFilter[]).map((f) => (
             <button
               key={f}
               onClick={() => setPerfFilter(f)}
-              className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+              className="text-[13px] font-medium px-3 py-1.5 rounded-lg transition-colors border"
+              style={
                 perfFilter === f
-                  ? "bg-[#C9A84C]/15 text-[#C9A84C] border border-[#C9A84C]/30"
-                  : "bg-[#18181b] text-zinc-400 border border-[#27272a] hover:border-zinc-600"
-              }`}
+                  ? {
+                      background: "rgba(108,92,231,0.12)",
+                      color: "var(--accent-primary)",
+                      borderColor: "rgba(108,92,231,0.3)",
+                    }
+                  : {
+                      background: "var(--bg-surface)",
+                      color: "var(--text-secondary)",
+                      borderColor: "var(--border-subtle)",
+                    }
+              }
             >
               {f === "all" ? "Tous" : f === "winners" ? "Gagnants" : "Perdants"}
             </button>
@@ -289,19 +376,43 @@ export default function TrackRecordPage() {
               ))}
             </div>
           ) : filteredEntries.length === 0 ? (
-            <div className="rounded-xl p-12 border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm text-center">
-              <p className="text-zinc-400 text-sm">
+            <div
+              className="rounded-xl p-12 border backdrop-blur-sm text-center"
+              style={{
+                borderColor: "var(--border-default)",
+                background: "var(--bg-surface)",
+              }}
+            >
+              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
                 {verdictFilter !== "all" || perfFilter !== "all"
                   ? "Aucun résultat pour ces filtres"
                   : "Les premières analyses apparaîtront ici dès qu'elles seront effectuées"}
               </p>
             </div>
           ) : (
-            <div className="rounded-xl border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm overflow-x-auto">
+            <div
+              className="rounded-xl border backdrop-blur-sm overflow-x-auto"
+              style={{
+                borderColor: "var(--border-default)",
+                background: "var(--bg-surface)",
+              }}
+            >
               {/* Table header */}
-              <div className="hidden md:grid grid-cols-[80px_1fr_100px_85px_85px_75px_70px_80px] gap-2 px-4 py-3 border-b border-[#27272a] bg-[#27272a]/30">
+              <div
+                className="hidden md:grid grid-cols-[80px_1fr_100px_85px_85px_75px_70px_80px] gap-2 px-4 py-3 border-b"
+                style={{
+                  borderColor: "var(--border-default)",
+                  background: "rgba(26,26,46,0.4)",
+                }}
+              >
                 {["Ticker", "Nom", "Verdict", "Entrée", "Actuel", "Perf.", "Durée", "Date"].map((h) => (
-                  <p key={h} className="text-[10px] font-bold uppercase tracking-[1.5px] text-zinc-500">{h}</p>
+                  <p
+                    key={h}
+                    className="text-[13px] font-medium"
+                    style={{ color: "var(--text-tertiary)" }}
+                  >
+                    {h}
+                  </p>
                 ))}
               </div>
 
@@ -310,22 +421,31 @@ export default function TrackRecordPage() {
                 <div
                   key={row.id}
                   onClick={() => router.push(`/analyze?ticker=${row.ticker}`)}
-                  className={`grid grid-cols-2 md:grid-cols-[80px_1fr_100px_85px_85px_75px_70px_80px] gap-2 items-center px-4 py-3 hover:bg-white/[0.03] cursor-pointer transition-colors ${
-                    i < filteredEntries.length - 1 ? "border-b border-[#27272a]" : ""
-                  }`}
+                  className="grid grid-cols-2 md:grid-cols-[80px_1fr_100px_85px_85px_75px_70px_80px] gap-2 items-center px-4 py-3 cursor-pointer transition-colors hover:bg-white/[0.03]"
+                  style={
+                    i < filteredEntries.length - 1
+                      ? { borderBottom: "1px solid var(--border-subtle)" }
+                      : {}
+                  }
                 >
-                  <span className="text-[#C9A84C] font-bold text-sm">{row.ticker}</span>
-                  <span className="text-zinc-300 text-xs truncate hidden md:block">{row.name}</span>
+                  <span className="font-bold text-sm" style={{ color: "var(--accent-primary)" }}>
+                    {row.ticker}
+                  </span>
+                  <span className="text-xs truncate hidden md:block" style={{ color: "var(--text-secondary)" }}>
+                    {row.name}
+                  </span>
                   <VerdictBadge verdict={row.verdict} />
-                  <span className="text-zinc-400 text-sm hidden md:block">
+                  <span className="text-sm hidden md:block" style={{ color: "var(--text-secondary)" }}>
                     {row.price_entry != null ? `$${row.price_entry.toFixed(2)}` : "—"}
                   </span>
-                  <span className="text-white text-sm font-medium hidden md:block">
+                  <span className="text-sm font-medium hidden md:block" style={{ color: "var(--text-primary)" }}>
                     {row.price_now != null ? `$${row.price_now.toFixed(2)}` : "—"}
                   </span>
                   <PerfBadge pct={row.performance_pct} verdict={row.verdict} />
-                  <span className="text-zinc-500 text-xs hidden md:block">{getDuration(row.created_at)}</span>
-                  <span className="text-zinc-600 text-xs hidden md:block">
+                  <span className="text-xs hidden md:block" style={{ color: "var(--text-tertiary)" }}>
+                    {getDuration(row.created_at)}
+                  </span>
+                  <span className="text-xs hidden md:block" style={{ color: "var(--text-tertiary)" }}>
                     {new Date(row.created_at).toLocaleDateString("fr-FR", {
                       day: "numeric",
                       month: "short",
@@ -341,28 +461,43 @@ export default function TrackRecordPage() {
         {/* Demo badge */}
         {data?.is_demo && (
           <div className="mt-4 text-center">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[rgba(201,168,76,0.06)] border border-[rgba(201,168,76,0.15)] text-[11px] text-zinc-500">
-              DÉMO — Données représentatives des performances attendues
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[13px] font-medium"
+              style={{
+                background: "rgba(240,200,80,0.04)",
+                borderColor: "rgba(240,200,80,0.15)",
+                color: "var(--text-tertiary)",
+              }}
+            >
+              Démo — Données représentatives des performances attendues
             </span>
           </div>
         )}
 
         {/* CTA */}
-        <div className="mt-10 rounded-xl p-6 border border-[rgba(201,168,76,0.2)] bg-[rgba(201,168,76,0.04)] text-center anim-4">
-          <p className="text-sm font-semibold text-zinc-200 mb-1">
+        <div
+          className="mt-10 rounded-xl p-6 border text-center anim-4"
+          style={{
+            borderColor: "var(--border-default)",
+            background: "var(--bg-elevated)",
+          }}
+        >
+          <p className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
             Accède aux analyses complètes (DCF, SWOT, PESTLE)
           </p>
-          <p className="text-xs text-zinc-500 mb-4">Crée un compte gratuit pour commencer</p>
+          <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>
+            Crée un compte gratuit pour commencer
+          </p>
           <button
             onClick={() => router.push("/sign-up")}
-            className="bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold px-6 py-2.5 rounded-lg text-sm transition-all"
+            className="btn-primary font-bold px-6 py-2.5 rounded-lg text-sm transition-all"
           >
             Commencer gratuitement
           </button>
         </div>
 
         {/* Disclaimer */}
-        <p className="text-[11px] text-zinc-600 text-center mt-6">
+        <p className="text-[11px] text-center mt-6" style={{ color: "var(--text-tertiary)" }}>
           Les performances passées ne préjugent pas des performances futures. Outil éducatif — pas un conseil en investissement au sens de la directive MIF II.
         </p>
 
@@ -378,28 +513,30 @@ function StatCard({
   label,
   value,
   sub,
-  color,
+  valueColor,
   loading,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   sub: string;
-  color: string;
+  valueColor: string;
   loading: boolean;
 }) {
   return (
-    <div className="rounded-xl p-4 border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm">
+    <div
+      className="card rounded-xl p-4 backdrop-blur-sm"
+    >
       <div className="flex items-center gap-2 mb-2">
         {icon}
-        <p className="text-xs font-semibold text-zinc-400">{label}</p>
+        <p className="text-[13px] font-medium" style={{ color: "var(--text-secondary)" }}>{label}</p>
       </div>
       {loading ? (
         <div className="skeleton h-7 w-16 rounded mb-1" />
       ) : (
-        <p className={`text-2xl font-black ${color}`}>{value}</p>
+        <p className="text-2xl font-black" style={{ color: valueColor }}>{value}</p>
       )}
-      <p className="text-[10px] text-zinc-600 mt-0.5">{sub}</p>
+      <p className="text-[13px] font-medium mt-0.5" style={{ color: "var(--text-tertiary)" }}>{sub}</p>
     </div>
   );
 }

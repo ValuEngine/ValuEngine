@@ -168,12 +168,13 @@ export default function CommandPalette() {
 
       {/* Modal */}
       <div
-        className="relative w-full max-w-lg mx-4 bg-[#18181b] border border-[#27272a] rounded-xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-lg mx-4 rounded-xl shadow-2xl overflow-hidden"
+        style={{ background: "var(--bg-surface)", border: "1px solid var(--border-default)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search input */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-[#27272a]">
-          <Search className="w-5 h-5 text-[#71717a] shrink-0" />
+        <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: "1px solid var(--border-default)" }}>
+          <Search className="w-5 h-5 shrink-0" style={{ color: "var(--text-secondary)" }} />
           <input
             ref={inputRef}
             type="text"
@@ -181,9 +182,13 @@ export default function CommandPalette() {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleInputKeyDown}
             placeholder="Rechercher une page ou un ticker..."
-            className="flex-1 bg-transparent text-[#e4e4e7] placeholder-[#71717a] outline-none text-sm"
+            className="flex-1 bg-transparent outline-none text-sm"
+            style={{ color: "var(--text-primary)", caretColor: "var(--accent-primary)" }}
           />
-          <kbd className="hidden sm:inline-block text-[10px] text-[#71717a] border border-[#27272a] rounded px-1.5 py-0.5">
+          <kbd
+            className="hidden sm:inline-block text-[13px] font-medium rounded px-1.5 py-0.5"
+            style={{ color: "var(--text-secondary)", border: "1px solid var(--border-default)" }}
+          >
             ESC
           </kbd>
         </div>
@@ -191,13 +196,13 @@ export default function CommandPalette() {
         {/* Results */}
         <div className="max-h-72 overflow-y-auto py-2">
           {items.length === 0 && !tickerLoading && (
-            <p className="px-4 py-6 text-sm text-[#71717a] text-center">
+            <p className="px-4 py-6 text-sm text-center" style={{ color: "var(--text-secondary)" }}>
               Aucun résultat
             </p>
           )}
 
           {tickerLoading && items.length === 0 && (
-            <p className="px-4 py-6 text-sm text-[#71717a] text-center">
+            <p className="px-4 py-6 text-sm text-center" style={{ color: "var(--text-secondary)" }}>
               Recherche...
             </p>
           )}
@@ -224,7 +229,7 @@ function renderSection(
 
   return (
     <div key={section}>
-      <p className="px-4 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[#71717a]">
+      <p className="px-4 pt-2 pb-1 text-[13px] font-medium uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
         {section}
       </p>
       {sectionItems.map((item) => {
@@ -235,11 +240,15 @@ function renderSection(
           <button
             key={item.id}
             onClick={() => onSelect(item.href)}
-            className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors cursor-pointer ${
-              isSelected
-                ? "bg-[#C9A84C]/15 text-[#C9A84C]"
-                : "text-[#e4e4e7] hover:bg-[#27272a]"
-            }`}
+            className="w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors cursor-pointer"
+            style={isSelected ? {
+              background: "rgba(108,92,231,0.15)",
+              color: "var(--accent-primary)",
+            } : {
+              color: "var(--text-primary)",
+            }}
+            onMouseEnter={!isSelected ? (e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--bg-elevated, var(--border-default))"; } : undefined}
+            onMouseLeave={!isSelected ? (e) => { (e.currentTarget as HTMLButtonElement).style.background = ""; } : undefined}
           >
             <Icon className="w-4 h-4 shrink-0" />
             <span>{item.label}</span>

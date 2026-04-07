@@ -19,42 +19,54 @@ import DeepAnalysisSection from "@/components/DeepAnalysisSection";
 import AnomaliesSection from "@/components/AnomaliesSection";
 import DCFScenariosSection from "@/components/DCFScenariosSection";
 import { useProStatus } from "@/hooks/useProStatus";
+import Tabs from "@/components/ui/Tabs";
 
 /* ─────────────── helpers ────────────────────────────────────────────── */
 
 function VerdictBadgePremium({ verdict }: { verdict: string }) {
   if (verdict === "BUY") return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+    <span
+      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold border"
+      style={{ background: "rgba(0,230,138,0.1)", color: "var(--color-success)", borderColor: "rgba(0,230,138,0.2)" }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--color-success)" }} />
       Sous-évalué
     </span>
   );
   if (verdict === "SELL") return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
-      <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+    <span
+      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold border"
+      style={{ background: "rgba(255,84,112,0.1)", color: "var(--color-danger)", borderColor: "rgba(255,84,112,0.2)" }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--color-danger)" }} />
       Surévalué
     </span>
   );
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
-      <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+    <span
+      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold border"
+      style={{ background: "rgba(255,184,77,0.1)", color: "var(--color-warning)", borderColor: "rgba(255,184,77,0.2)" }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--color-warning)" }} />
       Juste valeur
     </span>
   );
 }
 
 function VerdictConfig(verdict: string) {
-  if (verdict === "BUY")  return { color: "#10b981", bg: "rgba(16,185,129,0.06)",  border: "rgba(16,185,129,0.2)",  icon: <TrendingUp  size={20} />, action: "Potentiel haussier identifié" };
-  if (verdict === "SELL") return { color: "#ef4444", bg: "rgba(239,68,68,0.06)",   border: "rgba(239,68,68,0.2)",   icon: <TrendingDown size={20} />, action: "Valorisation tendue"            };
-  return                         { color: "#C9A84C", bg: "rgba(201,168,76,0.06)",  border: "rgba(201,168,76,0.2)",  icon: <Minus        size={20} />, action: "Zone de juste valeur"           };
+  if (verdict === "BUY")  return { color: "var(--color-success)", rawColor: "#00E68A", bg: "rgba(0,230,138,0.06)",   border: "rgba(0,230,138,0.2)",   icon: <TrendingUp  size={20} />, action: "Potentiel haussier identifié" };
+  if (verdict === "SELL") return { color: "var(--color-danger)",  rawColor: "#FF5470", bg: "rgba(255,84,112,0.06)",  border: "rgba(255,84,112,0.2)",  icon: <TrendingDown size={20} />, action: "Valorisation tendue"            };
+  return                         { color: "var(--color-warning)", rawColor: "#FFB84D", bg: "rgba(255,184,77,0.06)",  border: "rgba(255,184,77,0.2)",  icon: <Minus        size={20} />, action: "Zone de juste valeur"           };
 }
 
 function KPI({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
   return (
-    <div className="bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-xl p-4 hover:border-[#3f3f46] transition-colors duration-200">
-      <p className="text-[10px] font-bold uppercase tracking-[1.6px] text-zinc-500 mb-2">{label}</p>
-      <p className="text-xl font-bold text-white tracking-tight">{value}</p>
-      {sub && <p className="text-xs mt-1.5" style={{ color: color || "#71717a" }}>{sub}</p>}
+    <div
+      className="card rounded-xl p-4 transition-colors duration-200"
+    >
+      <p className="text-[13px] font-medium mb-2" style={{ color: "var(--text-tertiary)" }}>{label}</p>
+      <p className="text-xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>{value}</p>
+      {sub && <p className="text-xs mt-1.5" style={{ color: color || "var(--text-secondary)" }}>{sub}</p>}
     </div>
   );
 }
@@ -64,8 +76,8 @@ function Section({ title, children, defaultOpen = true }: { title: string; child
   return (
     <div className="mb-6">
       <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between mb-4 group">
-        <span className="text-[11px] font-bold uppercase tracking-[2px] text-[#C9A84C]">{title}</span>
-        <span className="text-zinc-400 group-hover:text-[#C9A84C] transition-colors">
+        <span className="text-lg font-semibold" style={{ color: "var(--accent-primary)" }}>{title}</span>
+        <span className="transition-colors" style={{ color: "var(--text-secondary)" }}>
           {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </span>
       </button>
@@ -94,7 +106,12 @@ function useCountUp(target: number, duration = 1500): number {
 
 /* ── Skeleton Loading ─────────────────────────────────────────────────── */
 function SkeletonCard({ className = "" }: { className?: string }) {
-  return <div className={`bg-[#132032]/80 backdrop-blur-sm rounded-2xl animate-pulse ${className}`} />;
+  return (
+    <div
+      className={`backdrop-blur-sm rounded-2xl animate-pulse ${className}`}
+      style={{ background: "rgba(19,32,50,0.8)" }}
+    />
+  );
 }
 
 function SkeletonDashboard({ ticker }: { ticker: string }) {
@@ -119,21 +136,36 @@ function SkeletonDashboard({ ticker }: { ticker: string }) {
       {/* Progress steps */}
       <div className="max-w-md mx-auto mb-10 mt-4">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-semibold text-white">Analyse de <span className="text-[#C9A84C]">{ticker}</span></span>
-          <span className="text-xs text-zinc-500">{Math.min(step + 1, steps.length)}/{steps.length}</span>
+          <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            Analyse de <span style={{ color: "var(--accent-primary)" }}>{ticker}</span>
+          </span>
+          <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>{Math.min(step + 1, steps.length)}/{steps.length}</span>
         </div>
-        <div className="w-full bg-zinc-800 rounded-full h-1.5 mb-4">
-          <div className="bg-[#C9A84C] h-1.5 rounded-full transition-all duration-1000 ease-out" style={{ width: `${((step + 1) / steps.length) * 100}%` }} />
+        <div className="w-full rounded-full h-1.5 mb-4" style={{ background: "var(--bg-overlay)" }}>
+          <div
+            className="h-1.5 rounded-full transition-all duration-1000 ease-out"
+            style={{ width: `${((step + 1) / steps.length) * 100}%`, background: "var(--accent-primary)" }}
+          />
         </div>
         <div className="space-y-2">
           {steps.map((s, i) => (
-            <div key={s} className={`flex items-center gap-3 text-xs transition-colors ${i < step ? "text-emerald-400" : i === step ? "text-[#C9A84C]" : "text-zinc-500"}`}>
+            <div
+              key={s}
+              className="flex items-center gap-3 text-xs transition-colors"
+              style={{
+                color: i < step
+                  ? "var(--color-success)"
+                  : i === step
+                  ? "var(--accent-primary)"
+                  : "var(--text-tertiary)",
+              }}
+            >
               {i < step ? (
                 <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5 flex-shrink-0"><path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.78 5.22a.75.75 0 00-1.06 0L7 8.94 5.28 7.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25a.75.75 0 000-1.06z" /></svg>
               ) : i === step ? (
-                <div className="w-3.5 h-3.5 flex-shrink-0 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
+                <div className="w-3.5 h-3.5 flex-shrink-0 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: "var(--accent-primary)", borderTopColor: "transparent" }} />
               ) : (
-                <div className="w-3.5 h-3.5 flex-shrink-0 rounded-full border border-zinc-700" />
+                <div className="w-3.5 h-3.5 flex-shrink-0 rounded-full border" style={{ borderColor: "var(--border-default)" }} />
               )}
               <span className={i <= step ? "font-medium" : ""}>{s}</span>
             </div>
@@ -167,18 +199,18 @@ function VerdictBadge({ upsidePct }: { upsidePct: number }) {
   const abs = Math.abs(upsidePct);
   const clamped = Math.min(abs, 60);
   const barWidth = Math.round((clamped / 60) * 100);
-  const color = upsidePct > 15 ? "#00d4aa" : upsidePct < -15 ? "#ff4d6d" : "#C9A84C";
+  const color = upsidePct > 15 ? "var(--color-success)" : upsidePct < -15 ? "var(--color-danger)" : "var(--color-warning)";
   const label = upsidePct > 15 ? "Potentiel haussier" : upsidePct < -15 ? "Risque de correction" : "Zone de juste valeur";
 
   return (
     <div className="mt-4 w-full max-w-xs">
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color }}>{label}</span>
+        <span className="text-[13px] font-medium" style={{ color }}>{label}</span>
         <span className="text-xl font-black" style={{ color }}>
           {animatedPct > 0 ? "+" : ""}{animatedPct.toFixed(1)}%
         </span>
       </div>
-      <div className="h-2 bg-[rgba(255,255,255,0.06)] rounded-full overflow-hidden">
+      <div className="h-2 rounded-full overflow-hidden" style={{ background: "var(--border-subtle)" }}>
         <div
           className="h-full rounded-full transition-all duration-700"
           style={{ width: `${barWidth}%`, background: color }}
@@ -231,13 +263,16 @@ function SwotSection({ ticker }: { ticker: string }) {
 
   if (!data) {
     return (
-      <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.14)] rounded-2xl p-6 mb-6">
-        <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C] mb-4">Analyse SWOT</p>
-        {error && <p className="text-[#ff4d6d] text-sm mb-4">{error}</p>}
+      <div
+        className="rounded-2xl p-6 mb-6 border"
+        style={{ background: "rgba(19,32,50,0.8)", borderColor: "rgba(108,92,231,0.14)" }}
+      >
+        <p className="text-lg font-semibold mb-4" style={{ color: "var(--accent-primary)" }}>Analyse SWOT</p>
+        {error && <p className="text-sm mb-4" style={{ color: "var(--color-danger)" }}>{error}</p>}
         <button
           onClick={generate}
           disabled={loading}
-          className="flex items-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold px-5 py-2.5 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all disabled:opacity-50"
+          className="btn-primary flex items-center gap-2 disabled:opacity-50"
         >
           {loading ? <><Loader2 size={16} className="animate-spin" /> Génération...</> : "Générer SWOT"}
         </button>
@@ -246,25 +281,33 @@ function SwotSection({ ticker }: { ticker: string }) {
   }
 
   const quadrants = [
-    { key: "strengths",     label: "Forces",        items: data.strengths,     border: "#00d4aa", bg: "rgba(0,212,170,0.05)" },
-    { key: "weaknesses",    label: "Faiblesses",    items: data.weaknesses,    border: "#ff4d6d", bg: "rgba(255,77,109,0.05)" },
-    { key: "opportunities", label: "Opportunités",  items: data.opportunities, border: "#3b82f6", bg: "rgba(59,130,246,0.05)" },
-    { key: "threats",       label: "Menaces",       items: data.threats,       border: "#f97316", bg: "rgba(249,115,22,0.05)" },
+    { key: "strengths",     label: "Forces",        items: data.strengths,     border: "#00E68A", bg: "rgba(0,230,138,0.05)" },
+    { key: "weaknesses",    label: "Faiblesses",    items: data.weaknesses,    border: "#FF5470", bg: "rgba(255,84,112,0.05)" },
+    { key: "opportunities", label: "Opportunités",  items: data.opportunities, border: "#54B8FF", bg: "rgba(84,184,255,0.05)" },
+    { key: "threats",       label: "Menaces",       items: data.threats,       border: "#FFB84D", bg: "rgba(255,184,77,0.05)" },
   ];
 
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C]">Analyse SWOT</p>
-        <button onClick={() => setData(null)} className="text-xs text-zinc-400 hover:text-white transition-colors">Régénérer</button>
+        <p className="text-lg font-semibold" style={{ color: "var(--accent-primary)" }}>Analyse SWOT</p>
+        <button
+          onClick={() => setData(null)}
+          className="text-xs transition-colors"
+          style={{ color: "var(--text-secondary)" }}
+          onMouseEnter={e => (e.currentTarget.style.color = "var(--text-primary)")}
+          onMouseLeave={e => (e.currentTarget.style.color = "var(--text-secondary)")}
+        >
+          Régénérer
+        </button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {quadrants.map(({ key, label, items, border, bg }) => (
           <div key={key} className="rounded-2xl p-5" style={{ background: bg, border: `1px solid ${border}40` }}>
-            <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: border }}>{label}</p>
+            <p className="text-[13px] font-medium uppercase tracking-wider mb-3" style={{ color: border }}>{label}</p>
             <ul className="space-y-2">
               {items.map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-[#c8d8e8]">
+                <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "var(--text-primary)" }}>
                   <span style={{ color: border }} className="mt-1 flex-shrink-0">•</span>
                   {item}
                 </li>
@@ -303,13 +346,16 @@ function PestleSection({ ticker }: { ticker: string }) {
 
   if (!data) {
     return (
-      <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.14)] rounded-2xl p-6">
-        <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C] mb-4">Analyse PESTLE</p>
-        {error && <p className="text-[#ff4d6d] text-sm mb-4">{error}</p>}
+      <div
+        className="rounded-2xl p-6 border"
+        style={{ background: "rgba(19,32,50,0.8)", borderColor: "rgba(108,92,231,0.14)" }}
+      >
+        <p className="text-lg font-semibold mb-4" style={{ color: "var(--accent-primary)" }}>Analyse PESTLE</p>
+        {error && <p className="text-sm mb-4" style={{ color: "var(--color-danger)" }}>{error}</p>}
         <button
           onClick={generate}
           disabled={loading}
-          className="flex items-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold px-5 py-2.5 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all disabled:opacity-50"
+          className="btn-primary flex items-center gap-2 disabled:opacity-50"
         >
           {loading ? <><Loader2 size={16} className="animate-spin" /> Génération...</> : "Générer PESTLE"}
         </button>
@@ -329,17 +375,32 @@ function PestleSection({ ticker }: { ticker: string }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C]">Analyse PESTLE</p>
-        <button onClick={() => setData(null)} className="text-xs text-zinc-400 hover:text-white transition-colors">Régénérer</button>
+        <p className="text-lg font-semibold" style={{ color: "var(--accent-primary)" }}>Analyse PESTLE</p>
+        <button
+          onClick={() => setData(null)}
+          className="text-xs transition-colors"
+          style={{ color: "var(--text-secondary)" }}
+          onMouseEnter={e => (e.currentTarget.style.color = "var(--text-primary)")}
+          onMouseLeave={e => (e.currentTarget.style.color = "var(--text-secondary)")}
+        >
+          Régénérer
+        </button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {cards.map(({ key, label, icon, text }) => (
-          <div key={key} className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl p-5">
+          <div
+            key={key}
+            className="rounded-2xl p-5 border"
+            style={{
+              background: "linear-gradient(to bottom, var(--bg-elevated), var(--bg-surface))",
+              borderColor: "rgba(108,92,231,0.14)",
+            }}
+          >
             <div className="flex items-center gap-2 mb-3">
               <span className="text-lg">{icon}</span>
-              <p className="text-xs font-bold uppercase tracking-wider text-[#C9A84C]">{label}</p>
+              <p className="text-[13px] font-medium uppercase tracking-wider" style={{ color: "var(--accent-primary)" }}>{label}</p>
             </div>
-            <p className="text-sm text-[#c8d8e8] leading-relaxed">{text}</p>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>{text}</p>
           </div>
         ))}
       </div>
@@ -349,15 +410,12 @@ function PestleSection({ ticker }: { ticker: string }) {
 
 /* ─────────────── main component ─────────────────────────────────────── */
 
-type TabId = "overview" | "ai" | "valuation" | "comps" | "swot" | "pestle";
+type NewTabId = "overview" | "dcf" | "deep";
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: "overview",  label: "Vue d'ensemble" },
-  { id: "ai",        label: "Analyse IA" },
-  { id: "valuation", label: "Valorisation DCF" },
-  { id: "comps",     label: "Comparables" },
-  { id: "swot",      label: "SWOT" },
-  { id: "pestle",    label: "PESTLE" },
+const ANALYSIS_TABS: { id: NewTabId; label: string }[] = [
+  { id: "overview", label: "Vue d'ensemble" },
+  { id: "dcf",      label: "DCF & Scénarios" },
+  { id: "deep",     label: "Analyse profonde" },
 ];
 
 /* ─────────────── PriceAlertSection ─────────────────────────────────────── */
@@ -437,25 +495,31 @@ function PriceAlertSection({ ticker, tickerName }: { ticker: string; tickerName:
   if (!isSignedIn) return null;
 
   return (
-    <div className="mt-8 rounded-2xl border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm p-6">
+    <div
+      className="mt-8 rounded-2xl border p-6"
+      style={{
+        background: "var(--bg-surface)",
+        borderColor: "var(--border-default)",
+      }}
+    >
       <div className="flex items-center gap-2 mb-5">
-        <Bell size={16} className="text-[#C9A84C]" />
-        <h3 className="text-sm font-bold text-white">Créer une alerte prix</h3>
+        <Bell size={16} style={{ color: "var(--accent-primary)" }} />
+        <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>Créer une alerte prix</h3>
       </div>
 
       {/* Create form */}
       <div className="flex flex-wrap gap-2 mb-5">
         {/* Direction toggle */}
-        <div className="flex rounded-lg overflow-hidden border border-zinc-800">
+        <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: "var(--border-default)" }}>
           {(["above", "below"] as const).map(d => (
             <button
               key={d}
               onClick={() => setDirection(d)}
-              className={`px-3 py-2 text-xs font-semibold transition-colors ${
-                direction === d
-                  ? "bg-[#C9A84C] text-black"
-                  : "bg-zinc-900 text-zinc-400 hover:text-white"
-              }`}
+              className="px-3 py-2 text-xs font-semibold transition-colors"
+              style={{
+                background: direction === d ? "var(--accent-primary)" : "var(--bg-elevated)",
+                color: direction === d ? "#fff" : "var(--text-secondary)",
+              }}
             >
               {d === "above" ? "Au-dessus de" : "En-dessous de"}
             </button>
@@ -469,22 +533,29 @@ function PriceAlertSection({ ticker, tickerName }: { ticker: string; tickerName:
           onChange={e => { setTargetPrice(e.target.value); setCreateError(""); }}
           onKeyDown={e => e.key === "Enter" && handleCreate()}
           placeholder="Prix cible ($)"
-          className="flex-1 min-w-[140px] bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white text-base sm:text-sm placeholder-zinc-600 focus:outline-none focus:border-[rgba(201,168,76,0.5)] transition-all"
+          className="flex-1 min-w-[140px] rounded-lg px-4 py-2 text-base sm:text-sm placeholder-[#5A5A72] focus:outline-none transition-all"
+          style={{
+            background: "var(--bg-elevated)",
+            border: "1px solid var(--border-default)",
+            color: "var(--text-primary)",
+          }}
+          onFocus={e => (e.currentTarget.style.borderColor = "rgba(108,92,231,0.5)")}
+          onBlur={e => (e.currentTarget.style.borderColor = "var(--border-default)")}
         />
 
         <button
           onClick={handleCreate}
           disabled={creating || !targetPrice}
-          className="flex items-center gap-1.5 bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold px-4 py-2 rounded-lg text-sm transition-all disabled:opacity-40 whitespace-nowrap"
+          className="btn-primary flex items-center gap-1.5 disabled:opacity-40 whitespace-nowrap"
         >
           {creating ? <Loader2 size={14} className="animate-spin" /> : <Bell size={14} />}
           Créer l&apos;alerte
         </button>
       </div>
 
-      {createError && <p className="text-red-400 text-xs mb-3">{createError}</p>}
+      {createError && <p className="text-xs mb-3" style={{ color: "var(--color-danger)" }}>{createError}</p>}
       {createSuccess && (
-        <p className="text-emerald-400 text-xs mb-3">✓ Alerte créée — email envoyé quand le seuil est franchi</p>
+        <p className="text-xs mb-3" style={{ color: "var(--color-success)" }}>&#10003; Alerte créée — email envoyé quand le seuil est franchi</p>
       )}
 
       {/* Active alerts for this ticker */}
@@ -492,15 +563,25 @@ function PriceAlertSection({ ticker, tickerName }: { ticker: string; tickerName:
         <div className="skeleton h-8 rounded-lg w-full" />
       ) : alerts.length > 0 && (
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[1.5px] text-zinc-500 mb-2">Alertes actives</p>
+          <p className="text-[13px] font-medium mb-2" style={{ color: "var(--text-tertiary)" }}>Alertes actives</p>
           <div className="space-y-1.5">
             {alerts.map(a => (
-              <div key={a.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800">
-                <span className="text-xs text-zinc-300">
-                  <span className="text-zinc-500">{a.condition === "above" ? "↑ Au-dessus de" : "↓ En-dessous de"}</span>
-                  {" "}<span className="text-white font-bold">${Number(a.target_price).toFixed(2)}</span>
+              <div
+                key={a.id}
+                className="flex items-center justify-between px-3 py-2 rounded-lg border"
+                style={{ background: "var(--bg-elevated)", borderColor: "var(--border-subtle)" }}
+              >
+                <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                  <span style={{ color: "var(--text-tertiary)" }}>{a.condition === "above" ? "↑ Au-dessus de" : "↓ En-dessous de"}</span>
+                  {" "}<span className="font-bold" style={{ color: "var(--text-primary)" }}>${Number(a.target_price).toFixed(2)}</span>
                 </span>
-                <button onClick={() => handleDelete(a.id)} className="text-zinc-600 hover:text-red-400 transition-colors p-1">
+                <button
+                  onClick={() => handleDelete(a.id)}
+                  className="p-1 transition-colors"
+                  style={{ color: "var(--text-tertiary)" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "var(--color-danger)")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "var(--text-tertiary)")}
+                >
                   <Trash2 size={13} />
                 </button>
               </div>
@@ -534,8 +615,8 @@ function AnalyzePage() {
   const [pendingTicker, setPendingTicker] = useState<string | null>(null);
   const isFirstAnalysis = data?.is_first_analysis === true;
   const trialPro = isFirstAnalysis && !isPro;
-  const [activeTab,     setActiveTab]     = useState<TabId>("overview");
-  const [visitedTabs,  setVisitedTabs]  = useState<Set<TabId>>(() => new Set<TabId>(["overview"]));
+  const [activeTab,    setActiveTab]    = useState<NewTabId>("overview");
+  const [visitedTabs,  setVisitedTabs]  = useState<Set<NewTabId>>(() => new Set<NewTabId>(["overview"]));
   const [shareCopied,  setShareCopied]  = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
 
@@ -696,7 +777,7 @@ function AnalyzePage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen text-white">
+      <div className="min-h-screen" style={{ color: "var(--text-primary)" }}>
 
         <FreemiumGate
           pendingTicker={pendingTicker}
@@ -707,24 +788,37 @@ function AnalyzePage() {
         />
 
         {/* ── TOP BAR ─────────────────────────────────────────────────── */}
-        <header className="sticky top-0 z-40 bg-[#09090b]/80 backdrop-blur-xl border-b border-[rgba(201,168,76,0.1)]">
+        <header
+          className="sticky top-0 z-40 backdrop-blur-xl border-b"
+          style={{
+            background: "rgba(10,10,15,0.85)",
+            borderColor: "rgba(108,92,231,0.12)",
+          }}
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3 sm:gap-4">
             <div className="flex-1 flex items-center gap-2 sm:gap-3 max-w-md">
               <div className="relative flex-1">
-                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "var(--text-secondary)" }} />
                 <input
                   type="text"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value.toUpperCase())}
                   onKeyDown={(e) => e.key === "Enter" && runAnalysis(inputValue)}
                   placeholder="Ticker (AAPL, TSLA...)"
-                  className="w-full bg-[rgba(27,45,69,0.9)] border border-[rgba(201,168,76,0.25)] rounded-xl pl-10 pr-4 py-2.5 text-base sm:text-sm font-semibold text-white placeholder-[#304560] focus:outline-none focus:border-[#C9A84C] transition-all"
+                  className="w-full rounded-xl pl-10 pr-4 py-2.5 text-base sm:text-sm font-semibold focus:outline-none transition-all"
+                  style={{
+                    background: "rgba(27,45,69,0.9)",
+                    border: "1px solid rgba(108,92,231,0.25)",
+                    color: "var(--text-primary)",
+                  }}
+                  onFocus={e => (e.currentTarget.style.borderColor = "var(--accent-primary)")}
+                  onBlur={e => (e.currentTarget.style.borderColor = "rgba(108,92,231,0.25)")}
                 />
               </div>
               <button
                 onClick={() => runAnalysis(inputValue)}
                 disabled={loading || !inputValue}
-                className="bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold text-sm px-4 sm:px-5 py-2.5 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] hover:scale-[1.02] transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                className="btn-primary text-sm px-4 sm:px-5 py-2.5 whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {loading ? <Loader2 size={16} className="animate-spin" /> : "Analyser"}
               </button>
@@ -734,11 +828,14 @@ function AnalyzePage() {
               {data && (
                 <button
                   onClick={() => setShowAdvanced(!showAdvanced)}
-                  className={`flex items-center gap-2 text-xs font-bold px-3 py-2 rounded-lg border transition-all ${
-                    showAdvanced
-                      ? "bg-[rgba(201,168,76,0.12)] border-[rgba(201,168,76,0.3)] text-[#C9A84C]"
-                      : "border-[rgba(255,255,255,0.08)] text-zinc-400 hover:text-white"
-                  }`}
+                  className="flex items-center gap-2 text-xs font-bold px-3 py-2 rounded-lg border transition-all"
+                  style={{
+                    background: showAdvanced ? "rgba(108,92,231,0.12)" : "transparent",
+                    borderColor: showAdvanced ? "rgba(108,92,231,0.3)" : "var(--border-subtle)",
+                    color: showAdvanced ? "var(--accent-primary)" : "var(--text-secondary)",
+                  }}
+                  onMouseEnter={e => { if (!showAdvanced) e.currentTarget.style.color = "var(--text-primary)"; }}
+                  onMouseLeave={e => { if (!showAdvanced) e.currentTarget.style.color = "var(--text-secondary)"; }}
                 >
                   <Settings2 size={14} />
                   <span className="hidden sm:block">Hypothèses DCF</span>
@@ -752,8 +849,16 @@ function AnalyzePage() {
 
           {/* ── DCF PARAMS PANEL ──────────────────────────────────────── */}
           {data && showAdvanced && (
-            <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.18)] rounded-2xl p-6 mb-8 animate-[slideUp_0.3s_ease-out]">
-              <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C] mb-5">Hypothèses DCF — modifiez et relancez l&apos;analyse</p>
+            <div
+              className="backdrop-blur-sm rounded-2xl p-6 mb-8 animate-[slideUp_0.3s_ease-out] border"
+              style={{
+                background: "rgba(19,32,50,0.8)",
+                borderColor: "rgba(108,92,231,0.18)",
+              }}
+            >
+              <p className="text-lg font-semibold mb-5" style={{ color: "var(--accent-primary)" }}>
+                Hypothèses DCF — modifiez et relancez l&apos;analyse
+              </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {[
                   { label: "Croissance FCF",    value: growth,   set: setGrowth,   min: 1, max: 30, suffix: "%" },
@@ -763,20 +868,20 @@ function AnalyzePage() {
                 ].map(({ label, value, set, min, max, suffix }) => (
                   <div key={label}>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs text-[#5d7289]">{label}</span>
-                      <span className="text-sm font-bold text-[#C9A84C]">{value}{suffix}</span>
+                      <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>{label}</span>
+                      <span className="text-sm font-bold" style={{ color: "var(--accent-primary)" }}>{value}{suffix}</span>
                     </div>
                     <input
                       type="range" min={min} max={max} value={value}
                       onChange={(e) => set(Number(e.target.value))}
-                      className="w-full accent-[#C9A84C] cursor-pointer"
+                      className="w-full cursor-pointer accent-[#6C5CE7]"
                     />
                   </div>
                 ))}
               </div>
               <button
                 onClick={() => { setShowAdvanced(false); runAnalysis(ticker); }}
-                className="mt-5 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold text-sm px-6 py-2.5 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.35)] transition-all"
+                className="btn-primary mt-5 text-sm px-6 py-2.5"
               >
                 Relancer avec ces hypothèses
               </button>
@@ -784,8 +889,15 @@ function AnalyzePage() {
           )}
 
           {/* ── DISCLAIMER ────────────────────────────────────────────── */}
-          <div className="flex items-center gap-2 px-4 py-2 mb-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-xs text-yellow-400">
-            <span>⚠️</span>
+          <div
+            className="flex items-center gap-2 px-4 py-2 mb-4 rounded-lg border text-xs"
+            style={{
+              background: "rgba(255,184,77,0.08)",
+              borderColor: "rgba(255,184,77,0.25)",
+              color: "var(--color-warning)",
+            }}
+          >
+            <span>&#9888;&#65039;</span>
             <span>
               Outil éducatif uniquement — pas un conseil en investissement.
               Les analyses DCF sont des estimations mathématiques.
@@ -798,8 +910,8 @@ function AnalyzePage() {
             <>
               {retryInfo && (
                 <div className="text-center mb-4">
-                  <p className="text-[#C9A84C] text-sm font-medium animate-pulse">{retryInfo}</p>
-                  <p className="text-zinc-500 text-xs mt-1">Première requête parfois lente (réveil du serveur)</p>
+                  <p className="text-sm font-medium animate-pulse" style={{ color: "var(--accent-primary)" }}>{retryInfo}</p>
+                  <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>Première requête parfois lente (réveil du serveur)</p>
                 </div>
               )}
               <SkeletonDashboard ticker={ticker} />
@@ -808,13 +920,19 @@ function AnalyzePage() {
 
           {/* ── ERROR ─────────────────────────────────────────────────── */}
           {error && (
-            <div className="bg-[rgba(255,77,109,0.07)] border border-[rgba(255,77,109,0.2)] rounded-2xl p-8 text-center max-w-lg mx-auto mt-16">
-              <p className="text-[#ff4d6d] font-bold text-lg mb-3">Connexion impossible</p>
-              <p className="text-[#7a8fa3] text-sm leading-relaxed mb-1">{error}</p>
-              <p className="text-zinc-500 text-xs mb-5">Le serveur peut mettre quelques secondes à se réveiller lors de la première requête.</p>
+            <div
+              className="rounded-2xl p-8 text-center max-w-lg mx-auto mt-16 border"
+              style={{
+                background: "rgba(255,84,112,0.07)",
+                borderColor: "rgba(255,84,112,0.2)",
+              }}
+            >
+              <p className="font-bold text-lg mb-3" style={{ color: "var(--color-danger)" }}>Connexion impossible</p>
+              <p className="text-sm leading-relaxed mb-1" style={{ color: "var(--text-secondary)" }}>{error}</p>
+              <p className="text-xs mb-5" style={{ color: "var(--text-tertiary)" }}>Le serveur peut mettre quelques secondes à se réveiller lors de la première requête.</p>
               <button
                 onClick={() => runAnalysis(ticker || inputValue)}
-                className="inline-flex items-center gap-2 bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold px-6 py-2.5 rounded-xl transition-colors text-sm"
+                className="btn-primary inline-flex items-center gap-2 text-sm px-6 py-2.5"
               >
                 Réessayer l&apos;analyse
               </button>
@@ -824,15 +942,27 @@ function AnalyzePage() {
           {/* ── EMPTY STATE ───────────────────────────────────────────── */}
           {!loading && !error && !data && (
             <div className="flex flex-col items-center justify-center py-32 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.18)] flex items-center justify-center mb-6">
-                <Search size={24} className="text-[#C9A84C]" />
+              <div
+                className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 border"
+                style={{
+                  background: "rgba(108,92,231,0.08)",
+                  borderColor: "rgba(108,92,231,0.18)",
+                }}
+              >
+                <Search size={24} style={{ color: "var(--accent-primary)" }} />
               </div>
-              <h2 className="text-xl font-bold mb-2">Entre un ticker pour commencer</h2>
-              <p className="text-zinc-400 text-sm max-w-xs">
+              <h2 className="text-xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>Entre un ticker pour commencer</h2>
+              <p className="text-sm max-w-xs" style={{ color: "var(--text-secondary)" }}>
                 Exemples :{" "}
                 {["AAPL", "MC.PA", "TSLA", "TTE.PA", "NVDA"].map((t, i) => (
                   <span key={t}>
-                    <button onClick={() => runAnalysis(t)} className="text-[#C9A84C] hover:underline">{t}</button>
+                    <button
+                      onClick={() => runAnalysis(t)}
+                      className="hover:underline"
+                      style={{ color: "var(--accent-primary)" }}
+                    >
+                      {t}
+                    </button>
                     {i < 4 ? ", " : ""}
                   </span>
                 ))}
@@ -844,35 +974,46 @@ function AnalyzePage() {
           {data && vc && (
             <div className="animate-[fadeIn_0.4s_ease-out]">
 
-              {/* Analysis completeness */}
-              <div className="flex flex-wrap items-center gap-3 mb-6 px-3 py-2 bg-zinc-900/50 rounded-lg">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mr-1">Complétude :</span>
-                {([
-                  { label: "DCF",     tabId: "overview" as TabId },
-                  { label: "Bull/Bear", tabId: "ai" as TabId },
-                  { label: "Comps",   tabId: "comps" as TabId },
-                  { label: "Matrice", tabId: "valuation" as TabId },
-                  { label: "SWOT",    tabId: "swot" as TabId },
-                  { label: "PESTLE",  tabId: "pestle" as TabId },
-                ] as const).map((s) => (
-                  <span key={s.label} className={`text-xs font-medium ${visitedTabs.has(s.tabId) ? "text-emerald-400" : "text-zinc-500"}`}>
-                    {visitedTabs.has(s.tabId) ? "\u2713" : "\u2717"} {s.label}
-                  </span>
-                ))}
-              </div>
+              {/* Trial Pro banner */}
+              {trialPro && (
+                <div
+                  className="rounded-xl p-4 mb-6 flex items-center gap-3 border"
+                  style={{
+                    background: "rgba(240,200,80,0.08)",
+                    borderColor: "rgba(240,200,80,0.25)",
+                  }}
+                >
+                  <span className="text-xl flex-shrink-0" style={{ color: "var(--accent-gold)" }}>&#10022;</span>
+                  <div>
+                    <p className="font-semibold" style={{ color: "var(--accent-gold)" }}>
+                      Analyse Pro offerte &mdash; d&eacute;couvre la puissance compl&egrave;te
+                    </p>
+                    <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                      Deep Analysis, 3 sc&eacute;narios DCF et anomalies sectorielles d&eacute;bloqu&eacute;s pour cette premi&egrave;re analyse.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Company header */}
               <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
                 <div>
                   <div className="flex items-center gap-3 flex-wrap">
-                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight">{data.company.name}</h1>
-                    <span className="text-zinc-400 text-xl font-light">·</span>
-                    <span className="text-xl text-[#6b7d91] font-mono">{data.company.ticker}</span>
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#C9A84C] bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.25)] px-3 py-1 rounded-full">
+                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ color: "var(--text-primary)" }}>{data.company.name}</h1>
+                    <span className="text-xl font-light" style={{ color: "var(--text-tertiary)" }}>·</span>
+                    <span className="text-xl font-mono" style={{ color: "var(--text-secondary)" }}>{data.company.ticker}</span>
+                    <span
+                      className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border"
+                      style={{
+                        color: "var(--accent-primary)",
+                        background: "rgba(108,92,231,0.1)",
+                        borderColor: "rgba(108,92,231,0.25)",
+                      }}
+                    >
                       {data.company.sector}
                     </span>
                   </div>
-                  <p className="text-zinc-400 text-sm mt-1">
+                  <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
                     {data.company.industry} · {data.company.exchange}
                     <button
                       onClick={() => {
@@ -881,7 +1022,10 @@ function AnalyzePage() {
                         setShareCopied(true);
                         setTimeout(() => setShareCopied(false), 2000);
                       }}
-                      className="ml-3 text-xs text-zinc-400 hover:text-[#C9A84C] transition-colors inline-flex items-center gap-1 w-full sm:w-auto"
+                      className="ml-3 text-xs transition-colors inline-flex items-center gap-1 w-full sm:w-auto"
+                      style={{ color: "var(--text-secondary)" }}
+                      onMouseEnter={e => (e.currentTarget.style.color = "var(--accent-primary)")}
+                      onMouseLeave={e => (e.currentTarget.style.color = "var(--text-secondary)")}
                     >
                       <Share2 size={12} /> {shareCopied ? "Lien copié !" : "Partager"}
                     </button>
@@ -891,7 +1035,7 @@ function AnalyzePage() {
                   <button
                     onClick={handleExportPDF}
                     disabled={exportingPDF}
-                    className="flex items-center gap-2 border border-[#C9A84C]/40 text-[#C9A84C] hover:bg-[#C9A84C]/10 rounded-xl px-4 py-2 text-sm font-medium transition-all disabled:opacity-50"
+                    className="btn-secondary flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all disabled:opacity-50"
                   >
                     {exportingPDF ? (
                       <><Loader2 size={14} className="animate-spin" /> Generation...</>
@@ -901,118 +1045,100 @@ function AnalyzePage() {
                   </button>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl sm:text-3xl font-black">{currencySymbol(data.company.ticker)}{data.company.price.toFixed(2)}</p>
-                  <p className="text-xs text-zinc-400 mt-0.5">{data.company.currency} · Cours actuel</p>
+                  <p className="text-2xl sm:text-3xl font-black" style={{ color: "var(--text-primary)" }}>{currencySymbol(data.company.ticker)}{data.company.price.toFixed(2)}</p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>{data.company.currency} · Cours actuel</p>
                 </div>
               </div>
 
-              {/* ── TAB BAR ─────────────────────────────────────────────── */}
-              <div className="flex border-b border-zinc-800 mb-8 overflow-x-auto">
-                {TABS.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`px-4 py-3 text-sm font-medium transition-all relative whitespace-nowrap flex-shrink-0 ${
-                      activeTab === tab.id
-                        ? "text-white border-b-2 border-[#C9A84C]"
-                        : "text-zinc-500 hover:text-zinc-300 border-b-2 border-transparent"
-                    }`}
+              {/* ── VERDICT CARD — always visible ─────────────────────── */}
+              <div
+                className="card-highlight rounded-2xl p-6 sm:p-8 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6"
+              >
+                <div className="flex items-start gap-5">
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: vc.bg, color: vc.color }}
                   >
-                    {tab.label}
-                  </button>
-                ))}
+                    {vc.icon}
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-medium mb-2" style={{ color: "var(--text-tertiary)" }}>
+                      Verdict ValuEngine
+                    </p>
+                    <VerdictBadgePremium verdict={data.verdict} />
+                    <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>{vc.action}</p>
+                    <p className="text-sm mt-2 max-w-lg leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                      {data.company.name} se négocie{" "}
+                      {data.dcf.upside_pct > 0
+                        ? `avec une décote de ${Math.abs(data.dcf.upside_pct).toFixed(1)}% par rapport à sa valeur intrinsèque DCF.`
+                        : data.dcf.upside_pct < 0
+                        ? `avec une prime de ${Math.abs(data.dcf.upside_pct).toFixed(1)}% au-dessus de sa valeur intrinsèque DCF.`
+                        : `proche de sa valeur intrinsèque (écart ${data.dcf.upside_pct.toFixed(1)}%).`}
+                    </p>
+                    <VerdictBadge upsidePct={data.dcf.upside_pct} />
+                  </div>
+                </div>
+                {/* Price vs intrinsic side by side */}
+                <div className="flex gap-4 sm:gap-6 flex-shrink-0">
+                  <div className="text-center">
+                    <p className="text-[13px] font-medium uppercase tracking-wider mb-1" style={{ color: "var(--text-tertiary)" }}>Prix actuel</p>
+                    <p className="text-2xl sm:text-3xl font-black" style={{ color: "var(--text-primary)" }}>{currencySymbol(data.company.ticker)}{data.company.price.toFixed(2)}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[13px] font-medium uppercase tracking-wider mb-1" style={{ color: "var(--text-tertiary)" }}>Valeur DCF</p>
+                    <p className="text-2xl sm:text-3xl font-black" style={{ color: vc.color }}>
+                      {currencySymbol(data.company.ticker)}{data.dcf.intrinsic_value.toFixed(2)}
+                    </p>
+                    <p className="text-sm font-bold mt-1" style={{ color: vc.color }}>
+                      {data.dcf.upside_pct > 0 ? "+" : ""}{data.dcf.upside_pct.toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* AMF Warning */}
+              <div
+                className="flex items-start gap-2 px-4 py-3 rounded-xl border mb-6"
+                style={{
+                  background: "rgba(255,184,77,0.06)",
+                  borderColor: "rgba(255,184,77,0.18)",
+                }}
+              >
+                <span className="mt-0.5" style={{ color: "var(--color-warning)" }}>&#9888;&#65039;</span>
+                <p className="text-xs leading-relaxed" style={{ color: "rgba(255,220,140,0.7)" }}>
+                  Cette estimation est basée sur un modèle DCF mathématique. Elle ne constitue pas un conseil en investissement au sens de la directive MIF II. Fais tes propres recherches.
+                </p>
+              </div>
+
+              {/* ── TAB SYSTEM ─────────────────────────────────────────── */}
+              <div
+                className="rounded-xl p-1 mb-8 border"
+                style={{
+                  background: "var(--bg-base)",
+                  borderColor: "var(--border-subtle)",
+                }}
+              >
+                <Tabs
+                  tabs={ANALYSIS_TABS}
+                  activeTab={activeTab}
+                  onChange={(id) => setActiveTab(id as NewTabId)}
+                />
               </div>
 
               {/* ── TAB 1: VUE D'ENSEMBLE ─────────────────────────────── */}
               {activeTab === "overview" && (
                 <div className="animate-fade-in-up">
-                  {/* Trial Pro banner */}
-                  {trialPro && (
-                    <div className="bg-[#C9A84C]/10 border border-[#C9A84C]/30 rounded-xl p-4 mb-6 flex items-center gap-3">
-                      <span className="text-[#C9A84C] text-xl flex-shrink-0">&#10022;</span>
-                      <div>
-                        <p className="text-[#C9A84C] font-semibold">
-                          Analyse Pro offerte &mdash; d&eacute;couvre la puissance compl&egrave;te
-                        </p>
-                        <p className="text-gray-400 text-sm">
-                          Deep Analysis, 3 sc&eacute;narios DCF et anomalies sectorielles d&eacute;bloqu&eacute;s pour cette premi&egrave;re analyse.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Verdict hero card */}
-                  <div
-                    className="rounded-xl p-6 sm:p-8 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] hover:border-[#3f3f46] transition-colors anim-1"
-                  >
-                    <div className="flex items-start gap-5">
-                      <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: `${vc.color}15`, color: vc.color }}
-                      >
-                        {vc.icon}
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-[2px] text-zinc-500 mb-2">
-                          Verdict ValuEngine
-                        </p>
-                        <VerdictBadgePremium verdict={data.verdict} />
-                        <p className="text-zinc-300 text-sm mt-2">{vc.action}</p>
-                        <p className="text-[#6b7d91] text-sm mt-2 max-w-lg leading-relaxed">
-                          {data.company.name} se négocie{" "}
-                          {data.dcf.upside_pct > 0
-                            ? `avec une décote de ${Math.abs(data.dcf.upside_pct).toFixed(1)}% par rapport à sa valeur intrinsèque DCF.`
-                            : data.dcf.upside_pct < 0
-                            ? `avec une prime de ${Math.abs(data.dcf.upside_pct).toFixed(1)}% au-dessus de sa valeur intrinsèque DCF.`
-                            : `proche de sa valeur intrinsèque (écart ${data.dcf.upside_pct.toFixed(1)}%).`}
-                        </p>
-                        <VerdictBadge upsidePct={data.dcf.upside_pct} />
-                      </div>
-                    </div>
-                    {/* Price vs intrinsic side by side */}
-                    <div className="flex gap-4 sm:gap-6 flex-shrink-0">
-                      <div className="text-center">
-                        <p className="text-xs text-[#5d7289] uppercase tracking-wider mb-1">Prix actuel</p>
-                        <p className="text-2xl sm:text-3xl font-black text-white">{currencySymbol(data.company.ticker)}{data.company.price.toFixed(2)}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-[#5d7289] uppercase tracking-wider mb-1">Valeur DCF</p>
-                        <p className="text-2xl sm:text-3xl font-black" style={{ color: vc.color }}>
-                          {currencySymbol(data.company.ticker)}{data.dcf.intrinsic_value.toFixed(2)}
-                        </p>
-                        <p className="text-sm font-bold mt-1" style={{ color: vc.color }}>
-                          {data.dcf.upside_pct > 0 ? "+" : ""}{data.dcf.upside_pct.toFixed(1)}%
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* AMF Warning */}
-                  <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-yellow-500/[0.08] border border-yellow-500/20 mb-6">
-                    <span className="text-yellow-400 mt-0.5">⚠️</span>
-                    <p className="text-xs text-yellow-200/70 leading-relaxed">
-                      Cette estimation est basée sur un modèle DCF mathématique. Elle ne constitue pas un conseil en investissement au sens de la directive MIF II. Fais tes propres recherches.
-                    </p>
-                  </div>
-
-                  {/* Historical chart */}
-                  <Section title="Cours historique">
-                    <div className="mb-6 anim-2">
-                      <PriceChart ticker={data.company.ticker} currentPrice={data.company.price} />
-                    </div>
-                  </Section>
-
                   {/* KPI Grid */}
                   <Section title="Fondamentaux clés">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-4 anim-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-4">
                       <KPI label="Market Cap"         value={fmt(data.company.market_cap, currencySymbol(data.company.ticker))} />
                       <KPI label="Chiffre d'affaires" value={fmt(data.company.revenue, currencySymbol(data.company.ticker))} />
                       <KPI label="EBITDA"             value={fmt(data.company.ebitda, currencySymbol(data.company.ticker))} />
                       <KPI label="Résultat net"       value={fmt(data.company.net_income, currencySymbol(data.company.ticker))}
-                        color={data.company.net_income > 0 ? "#00d4aa" : "#ff4d6d"}
+                        color={data.company.net_income > 0 ? "var(--color-success)" : "var(--color-danger)"}
                         sub={data.company.net_income > 0 ? "▲ Positif" : "▼ Négatif"} />
                       <KPI label="Free Cash Flow"     value={fmt(data.company.free_cash_flow, currencySymbol(data.company.ticker))}
-                        color={data.company.free_cash_flow > 0 ? "#00d4aa" : "#ff4d6d"}
+                        color={data.company.free_cash_flow > 0 ? "var(--color-success)" : "var(--color-danger)"}
                         sub={data.company.free_cash_flow > 0 ? "▲ Génère du cash" : "▼ Consomme du cash"} />
                       <KPI label="Dette nette"        value={fmt(data.company.net_debt, currencySymbol(data.company.ticker))} />
                     </div>
@@ -1022,37 +1148,29 @@ function AnalyzePage() {
                       <KPI label="EV/EBITDA"  value={data.company.ev_ebitda != null ? `${data.company.ev_ebitda.toFixed(1)}x` : "N/A"} />
                       <KPI label="P/B Ratio"  value={data.company.pb_ratio != null ? `${data.company.pb_ratio.toFixed(1)}x` : "N/A"} />
                       <KPI label="ROE"        value={data.company.roe != null ? `${(data.company.roe * 100).toFixed(1)}%` : "N/A"}
-                        color={data.company.roe != null && data.company.roe > 0.15 ? "#00d4aa" : undefined} />
+                        color={data.company.roe != null && data.company.roe > 0.15 ? "var(--color-success)" : undefined} />
                       <KPI label="Croissance CA" value={data.company.revenue_growth != null ? pct(data.company.revenue_growth) : "N/A"}
-                        color={data.company.revenue_growth != null && data.company.revenue_growth > 0 ? "#00d4aa" : "#ff4d6d"} />
+                        color={data.company.revenue_growth != null && data.company.revenue_growth > 0 ? "var(--color-success)" : "var(--color-danger)"} />
                       <KPI label="Beta"       value={data.company.beta != null ? data.company.beta.toFixed(2) : "N/A"}
                         sub={data.company.beta != null ? (data.company.beta > 1.2 ? "Volatil" : data.company.beta < 0.8 ? "Défensif" : "Neutre") : ""} />
                     </div>
                   </Section>
 
-                  {/* Anomalies (Niveau 2) — auto-loads */}
-                  <AnomaliesSection ticker={data.company.ticker} trialPro={trialPro} />
-                </div>
-              )}
-
-              {/* ── TAB 2: ANALYSE IA ─────────────────────────────────── */}
-              {activeTab === "ai" && (
-                <div className="animate-fade-in-up">
-                  {/* Deep Analysis Pro (Niveau 1) */}
-                  <DeepAnalysisSection ticker={data.company.ticker} trialPro={trialPro} />
-
-                  {/* Bull & Bear (analyse rapide existante) */}
-                  <Section title="Bull & Bear Case (aperçu rapide)">
+                  {/* Bull & Bear Case */}
+                  <Section title="Bull & Bear Case">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
                       {[
-                        { key: "bull_case", label: "BULL CASE — Scénario Haussier", color: "#00d4aa", bg: "rgba(0,212,170,0.05)", border: "rgba(0,212,170,0.2)" },
-                        { key: "bear_case", label: "BEAR CASE — Scénario Baissier", color: "#ff4d6d", bg: "rgba(255,77,109,0.05)", border: "rgba(255,77,109,0.2)" },
+                        { key: "bull_case", label: "BULL CASE — Scénario Haussier", color: "var(--color-success)", rawColor: "#00E68A", bg: "rgba(0,230,138,0.05)", border: "rgba(0,230,138,0.2)" },
+                        { key: "bear_case", label: "BEAR CASE — Scénario Baissier", color: "var(--color-danger)",  rawColor: "#FF5470", bg: "rgba(255,84,112,0.05)", border: "rgba(255,84,112,0.2)" },
                       ].map(({ key, label, color, bg, border }) => (
                         <div key={key} className="rounded-2xl p-6" style={{ background: bg, border: `1px solid ${border}` }}>
-                          <p className="text-xs font-bold uppercase tracking-[2px] mb-4 pb-3 border-b border-[rgba(255,255,255,0.06)]" style={{ color }}>
+                          <p
+                            className="text-[13px] font-medium mb-4 pb-3 border-b"
+                            style={{ color, borderColor: "var(--border-subtle)" }}
+                          >
                             {label}
                           </p>
-                          <div className="text-sm text-[#c8d8e8] leading-7 whitespace-pre-line">
+                          <div className="text-sm leading-7 whitespace-pre-line" style={{ color: "var(--text-primary)" }}>
                             {data.analysis[key as "bull_case" | "bear_case"]}
                           </div>
                         </div>
@@ -1060,24 +1178,34 @@ function AnalyzePage() {
                     </div>
                   </Section>
 
-                  {/* SWOT */}
-                  <SwotSection ticker={data.company.ticker} />
-
-                  {/* PESTLE */}
-                  <PestleSection ticker={data.company.ticker} />
+                  {/* Historical chart */}
+                  <Section title="Cours historique">
+                    <div className="mb-6">
+                      <PriceChart ticker={data.company.ticker} currentPrice={data.company.price} />
+                    </div>
+                  </Section>
                 </div>
               )}
 
-              {/* ── TAB 3: VALORISATION ───────────────────────────────── */}
-              {activeTab === "valuation" && (
+              {/* ── TAB 2: DCF & SCÉNARIOS ────────────────────────────── */}
+              {activeTab === "dcf" && (
                 <div className="animate-fade-in-up">
                   {/* DCF Scenarios Pro (Niveau 3) */}
                   <DCFScenariosSection ticker={data.company.ticker} trialPro={trialPro} />
 
+                  {/* Anomalies */}
+                  <AnomaliesSection ticker={data.company.ticker} trialPro={trialPro} />
+
                   <Section title="Résultats DCF & Projections FCF">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                      <div className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl p-6">
-                        <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C] mb-5">Modèle DCF</p>
+                      <div
+                        className="rounded-2xl p-6 border"
+                        style={{
+                          background: "linear-gradient(to bottom, var(--bg-elevated), var(--bg-surface))",
+                          borderColor: "rgba(108,92,231,0.14)",
+                        }}
+                      >
+                        <p className="text-lg font-semibold mb-5" style={{ color: "var(--accent-primary)" }}>Modèle DCF</p>
                         {[
                           ["Valeur d'entreprise (EV)",   fmt(data.dcf.enterprise_value_dcf, currencySymbol(data.company.ticker)), ""],
                           ["Valeur des fonds propres",    fmt(data.dcf.equity_value, currencySymbol(data.company.ticker)),         ""],
@@ -1087,24 +1215,54 @@ function AnalyzePage() {
                           ["Potentiel",                   `${data.dcf.upside_pct > 0 ? "+" : ""}${data.dcf.upside_pct.toFixed(1)}%`,
                             data.dcf.upside_pct > 0 ? "pos" : data.dcf.upside_pct < 0 ? "neg" : ""],
                         ].map(([label, value, cls]) => (
-                          <div key={label} className={`flex justify-between items-center py-2.5 border-b border-[rgba(255,255,255,0.04)] last:border-0 ${cls === "highlight" ? "bg-[rgba(201,168,76,0.05)] -mx-2 px-2 rounded-lg" : ""}`}>
-                            <span className="text-sm text-[#6b7d91]">{label}</span>
-                            <span className={`text-sm font-bold ${cls === "pos" ? "text-[#00d4aa]" : cls === "neg" ? "text-[#ff4d6d]" : cls === "highlight" ? "text-[#C9A84C] text-base" : "text-white"}`}>
+                          <div
+                            key={label}
+                            className={`flex justify-between items-center py-2.5 border-b last:border-0 ${cls === "highlight" ? "-mx-2 px-2 rounded-lg" : ""}`}
+                            style={{
+                              borderColor: "rgba(255,255,255,0.04)",
+                              background: cls === "highlight" ? "rgba(108,92,231,0.06)" : "transparent",
+                            }}
+                          >
+                            <span className="text-sm" style={{ color: "var(--text-secondary)" }}>{label}</span>
+                            <span
+                              className={`text-sm font-bold ${cls === "highlight" ? "text-base" : ""}`}
+                              style={{
+                                color: cls === "pos"
+                                  ? "var(--color-success)"
+                                  : cls === "neg"
+                                  ? "var(--color-danger)"
+                                  : cls === "highlight"
+                                  ? "var(--accent-primary)"
+                                  : "var(--text-primary)",
+                              }}
+                            >
                               {value}
                             </span>
                           </div>
                         ))}
                       </div>
-                      <div className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl p-6">
-                        <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C] mb-5">Projections Free Cash Flow</p>
+                      <div
+                        className="rounded-2xl p-6 border"
+                        style={{
+                          background: "linear-gradient(to bottom, var(--bg-elevated), var(--bg-surface))",
+                          borderColor: "rgba(108,92,231,0.14)",
+                        }}
+                      >
+                        <p className="text-lg font-semibold mb-5" style={{ color: "var(--accent-primary)" }}>Projections Free Cash Flow</p>
                         <FCFChart projections={data.dcf.fcf_projections} />
                       </div>
                     </div>
                   </Section>
 
                   <Section title={`Matrice de sensibilité — Valeur intrinsèque (${currencySymbol(data.company.ticker)})`} defaultOpen={false}>
-                    <div className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl p-6 mb-6">
-                      <p className="text-xs text-[#5d7289] mb-5">
+                    <div
+                      className="rounded-2xl p-6 mb-6 border"
+                      style={{
+                        background: "linear-gradient(to bottom, var(--bg-elevated), var(--bg-surface))",
+                        borderColor: "rgba(108,92,231,0.14)",
+                      }}
+                    >
+                      <p className="text-xs mb-5" style={{ color: "var(--text-tertiary)" }}>
                         Lignes = Croissance FCF · Colonnes = WACC · Vert = sous-évalué · Rouge = surévalué (vs {currencySymbol(data.company.ticker)}{data.company.price.toFixed(2)})
                       </p>
                       <div className="overflow-x-auto">
@@ -1117,7 +1275,13 @@ function AnalyzePage() {
 
                   {/* DCF params panel inline */}
                   <Section title="Paramètres DCF" defaultOpen={false}>
-                    <div className="bg-[#132032]/80 backdrop-blur-sm border border-[rgba(201,168,76,0.18)] rounded-2xl p-6">
+                    <div
+                      className="backdrop-blur-sm rounded-2xl p-6 border"
+                      style={{
+                        background: "rgba(19,32,50,0.8)",
+                        borderColor: "rgba(108,92,231,0.18)",
+                      }}
+                    >
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         {[
                           { label: "Croissance FCF",    value: growth,   set: setGrowth,   min: 1, max: 30, suffix: "%" },
@@ -1127,20 +1291,20 @@ function AnalyzePage() {
                         ].map(({ label, value, set, min, max, suffix }) => (
                           <div key={label}>
                             <div className="flex justify-between items-center mb-2">
-                              <span className="text-xs text-[#5d7289]">{label}</span>
-                              <span className="text-sm font-bold text-[#C9A84C]">{value}{suffix}</span>
+                              <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>{label}</span>
+                              <span className="text-sm font-bold" style={{ color: "var(--accent-primary)" }}>{value}{suffix}</span>
                             </div>
                             <input
                               type="range" min={min} max={max} value={value}
                               onChange={(e) => set(Number(e.target.value))}
-                              className="w-full accent-[#C9A84C] cursor-pointer"
+                              className="w-full cursor-pointer accent-[#6C5CE7]"
                             />
                           </div>
                         ))}
                       </div>
                       <button
                         onClick={() => runAnalysis(ticker)}
-                        className="mt-5 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold text-sm px-6 py-2.5 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.35)] transition-all"
+                        className="btn-primary mt-5 text-sm px-6 py-2.5"
                       >
                         Relancer avec ces hypothèses
                       </button>
@@ -1149,27 +1313,23 @@ function AnalyzePage() {
                 </div>
               )}
 
-              {/* ── TAB 4: COMPARABLES ────────────────────────────────── */}
-              {activeTab === "comps" && (
+              {/* ── TAB 3: ANALYSE PROFONDE ───────────────────────────── */}
+              {activeTab === "deep" && (
                 <div className="animate-fade-in-up">
+                  {/* Deep Analysis Pro (Niveau 1) */}
+                  <DeepAnalysisSection ticker={data.company.ticker} trialPro={trialPro} />
+
+                  {/* Trading Comps */}
                   <Section title="Comparaison sectorielle — Trading Comps">
                     <div className="overflow-x-auto">
                       <TradingComps ticker={data.company.ticker} sector={data.company.sector} />
                     </div>
                   </Section>
-                </div>
-              )}
 
-              {/* ── TAB 5: SWOT ───────────────────────────────────────── */}
-              {activeTab === "swot" && (
-                <div className="animate-fade-in-up">
+                  {/* SWOT */}
                   <SwotSection ticker={data.company.ticker} />
-                </div>
-              )}
 
-              {/* ── TAB 6: PESTLE ─────────────────────────────────────── */}
-              {activeTab === "pestle" && (
-                <div className="animate-fade-in-up">
+                  {/* PESTLE */}
                   <PestleSection ticker={data.company.ticker} />
                 </div>
               )}
@@ -1179,27 +1339,33 @@ function AnalyzePage() {
 
               {/* Pro conversion CTA after trial */}
               {trialPro && (
-                <div className="bg-[#18181b]/80 border border-[#C9A84C]/30 rounded-2xl p-8 text-center mt-8">
-                  <p className="text-[#C9A84C] font-bold text-lg mb-2">
+                <div
+                  className="rounded-2xl p-8 text-center mt-8 border"
+                  style={{
+                    background: "var(--bg-surface)",
+                    borderColor: "rgba(240,200,80,0.25)",
+                  }}
+                >
+                  <p className="font-bold text-lg mb-2" style={{ color: "var(--accent-gold)" }}>
                     Tu viens de voir ValuEngine Pro en action &#10022;
                   </p>
-                  <p className="text-gray-300 mb-6">
+                  <p className="mb-6" style={{ color: "var(--text-secondary)" }}>
                     Deep Analysis, 3 sc&eacute;narios DCF, d&eacute;tection d&apos;anomalies,
                     export PDF, screener IA &mdash; tout &ccedil;a pour 99&euro;/an.
                   </p>
                   <button
                     onClick={() => router.push("/#pricing")}
-                    className="bg-[#C9A84C] text-black font-bold rounded-xl px-8 py-3 hover:bg-[#A8863C] transition-all"
+                    className="btn-pro font-bold rounded-xl px-8 py-3 transition-all"
                   >
                     Passer Pro &#10022;
                   </button>
-                  <p className="text-gray-500 text-xs mt-3">
+                  <p className="text-xs mt-3" style={{ color: "var(--text-tertiary)" }}>
                     Sinon, tu gardes 3 analyses gratuites par jour.
                   </p>
                 </div>
               )}
 
-              <p className="text-[#2a3a4a] text-xs text-center mt-8 pb-4">
+              <p className="text-xs text-center mt-8 pb-4" style={{ color: "var(--text-tertiary)" }}>
                 ValuEngine est un outil d&apos;analyse éducatif uniquement. Les analyses ne constituent pas des conseils en investissement au sens de la directive MIF II.
                 FCF issu des données Yahoo Finance. Tout investissement comporte des risques. · ValuEngine 2026
               </p>

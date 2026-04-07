@@ -90,8 +90,8 @@ export default function OnboardingModal({ show, onComplete, onSkip }: Props) {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#09090b]/90 backdrop-blur-md px-4">
-      <div className="bg-[#18181b] border border-[#27272a] rounded-2xl p-8 max-w-lg w-full mx-4 relative shadow-2xl">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center backdrop-blur-md px-4" style={{ background: "rgba(var(--bg-base-rgb, 9,9,11),0.9)" }}>
+      <div className="border rounded-2xl p-8 max-w-lg w-full mx-4 relative shadow-2xl" style={{ background: "var(--bg-surface)", borderColor: "var(--border-default)" }}>
         {/* Skip button */}
         <button
           onClick={handleSkip}
@@ -106,10 +106,9 @@ export default function OnboardingModal({ show, onComplete, onSkip }: Props) {
             <div
               key={s}
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                s <= step
-                  ? "bg-[#C9A84C] w-8"
-                  : "bg-zinc-700 w-4"
+                s <= step ? "w-8" : "bg-zinc-700 w-4"
               }`}
+              style={s <= step ? { background: "var(--accent-primary)" } : undefined}
             />
           ))}
         </div>
@@ -117,13 +116,13 @@ export default function OnboardingModal({ show, onComplete, onSkip }: Props) {
         {/* STEP 1 — Welcome */}
         {step === 1 && (
           <div className="text-center">
-            <div className="w-16 h-16 rounded-2xl bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.25)] flex items-center justify-center mx-auto mb-6">
-              <span className="text-[#C9A84C] text-3xl font-black">V</span>
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ background: "rgba(108,92,231,0.1)", border: "1px solid rgba(108,92,231,0.25)" }}>
+              <span className="text-3xl font-black" style={{ color: "var(--accent-primary)" }}>V</span>
             </div>
             <h2 className="text-2xl font-bold text-white mb-2">
               Bienvenue sur ValuEngine
             </h2>
-            <p className="text-sm text-[#C9A84C] font-medium mb-4">
+            <p className="text-sm font-medium mb-4" style={{ color: "var(--accent-primary)" }}>
               L&apos;analyse boursière institutionnelle en 60 secondes.
             </p>
             <p className="text-sm text-zinc-400 leading-relaxed mb-8">
@@ -132,7 +131,8 @@ export default function OnboardingModal({ show, onComplete, onSkip }: Props) {
             </p>
             <button
               onClick={() => setStep(2)}
-              className="w-full bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2"
+              className="w-full text-black font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2"
+              style={{ background: "var(--accent-primary)" }}
             >
               Commencer <ChevronRight size={16} />
             </button>
@@ -156,7 +156,10 @@ export default function OnboardingModal({ show, onComplete, onSkip }: Props) {
               onChange={(e) => setTicker(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === "Enter" && ticker && handleAnalyze()}
               placeholder="Ex: AAPL, MC.PA, TSLA..."
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-3.5 text-white placeholder-zinc-600 text-base font-semibold focus:outline-none focus:border-[rgba(201,168,76,0.5)] transition-all mb-4"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-3.5 text-white placeholder-zinc-600 text-base font-semibold focus:outline-none transition-all mb-4"
+              style={{ ["--tw-ring-color" as string]: "rgba(108,92,231,0.5)" }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(108,92,231,0.5)"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = ""; }}
             />
 
             <div className="flex flex-wrap gap-2 mb-6">
@@ -166,9 +169,14 @@ export default function OnboardingModal({ show, onComplete, onSkip }: Props) {
                   onClick={() => handleSelectTicker(t)}
                   className={`text-xs font-semibold px-4 py-2 rounded-lg border transition-all ${
                     ticker === t
-                      ? "bg-[rgba(201,168,76,0.12)] border-[#C9A84C] text-[#C9A84C]"
+                      ? ""
                       : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white"
                   }`}
+                  style={ticker === t ? {
+                    background: "rgba(108,92,231,0.12)",
+                    borderColor: "var(--accent-primary)",
+                    color: "var(--accent-primary)",
+                  } : undefined}
                 >
                   {t}
                 </button>
@@ -182,7 +190,8 @@ export default function OnboardingModal({ show, onComplete, onSkip }: Props) {
             <button
               onClick={handleAnalyze}
               disabled={!ticker}
-              className="w-full bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full text-black font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ background: "var(--accent-primary)" }}
             >
               Analyser {ticker || "ce titre"} <ChevronRight size={16} />
             </button>
@@ -192,7 +201,7 @@ export default function OnboardingModal({ show, onComplete, onSkip }: Props) {
         {/* STEP 3 — Loading */}
         {step === 3 && (
           <div className="text-center py-8">
-            <div className="w-12 h-12 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin mx-auto mb-6" />
+            <div className="w-12 h-12 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-6" style={{ borderColor: "var(--accent-primary)", borderTopColor: "transparent" }} />
             <h2 className="text-xl font-bold text-white mb-2">
               Analyse en cours...
             </h2>
@@ -206,8 +215,8 @@ export default function OnboardingModal({ show, onComplete, onSkip }: Props) {
         {step === 4 && result && (
           <div>
             <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center">
-                <span className="text-emerald-400 text-lg">&#10003;</span>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(var(--color-success-rgb,63,185,80),0.1)", border: "1px solid rgba(var(--color-success-rgb,63,185,80),0.25)" }}>
+                <span className="text-lg" style={{ color: "var(--color-success)" }}>&#10003;</span>
               </div>
             </div>
             <h2 className="text-xl font-bold text-white text-center mb-1">
@@ -221,30 +230,31 @@ export default function OnboardingModal({ show, onComplete, onSkip }: Props) {
               <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4 text-center">
                 <span className="text-lg mb-2 block">&#128202;</span>
                 <p className="text-xs font-bold text-white mb-1">Verdict &amp; DCF</p>
-                <p className="text-[10px] text-zinc-500 leading-relaxed">La valeur intrinsèque et l&apos;upside potentiel</p>
+                <p className="text-[13px] font-medium text-zinc-500 leading-relaxed">La valeur intrinsèque et l&apos;upside potentiel</p>
               </div>
               <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4 text-center">
                 <span className="text-lg mb-2 block">&#129302;</span>
                 <p className="text-xs font-bold text-white mb-1">Analyse IA</p>
-                <p className="text-[10px] text-zinc-500 leading-relaxed">Bull case, Bear case, SWOT avec vrais chiffres</p>
+                <p className="text-[13px] font-medium text-zinc-500 leading-relaxed">Bull case, Bear case, SWOT avec vrais chiffres</p>
               </div>
               <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4 text-center">
                 <span className="text-lg mb-2 block">&#127919;</span>
                 <p className="text-xs font-bold text-white mb-1">Scénarios</p>
-                <p className="text-[10px] text-zinc-500 leading-relaxed">3 projections pessimiste/base/optimiste</p>
+                <p className="text-[13px] font-medium text-zinc-500 leading-relaxed">3 projections pessimiste/base/optimiste</p>
               </div>
             </div>
 
-            <div className="bg-[rgba(201,168,76,0.05)] border border-[rgba(201,168,76,0.15)] rounded-xl px-4 py-3 mb-6">
+            <div className="rounded-xl px-4 py-3 mb-6" style={{ background: "rgba(108,92,231,0.05)", border: "1px solid rgba(108,92,231,0.15)" }}>
               <p className="text-xs text-zinc-400">
                 Les analyses approfondies (Deep Analysis, PDF export, Screener) sont disponibles en{" "}
-                <span className="text-[#C9A84C] font-semibold">Pro &#10022;</span>
+                <span className="font-semibold" style={{ color: "var(--accent-gold, var(--accent-primary))" }}>Pro &#10022;</span>
               </p>
             </div>
 
             <button
               onClick={handleComplete}
-              className="w-full bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 mb-3"
+              className="w-full text-black font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 mb-3"
+              style={{ background: "var(--accent-primary)" }}
             >
               Voir mon analyse <ChevronRight size={16} />
             </button>

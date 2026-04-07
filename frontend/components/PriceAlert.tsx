@@ -40,39 +40,53 @@ export function PriceAlertModal({ ticker, onClose }: { ticker: string; onClose: 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-[#1c2128] border border-[#30363d] rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm" style={{ background: "rgba(0,0,0,0.70)" }}>
+      <div
+        className="rounded-2xl p-6 w-full max-w-sm shadow-2xl border"
+        style={{ background: "var(--bg-surface)", borderColor: "var(--border-default)" }}
+      >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-white font-bold text-lg flex items-center gap-2">
-            <Bell size={18} className="text-[#C9A84C]" /> Alerte prix — {ticker}
+          <h3 className="font-bold text-lg flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
+            <Bell size={18} style={{ color: "var(--accent-primary)" }} /> Alerte prix — {ticker}
           </h3>
-          <button onClick={onClose} className="text-[#8b949e] hover:text-white"><X size={18} /></button>
+          <button onClick={onClose} className="transition-colors" style={{ color: "var(--text-tertiary)" }}><X size={18} /></button>
         </div>
         <div className="space-y-4">
           <div>
-            <label className="text-[#8b949e] text-sm block mb-1">Condition</label>
+            <label className="text-sm block mb-1" style={{ color: "var(--text-secondary)" }}>Condition</label>
             <select
               value={condition}
               onChange={e => setCondition(e.target.value as "above" | "below")}
-              className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] rounded-lg px-3 py-2 text-sm"
+              className="w-full rounded-lg px-3 py-2 text-sm border"
+              style={{
+                background: "var(--bg-base)",
+                borderColor: "var(--border-default)",
+                color: "var(--text-primary)",
+              }}
             >
               <option value="above">Au-dessus de</option>
               <option value="below">En-dessous de</option>
             </select>
           </div>
           <div>
-            <label className="text-[#8b949e] text-sm block mb-1">Prix cible ($)</label>
+            <label className="text-sm block mb-1" style={{ color: "var(--text-secondary)" }}>Prix cible ($)</label>
             <input
               type="number"
               value={targetPrice}
               onChange={e => setTargetPrice(e.target.value)}
               placeholder="ex: 180.00"
-              className="w-full bg-[#0d1117] border border-[#30363d] text-[#e6edf3] rounded-lg px-3 py-2 text-sm"
+              className="w-full rounded-lg px-3 py-2 text-sm border"
+              style={{
+                background: "var(--bg-base)",
+                borderColor: "var(--border-default)",
+                color: "var(--text-primary)",
+              }}
             />
           </div>
           <button
             onClick={handleSave}
-            className="w-full py-2.5 bg-[#C9A84C] hover:bg-[#b8943d] text-[#0d1117] font-bold rounded-lg transition-all"
+            className="w-full py-2.5 font-bold rounded-lg transition-all"
+            style={{ background: "var(--accent-primary)", color: "#fff" }}
           >
             {saved ? "✓ Alerte créée !" : "Créer l'alerte"}
           </button>
@@ -90,10 +104,17 @@ export function AlertToast({ message, onDismiss }: { message: string; onDismiss:
   }, [onDismiss]);
 
   return (
-    <div className="animate-slide-in-right flex items-center gap-3 bg-[#1c2128] border border-[#C9A84C]/40 text-[#e6edf3] px-4 py-3 rounded-xl shadow-xl max-w-sm">
-      <Bell size={16} className="text-[#C9A84C] shrink-0" />
+    <div
+      className="animate-slide-in-right flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl max-w-sm border"
+      style={{
+        background: "var(--bg-surface)",
+        borderColor: "rgba(99,102,241,0.4)",
+        color: "var(--text-primary)",
+      }}
+    >
+      <Bell size={16} className="shrink-0" style={{ color: "var(--accent-primary)" }} />
       <span className="text-sm">{message}</span>
-      <button onClick={onDismiss} className="ml-auto text-[#8b949e] hover:text-white"><X size={14} /></button>
+      <button onClick={onDismiss} className="ml-auto transition-colors" style={{ color: "var(--text-tertiary)" }}><X size={14} /></button>
     </div>
   );
 }

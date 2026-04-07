@@ -36,9 +36,9 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  valorisation: "#C9A84C",
-  fondamentaux: "#00d4aa",
-  risque: "#ff4d6d",
+  valorisation: "var(--accent-primary)",
+  fondamentaux: "var(--color-success)",
+  risque: "var(--color-danger)",
   rendement: "#818cf8",
   strategies: "#fb923c",
   fiscalite: "#22d3ee",
@@ -116,27 +116,30 @@ export default function PedagogyPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen text-white px-4 sm:px-6 md:px-10 py-4 sm:py-8 max-w-4xl">
+      <div className="min-h-screen px-4 sm:px-6 md:px-10 py-4 sm:py-8 max-w-4xl" style={{ color: "var(--text-primary)" }}>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <BookOpen size={24} className="text-[#C9A84C]" />
+            <BookOpen size={24} style={{ color: "var(--accent-primary)" }} />
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Mode Pedagogique</h1>
           </div>
-          <p className="text-zinc-500 text-sm">
+          <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
             La finance expliquee simplement. Comme si tu avais 15 ans.
           </p>
         </div>
 
         {/* AI Explain Box */}
-        <div className="bg-[#18181b]/80 backdrop-blur-sm border border-[#C9A84C]/20 rounded-2xl p-6 mb-8">
+        <div
+          className="backdrop-blur-sm rounded-2xl p-6 mb-8 border"
+          style={{ background: "var(--bg-surface)", borderColor: "rgba(var(--accent-primary-rgb, 99,102,241), 0.2)" }}
+        >
           <div className="flex items-center gap-2 mb-3">
-            <Sparkles size={16} className="text-[#C9A84C]" />
-            <h2 className="text-sm font-bold text-[#C9A84C] uppercase tracking-wider">
+            <Sparkles size={16} style={{ color: "var(--accent-primary)" }} />
+            <h2 className="text-sm font-bold" style={{ color: "var(--accent-primary)" }}>
               Pose ta question
             </h2>
           </div>
-          <p className="text-xs text-zinc-500 mb-4">
+          <p className="text-xs mb-4" style={{ color: "var(--text-tertiary)" }}>
             Tape n&apos;importe quel terme financier et l&apos;IA te l&apos;explique simplement.
           </p>
           <div className="flex gap-3">
@@ -146,12 +149,18 @@ export default function PedagogyPage() {
               onChange={(e) => setCustomConcept(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && explainCustom()}
               placeholder="Ex: C'est quoi un DCF ? Comment marche un ETF ?"
-              className="flex-1 bg-[#09090b]/60 border border-[#27272a] rounded-xl px-4 py-3 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-[#C9A84C]/50 transition-colors"
+              className="flex-1 rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors"
+              style={{
+                background: "var(--bg-base)",
+                border: "1px solid var(--border-default)",
+                color: "var(--text-primary)",
+              }}
             />
             <button
               onClick={explainCustom}
               disabled={loadingAI || !customConcept.trim()}
-              className="bg-[#C9A84C] text-black font-bold px-5 py-3 rounded-xl text-sm hover:bg-[#e8c55a] transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="font-bold px-5 py-3 rounded-xl text-sm transition-colors disabled:opacity-50 flex items-center gap-2"
+              style={{ background: "var(--accent-primary)", color: "#fff" }}
             >
               {loadingAI ? <Loader2 size={14} className="animate-spin" /> : "Expliquer"}
             </button>
@@ -159,25 +168,28 @@ export default function PedagogyPage() {
 
           {/* AI Result */}
           {aiExplanation && (
-            <div className="mt-4 bg-[#09090b]/60 border border-[#27272a] rounded-xl p-5 space-y-3">
-              <h3 className="text-base font-bold text-white">{aiExplanation.term}</h3>
+            <div
+              className="mt-4 rounded-xl p-5 space-y-3 border"
+              style={{ background: "var(--bg-base)", borderColor: "var(--border-default)" }}
+            >
+              <h3 className="text-base font-bold" style={{ color: "var(--text-primary)" }}>{aiExplanation.term}</h3>
               <div>
-                <p className="text-xs font-bold text-[#C9A84C] uppercase tracking-wider mb-1">
+                <p className="text-[13px] font-medium mb-1" style={{ color: "var(--accent-primary)" }}>
                   Explication simple
                 </p>
-                <p className="text-sm text-zinc-300">{aiExplanation.simple}</p>
+                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{aiExplanation.simple}</p>
               </div>
               <div>
-                <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                <p className="text-[13px] font-medium mb-1" style={{ color: "var(--text-tertiary)" }}>
                   Version technique
                 </p>
-                <p className="text-sm text-zinc-400">{aiExplanation.technical}</p>
+                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{aiExplanation.technical}</p>
               </div>
-              <div className="bg-[#18181b] border border-[#27272a] rounded-lg p-3">
-                <p className="text-xs font-bold text-[#00d4aa] uppercase tracking-wider mb-1">
+              <div className="rounded-lg p-3 border" style={{ background: "var(--bg-surface)", borderColor: "var(--border-default)" }}>
+                <p className="text-[13px] font-medium mb-1" style={{ color: "var(--color-success)" }}>
                   Exemple concret
                 </p>
-                <p className="text-sm text-zinc-300">{aiExplanation.example}</p>
+                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{aiExplanation.example}</p>
               </div>
             </div>
           )}
@@ -185,13 +197,18 @@ export default function PedagogyPage() {
 
         {/* Search */}
         <div className="relative mb-6">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: "var(--text-tertiary)" }} />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Rechercher un terme..."
-            className="w-full bg-[#18181b]/80 border border-[#27272a] rounded-xl pl-11 pr-4 py-3 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-[#C9A84C]/50 transition-colors"
+            className="w-full backdrop-blur-sm rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none transition-colors"
+            style={{
+              background: "var(--bg-surface)",
+              border: "1px solid var(--border-default)",
+              color: "var(--text-primary)",
+            }}
           />
         </div>
 
@@ -202,9 +219,9 @@ export default function PedagogyPage() {
               <div className="flex items-center gap-2 mb-3">
                 <div
                   className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: CATEGORY_COLORS[category] || "#C9A84C" }}
+                  style={{ backgroundColor: CATEGORY_COLORS[category] || "var(--accent-primary)" }}
                 />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                <h3 className="text-[13px] font-medium" style={{ color: "var(--text-tertiary)" }}>
                   {CATEGORY_LABELS[category] || category}
                 </h3>
               </div>
@@ -213,49 +230,52 @@ export default function PedagogyPage() {
                   <div key={t.id}>
                     <button
                       onClick={() => loadTermDetail(t.id)}
-                      className={`w-full text-left bg-[#18181b]/80 border rounded-xl px-5 py-4 transition-all ${
-                        expandedTerm === t.id
-                          ? "border-[#C9A84C]/40 bg-[rgba(201,168,76,0.04)]"
-                          : "border-[#27272a] hover:border-[#3f3f46]"
-                      }`}
+                      className={`w-full text-left backdrop-blur-sm rounded-xl px-5 py-4 transition-all border`}
+                      style={{
+                        background: "var(--bg-surface)",
+                        borderColor: expandedTerm === t.id ? "rgba(99,102,241,0.4)" : "var(--border-default)",
+                      }}
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-semibold text-white">{t.term}</p>
-                          <p className="text-xs text-zinc-500 mt-0.5 line-clamp-1">{t.simple}</p>
+                          <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>{t.term}</p>
+                          <p className="text-xs mt-0.5 line-clamp-1" style={{ color: "var(--text-tertiary)" }}>{t.simple}</p>
                         </div>
                         {expandedTerm === t.id ? (
-                          <ChevronUp size={16} className="text-zinc-500" />
+                          <ChevronUp size={16} style={{ color: "var(--text-tertiary)" }} />
                         ) : (
-                          <ChevronDown size={16} className="text-zinc-500" />
+                          <ChevronDown size={16} style={{ color: "var(--text-tertiary)" }} />
                         )}
                       </div>
                     </button>
 
                     {/* Expanded detail */}
                     {expandedTerm === t.id && termDetail && (
-                      <div className="mt-2 bg-[#09090b]/60 border border-[#27272a] rounded-xl p-5 space-y-3 ml-4">
+                      <div
+                        className="mt-2 rounded-xl p-5 space-y-3 ml-4 border"
+                        style={{ background: "var(--bg-base)", borderColor: "var(--border-default)" }}
+                      >
                         {loadingDetail ? (
-                          <Loader2 size={16} className="animate-spin text-[#C9A84C]" />
+                          <Loader2 size={16} className="animate-spin" style={{ color: "var(--accent-primary)" }} />
                         ) : (
                           <>
                             <div>
-                              <p className="text-xs font-bold text-[#C9A84C] uppercase tracking-wider mb-1">
+                              <p className="text-[13px] font-medium mb-1" style={{ color: "var(--accent-primary)" }}>
                                 Explication simple
                               </p>
-                              <p className="text-sm text-zinc-300">{termDetail.simple}</p>
+                              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{termDetail.simple}</p>
                             </div>
                             <div>
-                              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                              <p className="text-[13px] font-medium mb-1" style={{ color: "var(--text-tertiary)" }}>
                                 Version technique
                               </p>
-                              <p className="text-sm text-zinc-400">{termDetail.technical}</p>
+                              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{termDetail.technical}</p>
                             </div>
-                            <div className="bg-[#18181b] border border-[#27272a] rounded-lg p-3">
-                              <p className="text-xs font-bold text-[#00d4aa] uppercase tracking-wider mb-1">
+                            <div className="rounded-lg p-3 border" style={{ background: "var(--bg-surface)", borderColor: "var(--border-default)" }}>
+                              <p className="text-[13px] font-medium mb-1" style={{ color: "var(--color-success)" }}>
                                 Exemple concret
                               </p>
-                              <p className="text-sm text-zinc-300">{termDetail.example}</p>
+                              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{termDetail.example}</p>
                             </div>
                           </>
                         )}
@@ -270,8 +290,8 @@ export default function PedagogyPage() {
 
         {filteredTerms.length === 0 && searchQuery && (
           <div className="text-center py-12">
-            <p className="text-zinc-500 text-sm">Aucun terme trouve pour &quot;{searchQuery}&quot;</p>
-            <p className="text-zinc-600 text-xs mt-1">
+            <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Aucun terme trouve pour &quot;{searchQuery}&quot;</p>
+            <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
               Utilise la barre &quot;Pose ta question&quot; pour une explication IA
             </p>
           </div>

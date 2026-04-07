@@ -54,17 +54,25 @@ function FirstRunHero({ onAnalyze }: { onAnalyze: (ticker: string) => void }) {
   const [ticker, setTicker] = useState("MC.PA");
 
   return (
-    <div className="flex flex-col items-center justify-center py-12 sm:py-16 text-center px-4 rounded-xl border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm">
+    <div
+      className="card flex flex-col items-center justify-center py-12 sm:py-16 text-center px-4"
+    >
       {/* Icon */}
-      <div className="w-14 h-14 rounded-full bg-[#C9A84C]/10 border border-[#C9A84C]/30 flex items-center justify-center mb-5 animate-pulse">
-        <Search className="w-6 h-6 text-[#C9A84C]" />
+      <div
+        className="w-14 h-14 rounded-full flex items-center justify-center mb-5 animate-pulse"
+        style={{
+          background: "rgba(108,92,231,0.12)",
+          border: "1px solid rgba(108,92,231,0.35)",
+        }}
+      >
+        <Search className="w-6 h-6" style={{ color: "var(--accent-primary)" }} />
       </div>
 
       {/* Title */}
-      <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
+      <h2 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>
         Analyse ta première action en 60 secondes
       </h2>
-      <p className="text-zinc-400 text-sm mb-7 max-w-md">
+      <p className="text-sm mb-7 max-w-md" style={{ color: "var(--text-secondary)" }}>
         DCF automatisé, analyse Bull/Bear IA, valeur intrinsèque.
         Les mêmes outils que les professionnels.
       </p>
@@ -76,12 +84,17 @@ function FirstRunHero({ onAnalyze }: { onAnalyze: (ticker: string) => void }) {
           onChange={(e) => setTicker(e.target.value.toUpperCase())}
           onKeyDown={(e) => e.key === "Enter" && ticker && onAnalyze(ticker)}
           placeholder="Ex: AAPL, MC.PA, TSLA..."
-          className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:border-[#C9A84C]/50 outline-none transition-all"
+          className="flex-1 rounded-xl px-4 py-3 text-sm outline-none transition-all"
+          style={{
+            background: "var(--bg-base)",
+            border: "1px solid var(--border-default)",
+            color: "var(--text-primary)",
+          }}
         />
         <button
           onClick={() => onAnalyze(ticker)}
           disabled={!ticker}
-          className="bg-[#C9A84C] text-black font-bold rounded-xl px-5 py-3 hover:bg-[#b8943d] transition-all disabled:opacity-50 whitespace-nowrap"
+          className="btn-primary rounded-xl px-5 py-3 disabled:opacity-50 whitespace-nowrap"
         >
           Analyser →
         </button>
@@ -93,11 +106,20 @@ function FirstRunHero({ onAnalyze }: { onAnalyze: (ticker: string) => void }) {
           <button
             key={t.symbol}
             onClick={() => setTicker(t.symbol)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+            style={
               ticker === t.symbol
-                ? "bg-[#C9A84C]/15 border-[#C9A84C]/40 text-[#C9A84C]"
-                : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-600"
-            }`}
+                ? {
+                    background: "rgba(108,92,231,0.15)",
+                    border: "1px solid rgba(108,92,231,0.45)",
+                    color: "var(--accent-primary)",
+                  }
+                : {
+                    background: "var(--bg-overlay)",
+                    border: "1px solid var(--border-subtle)",
+                    color: "var(--text-secondary)",
+                  }
+            }
           >
             {t.symbol} · {t.name}
           </button>
@@ -107,16 +129,16 @@ function FirstRunHero({ onAnalyze }: { onAnalyze: (ticker: string) => void }) {
       {/* Reassurance stats */}
       <div className="flex gap-8 mt-8 text-center">
         <div>
-          <div className="text-[#C9A84C] font-bold text-lg">60s</div>
-          <div className="text-zinc-500 text-[11px]">Analyse complète</div>
+          <div className="font-bold text-lg" style={{ color: "var(--accent-primary)" }}>60s</div>
+          <div className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>Analyse complète</div>
         </div>
         <div>
-          <div className="text-[#C9A84C] font-bold text-lg">5 ans</div>
-          <div className="text-zinc-500 text-[11px]">Données financières</div>
+          <div className="font-bold text-lg" style={{ color: "var(--accent-primary)" }}>5 ans</div>
+          <div className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>Données financières</div>
         </div>
         <div>
-          <div className="text-[#C9A84C] font-bold text-lg">IA</div>
-          <div className="text-zinc-500 text-[11px]">Bull/Bear réel</div>
+          <div className="font-bold text-lg" style={{ color: "var(--accent-primary)" }}>IA</div>
+          <div className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>Bull/Bear réel</div>
         </div>
       </div>
     </div>
@@ -124,9 +146,29 @@ function FirstRunHero({ onAnalyze }: { onAnalyze: (ticker: string) => void }) {
 }
 
 function verdictColor(verdict: string) {
-  if (verdict === "BUY")  return "bg-[rgba(63,185,80,0.12)] text-[#3fb950] border border-[rgba(63,185,80,0.25)]";
-  if (verdict === "SELL") return "bg-[rgba(248,81,73,0.12)] text-[#f85149] border border-[rgba(248,81,73,0.25)]";
-  return "bg-[rgba(201,168,76,0.12)] text-[#C9A84C] border border-[rgba(201,168,76,0.25)]";
+  if (verdict === "BUY")
+    return {
+      background: "rgba(0,230,138,0.12)",
+      color: "var(--color-success)",
+      border: "1px solid rgba(0,230,138,0.25)",
+    };
+  if (verdict === "SELL")
+    return {
+      background: "rgba(255,84,112,0.12)",
+      color: "var(--color-danger)",
+      border: "1px solid rgba(255,84,112,0.25)",
+    };
+  return {
+    background: "rgba(255,184,77,0.12)",
+    color: "var(--color-warning)",
+    border: "1px solid rgba(255,184,77,0.25)",
+  };
+}
+
+function verdictLabel(verdict: string) {
+  if (verdict === "BUY") return "Sous-évalué";
+  if (verdict === "SELL") return "Surévalué";
+  return "Juste valeur";
 }
 
 export default function DashboardPage() {
@@ -154,7 +196,6 @@ export default function DashboardPage() {
   // Show Pro welcome modal if user just activated Pro
   useEffect(() => {
     if (isLoaded && isSignedIn && shouldShowProWelcome()) {
-      // Small delay so the dashboard renders first
       const t = setTimeout(() => setShowProWelcome(true), 500);
       return () => clearTimeout(t);
     }
@@ -178,7 +219,6 @@ export default function DashboardPage() {
     if (!user?.id) return;
     const seen = localStorage.getItem("ve_onboarding_done");
     if (seen) return;
-    // Fallback: show if user created recently (backend check is best-effort)
     const created = user.createdAt ? new Date(user.createdAt).getTime() : 0;
     if (Date.now() - created < 10 * 60 * 1000) {
       setShowOnboarding(true);
@@ -272,8 +312,11 @@ export default function DashboardPage() {
   if (!isLoaded || !isSignedIn) {
     return (
       <AppLayout>
-        <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-primary)" }}>
-          <div className="w-8 h-8 border-t-2 border-[#C9A84C] rounded-full animate-spin" />
+        <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-base)" }}>
+          <div
+            className="w-8 h-8 border-t-2 rounded-full animate-spin"
+            style={{ borderColor: "var(--accent-primary)" }}
+          />
         </div>
       </AppLayout>
     );
@@ -281,19 +324,24 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen text-white px-4 sm:px-6 md:px-10 py-4 sm:py-8">
+      <div
+        className="min-h-screen px-4 sm:px-6 md:px-10 py-4 sm:py-8 animate-in"
+        style={{ color: "var(--text-primary)" }}
+      >
 
         {/* Header */}
-        <div className="mb-8 anim-1">
-          <h1 className="text-2xl font-bold tracking-tight text-white">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
             Bonjour {firstName}
           </h1>
-          <p className="text-sm mt-1 capitalize text-zinc-500">{today}</p>
+          <p className="text-sm mt-1 capitalize" style={{ color: "var(--text-tertiary)" }}>{today}</p>
         </div>
 
-        {/* Quick search */}
-        <div className="rounded-xl p-5 mb-8 border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm hover:border-[#3f3f46] transition-colors anim-2">
-          <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C] mb-4">Analyser un titre</p>
+        {/* Quick search — card-highlight */}
+        <div className="card-highlight p-5 mb-8">
+          <p className="text-[13px] font-medium mb-4" style={{ color: "var(--accent-primary)" }}>
+            Analyser un titre
+          </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
@@ -301,12 +349,17 @@ export default function DashboardPage() {
               onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Ex: AAPL, TSLA, MSFT..."
-              className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-white placeholder-zinc-600 text-base sm:text-sm focus:outline-none focus:border-[rgba(201,168,76,0.5)] transition-all"
+              className="flex-1 rounded-lg px-4 py-2.5 text-base sm:text-sm outline-none transition-all"
+              style={{
+                background: "var(--bg-base)",
+                border: "1px solid var(--border-default)",
+                color: "var(--text-primary)",
+              }}
             />
             <button
               onClick={handleSearch}
               disabled={!searchQuery}
-              className="flex items-center gap-2 bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold px-5 py-2.5 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap w-full sm:w-auto"
+              className="btn-primary flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap w-full sm:w-auto"
             >
               Analyser <ArrowRight size={16} />
             </button>
@@ -314,28 +367,37 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent analyses */}
-        <div className="mb-8 anim-3">
-          <p className="text-xs font-bold uppercase tracking-[2px] text-zinc-500 mb-4">Analyses récentes</p>
+        <div className="mb-8">
+          <p className="text-lg font-semibold mb-4" style={{ color: "var(--text-primary)" }}>
+            Analyses récentes
+          </p>
           {recent.length === 0 ? (
             <FirstRunHero onAnalyze={(t) => router.push(`/analyze?ticker=${t}`)} />
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="overflow-x-auto flex gap-3 pb-1 sm:grid sm:grid-cols-2 lg:grid-cols-3">
               {recent.map((entry) => (
                 <button
                   key={entry.ticker}
                   onClick={() => router.push(`/analyze?ticker=${entry.ticker}`)}
-                  className="rounded-xl p-4 text-left border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm hover:border-[#3f3f46] transition-colors duration-200"
+                  className="card-interactive rounded-xl p-4 text-left flex-shrink-0 w-64 sm:w-auto"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="text-[#C9A84C] font-bold text-base">{entry.ticker}</p>
-                      <p className="text-sm truncate max-w-[140px] text-zinc-300">{entry.name}</p>
+                      <p className="font-bold text-base" style={{ color: "var(--accent-primary)" }}>
+                        {entry.ticker}
+                      </p>
+                      <p className="text-sm truncate max-w-[140px]" style={{ color: "var(--text-secondary)" }}>
+                        {entry.name}
+                      </p>
                     </div>
-                    <span className={`text-xs font-bold px-2 py-1 rounded-lg ${verdictColor(entry.verdict)}`}>
-                      {entry.verdict === "BUY" ? "Sous-évalué" : entry.verdict === "SELL" ? "Surévalué" : "Juste valeur"}
+                    <span
+                      className="text-xs font-bold px-2 py-1 rounded-lg"
+                      style={verdictColor(entry.verdict)}
+                    >
+                      {verdictLabel(entry.verdict)}
                     </span>
                   </div>
-                  <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{entry.date}</p>
+                  <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{entry.date}</p>
                 </button>
               ))}
             </div>
@@ -343,16 +405,33 @@ export default function DashboardPage() {
         </div>
 
         {/* Market overview */}
-        <div className="mb-8 anim-4">
-          <div className="flex items-center gap-2 mb-4">
-            <p className="text-xs font-bold uppercase tracking-[2px] text-zinc-500">Marchés aujourd&apos;hui</p>
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <p className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
+              Marchés aujourd&apos;hui
+            </p>
             {marketLoading ? (
-              <span className="text-[10px] border border-zinc-800 text-zinc-600 px-2 py-0.5 rounded-full">
+              <span
+                className="text-[11px] px-2 py-0.5 rounded-full"
+                style={{
+                  border: "1px solid var(--border-subtle)",
+                  color: "var(--text-tertiary)",
+                }}
+              >
                 Chargement...
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-[10px] border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span
+                className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full"
+                style={{
+                  border: "1px solid rgba(0,230,138,0.25)",
+                  color: "var(--color-success)",
+                }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full animate-pulse"
+                  style={{ background: "var(--color-success)" }}
+                />
                 Live
               </span>
             )}
@@ -363,13 +442,15 @@ export default function DashboardPage() {
                 <div key={i} className="skeleton h-20 rounded-xl" />
               ))
             ) : (marketData.length > 0 ? marketData : MARKET_FALLBACK).map((m) => (
-              <div
-                key={m.label}
-                className="rounded-xl p-4 border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm hover:border-[#3f3f46] transition-colors duration-200"
-              >
-                <p className="text-xs font-medium mb-2 text-zinc-500">{m.label}</p>
-                <p className="font-bold text-base text-white">{m.value}</p>
-                <p className={`text-sm font-semibold mt-1 ${m.up ? "text-emerald-400" : "text-red-400"}`}>
+              <div key={m.label} className="card p-4">
+                <p className="text-[13px] font-medium mb-2" style={{ color: "var(--text-secondary)" }}>
+                  {m.label}
+                </p>
+                <p className="font-bold text-base" style={{ color: "var(--text-primary)" }}>{m.value}</p>
+                <p
+                  className="text-sm font-semibold mt-1"
+                  style={{ color: m.up ? "var(--color-success)" : "var(--color-danger)" }}
+                >
                   {m.change}
                 </p>
               </div>
@@ -378,14 +459,29 @@ export default function DashboardPage() {
         </div>
 
         {/* Popular tickers */}
-        <div className="mb-8 anim-5">
-          <p className="text-xs font-bold uppercase tracking-[2px] text-zinc-500 mb-4">Tickers populaires</p>
+        <div className="mb-8">
+          <p className="text-lg font-semibold mb-4" style={{ color: "var(--text-primary)" }}>
+            Tickers populaires
+          </p>
           <div className="flex flex-wrap gap-2">
             {POPULAR_TICKERS.map((t) => (
               <button
                 key={t}
                 onClick={() => router.push(`/analyze?ticker=${t}`)}
-                className="text-sm font-semibold text-zinc-300 bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-lg hover:border-zinc-600 hover:text-white transition-all"
+                className="text-sm font-semibold px-4 py-2 rounded-lg transition-all"
+                style={{
+                  background: "var(--bg-overlay)",
+                  border: "1px solid var(--border-subtle)",
+                  color: "var(--text-secondary)",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--accent-primary)";
+                  (e.currentTarget as HTMLButtonElement).style.color = "var(--accent-primary)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border-subtle)";
+                  (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)";
+                }}
               >
                 {t}
               </button>
@@ -396,10 +492,22 @@ export default function DashboardPage() {
         {/* Watchlist section */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-bold text-white">Ma Watchlist</h2>
+            <h2 className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
+              Ma Watchlist
+            </h2>
             <button
               onClick={() => { setShowAddInput(v => !v); setAddError(""); setAddInput(""); }}
-              className="flex items-center gap-1.5 text-xs font-semibold text-[#C9A84C] border border-[rgba(201,168,76,0.3)] px-3 py-1.5 rounded-lg hover:bg-[rgba(201,168,76,0.08)] transition-all"
+              className="flex items-center gap-1.5 text-[13px] font-medium px-3 py-1.5 rounded-lg transition-all"
+              style={{
+                color: "var(--accent-primary)",
+                border: "1px solid rgba(108,92,231,0.35)",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(108,92,231,0.10)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              }}
             >
               <Plus size={13} /> Ajouter
             </button>
@@ -416,20 +524,36 @@ export default function DashboardPage() {
                   onChange={e => { setAddInput(e.target.value.toUpperCase()); setAddError(""); }}
                   onKeyDown={e => e.key === "Enter" && handleAddTicker()}
                   placeholder="Ex: MC.PA, AAPL, TSLA..."
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-white placeholder-zinc-600 text-base sm:text-sm focus:outline-none focus:border-[rgba(201,168,76,0.5)] transition-all"
+                  className="w-full rounded-lg px-4 py-2.5 text-base sm:text-sm outline-none transition-all"
+                  style={{
+                    background: "var(--bg-base)",
+                    border: "1px solid var(--border-default)",
+                    color: "var(--text-primary)",
+                  }}
                 />
-                {addError && <p className="text-xs text-red-400 mt-1">{addError}</p>}
+                {addError && (
+                  <p className="text-xs mt-1" style={{ color: "var(--color-danger)" }}>
+                    {addError}
+                  </p>
+                )}
               </div>
               <button
                 onClick={handleAddTicker}
                 disabled={addLoading || !addInput}
-                className="flex items-center gap-1.5 bg-[#C9A84C] hover:bg-[#b8943d] text-black font-bold px-4 py-2.5 rounded-lg transition-all disabled:opacity-40 whitespace-nowrap text-sm"
+                className="btn-primary flex items-center gap-1.5 px-4 py-2.5 rounded-lg disabled:opacity-40 whitespace-nowrap text-sm"
               >
                 {addLoading ? <Loader2 size={14} className="animate-spin" /> : "Valider"}
               </button>
               <button
                 onClick={() => { setShowAddInput(false); setAddInput(""); setAddError(""); }}
-                className="p-2.5 text-zinc-500 hover:text-zinc-300 transition-colors"
+                className="p-2.5 transition-colors"
+                style={{ color: "var(--text-tertiary)" }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.color = "var(--text-tertiary)";
+                }}
               >
                 <X size={16} />
               </button>
@@ -442,50 +566,93 @@ export default function DashboardPage() {
               {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-12 rounded-xl" />)}
             </div>
           ) : watchlistItems.length === 0 ? (
-            <div className="rounded-xl p-8 border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm text-center">
-              <p className="text-sm text-zinc-400 mb-1">Ajoute tes premiers tickers à suivre</p>
-              <p className="text-xs text-zinc-600">Clique sur “Ajouter” pour commencer</p>
+            <div className="card p-8 text-center">
+              <p className="text-sm mb-1" style={{ color: "var(--text-secondary)" }}>
+                Ajoute tes premiers tickers à suivre
+              </p>
+              <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                Clique sur &quot;Ajouter&quot; pour commencer
+              </p>
             </div>
           ) : (
-            <div className="rounded-xl border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm overflow-hidden">
+            <div
+              className="rounded-2xl overflow-hidden"
+              style={{
+                background: "var(--bg-surface)",
+                border: "1px solid var(--border-subtle)",
+              }}
+            >
               {watchlistItems.map((item, i) => (
                 <div
                   key={item.ticker}
-                  className={`flex items-center justify-between px-4 py-3 hover:bg-white/[0.03] transition-colors ${i < watchlistItems.length - 1 ? "border-b border-[#27272a]" : ""}`}
+                  className="flex items-center justify-between px-4 py-3 transition-colors"
+                  style={
+                    i < watchlistItems.length - 1
+                      ? { borderBottom: "1px solid var(--border-subtle)" }
+                      : {}
+                  }
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.03)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.background = "transparent";
+                  }}
                 >
                   {/* Left: ticker + name */}
                   <button
                     className="flex items-center gap-3 text-left flex-1 min-w-0"
                     onClick={() => router.push(`/analyze?ticker=${item.ticker}`)}
                   >
-                    <span className="text-[#C9A84C] font-bold text-sm w-14 flex-shrink-0">{item.ticker}</span>
-                    <span className="text-zinc-400 text-xs truncate">{item.name}</span>
+                    <span
+                      className="font-bold text-sm w-14 flex-shrink-0"
+                      style={{ color: "var(--accent-primary)" }}
+                    >
+                      {item.ticker}
+                    </span>
+                    <span className="text-xs truncate" style={{ color: "var(--text-secondary)" }}>
+                      {item.name}
+                    </span>
                   </button>
 
                   {/* Right: price + change + verdict + remove */}
                   <div className="flex items-center gap-3 flex-shrink-0">
                     {item.price != null ? (
                       <>
-                        <span className="text-sm font-semibold text-white">${item.price.toFixed(2)}</span>
-                        <span className={`text-xs font-bold ${(item.change_pct ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                          ${item.price.toFixed(2)}
+                        </span>
+                        <span
+                          className="text-xs font-bold"
+                          style={{
+                            color: (item.change_pct ?? 0) >= 0
+                              ? "var(--color-success)"
+                              : "var(--color-danger)",
+                          }}
+                        >
                           {(item.change_pct ?? 0) >= 0 ? "+" : ""}{(item.change_pct ?? 0).toFixed(2)}%
                         </span>
                       </>
                     ) : (
-                      <span className="text-xs text-zinc-600">—</span>
+                      <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>—</span>
                     )}
                     {item.verdict && (
-                      <span className={`hidden sm:inline text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        item.verdict === "BUY"  ? "bg-emerald-500/15 text-emerald-400" :
-                        item.verdict === "SELL" ? "bg-red-500/15 text-red-400" :
-                        "bg-[#C9A84C]/15 text-[#C9A84C]"
-                      }`}>
-                        {item.verdict === "BUY" ? "Sous-évalué" : item.verdict === "SELL" ? "Surévalué" : "Juste valeur"}
+                      <span
+                        className="hidden sm:inline text-[11px] font-bold px-2 py-0.5 rounded-full"
+                        style={verdictColor(item.verdict)}
+                      >
+                        {verdictLabel(item.verdict)}
                       </span>
                     )}
                     <button
                       onClick={() => handleRemoveTicker(item.ticker)}
-                      className="text-zinc-600 hover:text-red-400 transition-colors p-1"
+                      className="p-1 transition-colors"
+                      style={{ color: "var(--text-tertiary)" }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.color = "var(--color-danger)";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.color = "var(--text-tertiary)";
+                      }}
                       aria-label={`Supprimer ${item.ticker}`}
                     >
                       <X size={13} />
@@ -499,20 +666,27 @@ export default function DashboardPage() {
 
         {/* Referral section */}
         {user?.id && (
-          <section className="mt-8 anim-6">
-            <div className="rounded-xl border border-[#27272a] bg-[#18181b]/80 backdrop-blur-sm p-5">
+          <section className="mt-8">
+            <div className="card p-5">
               <div className="flex items-center gap-2 mb-3">
-                <Users size={16} className="text-[#C9A84C]" />
-                <h3 className="text-sm font-bold text-white">Inviter des amis</h3>
+                <Users size={16} style={{ color: "var(--accent-primary)" }} />
+                <h3 className="text-[13px] font-medium" style={{ color: "var(--text-primary)" }}>
+                  Inviter des amis
+                </h3>
               </div>
-              <p className="text-xs text-zinc-400 mb-4">
+              <p className="text-xs mb-4" style={{ color: "var(--text-secondary)" }}>
                 Partage ton lien et gagne des avantages. 3 filleuls = 1 mois Pro offert.
               </p>
               <div className="flex gap-2 items-center mb-3">
                 <input
                   readOnly
                   value={`https://valuengine.fr?ref=${user.id}`}
-                  className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 truncate focus:outline-none"
+                  className="flex-1 rounded-lg px-3 py-2 text-xs truncate outline-none"
+                  style={{
+                    background: "var(--bg-base)",
+                    border: "1px solid var(--border-subtle)",
+                    color: "var(--text-secondary)",
+                  }}
                 />
                 <button
                   onClick={() => {
@@ -520,15 +694,31 @@ export default function DashboardPage() {
                     setRefCopied(true);
                     setTimeout(() => setRefCopied(false), 2000);
                   }}
-                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border border-[rgba(201,168,76,0.3)] text-[#C9A84C] hover:bg-[rgba(201,168,76,0.08)] transition-all whitespace-nowrap"
+                  className="flex items-center gap-1.5 text-[13px] font-medium px-3 py-2 rounded-lg transition-all whitespace-nowrap"
+                  style={{
+                    color: "var(--accent-primary)",
+                    border: "1px solid rgba(108,92,231,0.35)",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(108,92,231,0.10)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+                  }}
                 >
-                  {refCopied ? <><Check size={13} /> Copié</> : <><Copy size={13} /> Copier</>}
+                  {refCopied
+                    ? <><Check size={13} /> Copié</>
+                    : <><Copy size={13} /> Copier</>}
                 </button>
               </div>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
                 {referralCount === 0
                   ? "Aucun filleul pour le moment"
-                  : `${referralCount} filleul${referralCount > 1 ? "s" : ""} — ${referralCount >= 3 ? "1 mois Pro débloqué !" : `encore ${3 - referralCount} pour débloquer 1 mois Pro`}`}
+                  : `${referralCount} filleul${referralCount > 1 ? "s" : ""} — ${
+                      referralCount >= 3
+                        ? "1 mois Pro débloqué !"
+                        : `encore ${3 - referralCount} pour débloquer 1 mois Pro`
+                    }`}
               </p>
             </div>
           </section>
@@ -536,13 +726,12 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* ── Onboarding Modal ──────────────────────────────────────── */}
+      {/* Onboarding Modal */}
       <OnboardingModal
         show={showOnboarding}
         onComplete={(ticker) => {
           localStorage.setItem("ve_onboarding_done", "1");
           setShowOnboarding(false);
-          // Mark complete in backend (best-effort)
           if (user?.id) {
             const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
             authedFetch(`${API_BASE}/api/user/onboarding-complete/${user.id}`, getToken, { method: "POST" }).catch(() => {});

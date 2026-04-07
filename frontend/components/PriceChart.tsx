@@ -19,12 +19,12 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: { payl
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   return (
-    <div className="bg-[#132032] border border-[rgba(201,168,76,0.25)] rounded-xl px-4 py-3 shadow-xl">
-      <p className="text-[10px] text-[#5d7289] uppercase tracking-wider mb-1">
+    <div className="bg-[#132032] border border-[rgba(108,92,231,0.25)] rounded-xl px-4 py-3 shadow-xl">
+      <p className="text-[13px] font-medium text-[#5d7289] mb-1">
         {new Date(d.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
       </p>
-      <p className="text-lg font-black text-[#C9A84C]">${d.close.toFixed(2)}</p>
-      <p className="text-[10px] text-[#4a6070] mt-1">Vol: {(d.volume / 1e6).toFixed(1)}M</p>
+      <p className="text-lg font-black" style={{ color: "var(--accent-primary)" }}>${d.close.toFixed(2)}</p>
+      <p className="text-[13px] font-medium text-[#4a6070] mt-1">Vol: {(d.volume / 1e6).toFixed(1)}M</p>
     </div>
   );
 }
@@ -56,19 +56,26 @@ export function PriceChart({ ticker, currentPrice }: Props) {
   };
 
   return (
-    <div className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(201,168,76,0.14)] rounded-2xl p-6">
+    <div className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(108,92,231,0.14)] rounded-2xl p-6">
       <div className="flex items-center justify-between mb-5">
-        <p className="text-[11px] font-bold uppercase tracking-[2px] text-[#C9A84C]">Cours historique</p>
+        <p className="text-[11px] font-bold uppercase tracking-[2px]" style={{ color: "var(--accent-primary)" }}>Cours historique</p>
         <div className="flex items-center gap-1">
           {PERIODS.map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all ${
+              className={`text-[13px] font-medium px-2.5 py-1 rounded-lg transition-all ${
                 period === p
-                  ? "bg-[rgba(201,168,76,0.15)] text-[#C9A84C] border border-[rgba(201,168,76,0.3)]"
-                  : "text-[#4a6070] hover:text-[#C9A84C]"
+                  ? "border"
+                  : "text-[#4a6070]"
               }`}
+              style={period === p ? {
+                background: "rgba(108,92,231,0.15)",
+                color: "var(--accent-primary)",
+                borderColor: "rgba(108,92,231,0.3)",
+              } : undefined}
+              onMouseEnter={period !== p ? (e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--accent-primary)"; } : undefined}
+              onMouseLeave={period !== p ? (e) => { (e.currentTarget as HTMLButtonElement).style.color = "#4a6070"; } : undefined}
             >
               {p.toUpperCase()}
             </button>
@@ -78,12 +85,12 @@ export function PriceChart({ ticker, currentPrice }: Props) {
 
       {loading && (
         <div className="h-[220px] flex items-center justify-center">
-          <div className="w-6 h-6 border-t-2 border-[#C9A84C] rounded-full animate-spin" />
+          <div className="w-6 h-6 border-t-2 rounded-full animate-spin" style={{ borderTopColor: "var(--accent-primary)" }} />
         </div>
       )}
 
       {error && (
-        <div className="h-[220px] flex items-center justify-center text-[#ff4d6d] text-sm">{error}</div>
+        <div className="h-[220px] flex items-center justify-center text-sm" style={{ color: "var(--color-danger)" }}>{error}</div>
       )}
 
       {!loading && !error && data.length > 0 && (
@@ -109,17 +116,17 @@ export function PriceChart({ ticker, currentPrice }: Props) {
             <Tooltip content={<CustomTooltip />} />
             <ReferenceLine
               y={currentPrice}
-              stroke="rgba(201,168,76,0.35)"
+              stroke="rgba(108,92,231,0.35)"
               strokeDasharray="4 4"
-              label={{ value: `$${currentPrice.toFixed(0)}`, fill: "#C9A84C", fontSize: 10, position: "right" }}
+              label={{ value: `$${currentPrice.toFixed(0)}`, fill: "var(--accent-primary)", fontSize: 10, position: "right" }}
             />
             <Line
               type="monotone"
               dataKey="close"
-              stroke="#C9A84C"
+              stroke="var(--accent-primary)"
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, fill: "#C9A84C", strokeWidth: 0 }}
+              activeDot={{ r: 4, fill: "var(--accent-primary)", strokeWidth: 0 }}
             />
           </LineChart>
         </ResponsiveContainer>

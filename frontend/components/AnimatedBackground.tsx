@@ -34,7 +34,8 @@ export default function AnimatedBackground() {
           const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
           if (dist < 120) {
             ctx!.beginPath();
-            ctx!.strokeStyle = `rgba(201, 168, 76, ${0.15 * (1 - dist/120)})`;
+            // Blue-violet palette: indigo/violet lines
+            ctx!.strokeStyle = `rgba(99, 102, 241, ${0.15 * (1 - dist/120)})`;
             ctx!.lineWidth = 0.5;
             ctx!.moveTo(p.x, p.y);
             ctx!.lineTo(p2.x, p2.y);
@@ -43,7 +44,11 @@ export default function AnimatedBackground() {
         });
         ctx!.beginPath();
         ctx!.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx!.fillStyle = `rgba(201, 168, 76, ${p.opacity})`;
+        // Alternate between indigo and violet dots
+        const useViolet = i % 3 === 0;
+        ctx!.fillStyle = useViolet
+          ? `rgba(139, 92, 246, ${p.opacity})`   // violet
+          : `rgba(99, 102, 241, ${p.opacity})`;  // indigo
         ctx!.fill();
         p.x += p.vx;
         p.y += p.vy;

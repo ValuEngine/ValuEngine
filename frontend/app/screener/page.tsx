@@ -101,18 +101,28 @@ export default function ScreenerPage() {
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
               Screener IA
             </h1>
-            <Sparkles size={20} className="text-[#C9A84C]" />
-            <span className="text-[10px] font-bold uppercase tracking-[2px] text-[#C9A84C] bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.25)] px-2.5 py-0.5 rounded-full">
+            <Sparkles size={20} style={{ color: "var(--accent-primary)" }} />
+            <span
+              className="text-[13px] font-medium px-2.5 py-0.5 rounded-full"
+              style={{
+                color: "var(--accent-gold)",
+                background: "rgba(201,168,76,0.1)",
+                border: "1px solid rgba(201,168,76,0.25)",
+              }}
+            >
               Pro
             </span>
           </div>
-          <p className="text-[#6b7d91] text-sm">
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
             Decrivez en langage naturel l&apos;investissement que vous cherchez
           </p>
         </div>
 
         {/* ── SEARCH ZONE ──────────────────────────────────────────── */}
-        <div className="bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-2xl p-6 mb-6">
+        <div
+          className="backdrop-blur-sm rounded-2xl p-6 mb-6"
+          style={{ background: "rgba(24,24,27,0.8)", border: "1px solid var(--border-default)" }}
+        >
           <textarea
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -124,7 +134,12 @@ export default function ScreenerPage() {
             }}
             placeholder="Ex: Je cherche des societes tech americaines sous-evaluees avec une forte croissance du FCF et peu d'endettement..."
             rows={3}
-            className="w-full bg-[#09090b]/60 border border-[#27272a] rounded-xl px-4 py-3 text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-[#C9A84C]/50 transition-colors resize-none"
+            className="w-full rounded-xl px-4 py-3 text-white text-sm focus:outline-none transition-colors resize-none"
+            style={{
+              background: "rgba(9,9,11,0.6)",
+              border: "1px solid var(--border-default)",
+              color: "var(--text-primary)",
+            }}
           />
 
           {/* Suggestions */}
@@ -134,7 +149,22 @@ export default function ScreenerPage() {
                 <button
                   key={i}
                   onClick={() => setQuery(s)}
-                  className="text-xs text-zinc-400 bg-[#27272a]/60 hover:bg-[#C9A84C]/10 hover:text-[#C9A84C] border border-[#27272a] hover:border-[#C9A84C]/30 rounded-lg px-3 py-1.5 transition-all"
+                  className="text-xs rounded-lg px-3 py-1.5 transition-all"
+                  style={{
+                    color: "var(--text-secondary)",
+                    background: "rgba(39,39,42,0.6)",
+                    border: "1px solid var(--border-default)",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(108,92,231,0.1)";
+                    (e.currentTarget as HTMLButtonElement).style.color = "var(--accent-primary)";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(108,92,231,0.3)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(39,39,42,0.6)";
+                    (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border-default)";
+                  }}
                 >
                   {s}
                 </button>
@@ -143,13 +173,13 @@ export default function ScreenerPage() {
           )}
 
           {error && (
-            <p className="text-red-400 text-sm mt-3">{error}</p>
+            <p className="text-sm mt-3" style={{ color: "var(--color-danger)" }}>{error}</p>
           )}
 
           <button
             onClick={handleSearch}
             disabled={loading || !query.trim()}
-            className="mt-4 flex items-center justify-center gap-2 bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold px-8 py-3 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+            className="btn-pro mt-4 flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
           >
             {loading ? (
               <><Loader2 size={16} className="animate-spin" /> Analyse en cours...</>
@@ -165,26 +195,37 @@ export default function ScreenerPage() {
             {/* Blurred fake results */}
             <div className="blur-sm pointer-events-none opacity-50">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-[#18181b]/80 border border-[#27272a] rounded-2xl p-6 mb-4">
-                  <div className="h-5 bg-zinc-800 rounded w-1/3 mb-3" />
-                  <div className="h-3 bg-zinc-800 rounded w-full mb-2" />
-                  <div className="h-3 bg-zinc-800 rounded w-2/3" />
+                <div
+                  key={i}
+                  className="rounded-2xl p-6 mb-4"
+                  style={{ background: "rgba(24,24,27,0.8)", border: "1px solid var(--border-default)" }}
+                >
+                  <div className="h-5 rounded w-1/3 mb-3" style={{ background: "var(--bg-elevated)" }} />
+                  <div className="h-3 rounded w-full mb-2" style={{ background: "var(--bg-elevated)" }} />
+                  <div className="h-3 rounded w-2/3" style={{ background: "var(--bg-elevated)" }} />
                 </div>
               ))}
             </div>
             {/* CTA overlay */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-[#18181b]/95 backdrop-blur-md border border-[#C9A84C]/30 rounded-2xl p-8 text-center max-w-md shadow-[0_0_40px_rgba(201,168,76,0.15)]">
-                <Sparkles size={32} className="text-[#C9A84C] mx-auto mb-4" />
+              <div
+                className="backdrop-blur-md rounded-2xl p-8 text-center max-w-md"
+                style={{
+                  background: "rgba(24,24,27,0.95)",
+                  border: "1px solid rgba(108,92,231,0.3)",
+                  boxShadow: "0 0 40px rgba(108,92,231,0.15)",
+                }}
+              >
+                <Sparkles size={32} className="mx-auto mb-4" style={{ color: "var(--accent-primary)" }} />
                 <h3 className="text-lg font-bold text-white mb-2">
                   Fonctionnalite reservee aux membres Pro
                 </h3>
-                <p className="text-zinc-400 text-sm mb-6">
+                <p className="text-sm mb-6" style={{ color: "var(--text-secondary)" }}>
                   Le Screener IA analyse des centaines d&apos;actions pour trouver celles qui correspondent a vos criteres.
                 </p>
                 <button
                   onClick={() => router.push("/dashboard")}
-                  className="bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#0a1628] font-bold px-6 py-3 rounded-xl hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all"
+                  className="btn-pro font-bold px-6 py-3 rounded-xl transition-all"
                 >
                   Passer Pro
                 </button>
@@ -198,7 +239,7 @@ export default function ScreenerPage() {
           <div>
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-zinc-400">
+              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
                 <span className="text-white font-bold">{results.resultats.length}</span> actions selectionnees parmi{" "}
                 <span className="text-white">{results.nb_actions_analysees}</span> analysees
               </p>
@@ -206,7 +247,10 @@ export default function ScreenerPage() {
 
             {/* Interpretation */}
             {results.interpretation_requete && (
-              <p className="text-sm text-zinc-500 italic mb-6 border-l-2 border-[#C9A84C]/40 pl-3">
+              <p
+                className="text-sm italic mb-6 pl-3"
+                style={{ color: "var(--text-tertiary)", borderLeft: "2px solid rgba(108,92,231,0.4)" }}
+              >
                 {results.interpretation_requete}
               </p>
             )}
@@ -216,34 +260,45 @@ export default function ScreenerPage() {
               {results.resultats.map((r, idx) => (
                 <div
                   key={r.ticker || idx}
-                  className="bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-2xl p-6 hover:shadow-[0_0_20px_rgba(201,168,76,0.15)] hover:border-[#C9A84C]/20 transition-all"
+                  className="backdrop-blur-sm rounded-2xl p-6 transition-all"
+                  style={{ background: "rgba(24,24,27,0.8)", border: "1px solid var(--border-default)" }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(108,92,231,0.2)";
+                    (e.currentTarget as HTMLDivElement).style.boxShadow = "0 0 20px rgba(108,92,231,0.15)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.borderColor = "var(--border-default)";
+                    (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+                  }}
                 >
                   {/* Top row */}
                   <div className="flex justify-between items-start">
                     <div>
                       <span className="font-bold text-white text-lg">{r.ticker}</span>
-                      <span className="text-gray-400 ml-2 text-sm">{r.nom}</span>
+                      <span className="ml-2 text-sm" style={{ color: "var(--text-secondary)" }}>{r.nom}</span>
                     </div>
                     <div className="text-right">
-                      <div className="text-[#C9A84C] font-bold text-lg">{r.score_match}<span className="text-sm text-zinc-500">/100</span></div>
-                      <div className="w-20 bg-gray-700 rounded-full h-1.5 mt-1">
+                      <div className="font-bold text-lg" style={{ color: "var(--accent-primary)" }}>
+                        {r.score_match}<span className="text-sm" style={{ color: "var(--text-tertiary)" }}>/100</span>
+                      </div>
+                      <div className="w-20 rounded-full h-1.5 mt-1" style={{ background: "var(--bg-elevated)" }}>
                         <div
-                          className="bg-[#C9A84C] h-1.5 rounded-full transition-all"
-                          style={{ width: `${r.score_match}%` }}
+                          className="h-1.5 rounded-full transition-all"
+                          style={{ width: `${r.score_match}%`, background: "var(--accent-primary)" }}
                         />
                       </div>
                     </div>
                   </div>
 
                   {/* Raison */}
-                  <p className="text-gray-300 mt-3 text-sm leading-relaxed">{r.raison}</p>
+                  <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{r.raison}</p>
 
                   {/* Points forts */}
                   {r.points_forts && r.points_forts.length > 0 && (
                     <div className="flex flex-wrap gap-3 mt-3">
                       {r.points_forts.map((p, i) => (
-                        <span key={i} className="text-green-400 text-xs flex items-center gap-1">
-                          <span className="text-green-400">&#10003;</span> {p}
+                        <span key={i} className="text-xs flex items-center gap-1" style={{ color: "var(--color-success)" }}>
+                          <span>&#10003;</span> {p}
                         </span>
                       ))}
                     </div>
@@ -251,19 +306,23 @@ export default function ScreenerPage() {
 
                   {/* Vigilance */}
                   {r.point_vigilance && (
-                    <div className="text-yellow-400 text-xs mt-2">
+                    <div className="text-xs mt-2" style={{ color: "#eab308" }}>
                       &#9888;&#65039; {r.point_vigilance}
                     </div>
                   )}
 
                   {/* Bottom row */}
-                  <div className="flex justify-between items-center mt-4 pt-3 border-t border-[#27272a]">
-                    <span className="text-gray-500 text-xs">
+                  <div
+                    className="flex justify-between items-center mt-4 pt-3"
+                    style={{ borderTop: "1px solid var(--border-default)" }}
+                  >
+                    <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
                       {r.secteur} &middot; {r.capitalisation}
                     </span>
                     <button
                       onClick={() => router.push(`/analyze?ticker=${r.ticker}`)}
-                      className="text-[#C9A84C] text-sm hover:underline font-medium"
+                      className="text-sm font-medium hover:underline"
+                      style={{ color: "var(--accent-primary)" }}
                     >
                       Analyser &rarr;
                     </button>
@@ -277,9 +336,9 @@ export default function ScreenerPage() {
         {/* Empty state after search with no results */}
         {results && results.resultats && results.resultats.length === 0 && !error && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Search size={40} className="text-zinc-600 mb-4" />
+            <Search size={40} className="mb-4" style={{ color: "var(--text-tertiary)" }} />
             <h3 className="text-lg font-bold text-white mb-2">Aucun resultat</h3>
-            <p className="text-zinc-500 text-sm">
+            <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
               Essayez de reformuler votre recherche avec des criteres differents.
             </p>
           </div>
@@ -288,11 +347,17 @@ export default function ScreenerPage() {
         {/* Initial empty state */}
         {!results && !loading && isPro && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.18)] flex items-center justify-center mb-6">
-              <Search size={28} className="text-[#C9A84C]" />
+            <div
+              className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
+              style={{
+                background: "rgba(108,92,231,0.08)",
+                border: "1px solid rgba(108,92,231,0.18)",
+              }}
+            >
+              <Search size={28} style={{ color: "var(--accent-primary)" }} />
             </div>
             <h2 className="text-xl font-bold mb-2">Pret a chercher</h2>
-            <p className="text-[#4a6070] text-sm max-w-md">
+            <p className="text-sm max-w-md" style={{ color: "var(--text-tertiary)" }}>
               Decrivez le type d&apos;investissement que vous recherchez et l&apos;IA analysera des centaines d&apos;actions pour vous.
             </p>
           </div>

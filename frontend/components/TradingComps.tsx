@@ -43,14 +43,14 @@ export function TradingComps({ ticker, sector }: { ticker: string; sector: strin
   }, [ticker, sector]);
 
   if (loading) return (
-    <div className="flex items-center gap-3 py-8 text-[#5d7289] text-sm">
-      <Loader2 size={16} className="animate-spin text-[#C9A84C]" />
+    <div className="flex items-center gap-3 py-8 text-sm" style={{ color: "var(--text-tertiary)" }}>
+      <Loader2 size={16} className="animate-spin" style={{ color: "var(--accent-primary)" }} />
       Chargement des comparables sectoriels…
     </div>
   );
 
   if (error || peers.length === 0) return (
-    <p className="text-[#4a6070] text-sm py-4">
+    <p className="text-sm py-4" style={{ color: "var(--text-tertiary)" }}>
       {error || "Aucun comparable disponible pour ce secteur."}
     </p>
   );
@@ -58,12 +58,12 @@ export function TradingComps({ ticker, sector }: { ticker: string; sector: strin
   const headers = ["Ticker", "Société", "Prix", "Market Cap", "P/E", "EV/EBITDA", "Marge nette", "Croissance CA", "Beta"];
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-[rgba(201,168,76,0.14)]">
+    <div className="overflow-x-auto rounded-2xl border" style={{ borderColor: "rgba(99,102,241,0.14)" }}>
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-[rgba(201,168,76,0.05)] border-b border-[rgba(201,168,76,0.1)]">
+          <tr className="border-b" style={{ background: "rgba(99,102,241,0.05)", borderColor: "rgba(99,102,241,0.1)" }}>
             {headers.map((h) => (
-              <th key={h} className="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-[#5d7289] whitespace-nowrap">
+              <th key={h} className="text-left px-5 py-3.5 text-[13px] font-medium whitespace-nowrap" style={{ color: "var(--text-tertiary)" }}>
                 {h}
               </th>
             ))}
@@ -72,21 +72,25 @@ export function TradingComps({ ticker, sector }: { ticker: string; sector: strin
         <tbody>
           {peers.map((p, i) => (
             <tr key={p.ticker}
-              className={`border-b border-[rgba(255,255,255,0.03)] hover:bg-[rgba(201,168,76,0.03)] transition-colors ${i % 2 === 0 ? "" : "bg-[rgba(255,255,255,0.01)]"}`}
+              className="border-b transition-colors hover:bg-[rgba(99,102,241,0.03)]"
+              style={{
+                borderColor: "rgba(255,255,255,0.03)",
+                background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
+              }}
             >
-              <td className="px-5 py-4 font-bold text-[#C9A84C] font-mono">{p.ticker}</td>
-              <td className="px-5 py-4 text-white font-medium">{p.name}</td>
-              <td className="px-5 py-4 text-white font-bold">${p.price.toFixed(2)}</td>
-              <td className="px-5 py-4 text-[#7a8fa3]">{fmtCap(p.market_cap)}</td>
-              <td className="px-5 py-4 text-[#7a8fa3]">{fmt(p.pe_ratio, "x")}</td>
-              <td className="px-5 py-4 text-[#7a8fa3]">{fmt(p.ev_ebitda, "x")}</td>
-              <td className={`px-5 py-4 font-semibold ${p.profit_margin != null && p.profit_margin > 0 ? "text-[#00d4aa]" : "text-[#ff4d6d]"}`}>
+              <td className="px-5 py-4 font-bold font-mono" style={{ color: "var(--accent-primary)" }}>{p.ticker}</td>
+              <td className="px-5 py-4 font-medium" style={{ color: "var(--text-primary)" }}>{p.name}</td>
+              <td className="px-5 py-4 font-bold" style={{ color: "var(--text-primary)" }}>${p.price.toFixed(2)}</td>
+              <td className="px-5 py-4" style={{ color: "var(--text-secondary)" }}>{fmtCap(p.market_cap)}</td>
+              <td className="px-5 py-4" style={{ color: "var(--text-secondary)" }}>{fmt(p.pe_ratio, "x")}</td>
+              <td className="px-5 py-4" style={{ color: "var(--text-secondary)" }}>{fmt(p.ev_ebitda, "x")}</td>
+              <td className="px-5 py-4 font-semibold" style={{ color: p.profit_margin != null && p.profit_margin > 0 ? "var(--color-success)" : "var(--color-danger)" }}>
                 {p.profit_margin != null ? `${p.profit_margin}%` : "—"}
               </td>
-              <td className={`px-5 py-4 font-semibold ${p.revenue_growth != null && p.revenue_growth > 0 ? "text-[#00d4aa]" : "text-[#ff4d6d]"}`}>
+              <td className="px-5 py-4 font-semibold" style={{ color: p.revenue_growth != null && p.revenue_growth > 0 ? "var(--color-success)" : "var(--color-danger)" }}>
                 {p.revenue_growth != null ? `${p.revenue_growth > 0 ? "+" : ""}${p.revenue_growth}%` : "—"}
               </td>
-              <td className="px-5 py-4 text-[#7a8fa3]">{fmt(p.beta)}</td>
+              <td className="px-5 py-4" style={{ color: "var(--text-secondary)" }}>{fmt(p.beta)}</td>
             </tr>
           ))}
         </tbody>

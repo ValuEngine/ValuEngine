@@ -43,34 +43,50 @@ function PaywallModal({
       style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-gradient-to-b from-[#1a2d45] to-[#132032] border border-[rgba(201,168,76,0.3)] rounded-2xl p-8 max-w-md w-full shadow-2xl animate-[slideUp_0.3s_ease-out]">
+      <div
+        className="rounded-2xl p-8 max-w-md w-full shadow-2xl animate-[slideUp_0.3s_ease-out] border"
+        style={{
+          background: "linear-gradient(to bottom, var(--bg-surface), var(--bg-base))",
+          borderColor: "rgba(99,102,241,0.3)",
+        }}
+      >
         <div className="flex flex-col items-center text-center">
-          <div className="w-16 h-16 rounded-2xl bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.25)] flex items-center justify-center mb-5">
-            <Lock size={28} className="text-[#C9A84C]" />
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 border"
+            style={{ background: "rgba(99,102,241,0.1)", borderColor: "rgba(99,102,241,0.25)" }}
+          >
+            <Lock size={28} style={{ color: "var(--accent-primary)" }} />
           </div>
-          <h2 className="text-2xl font-black text-white mb-2">Limite atteinte</h2>
-          <p className="text-[#7a8fa3] text-sm leading-relaxed mb-6">
+          <h2 className="text-2xl font-black mb-2" style={{ color: "var(--text-primary)" }}>Limite atteinte</h2>
+          <p className="text-sm leading-relaxed mb-6" style={{ color: "var(--text-secondary)" }}>
             Tu as utilisé tes{" "}
-            <span className="text-[#C9A84C] font-bold">{used} analyses gratuites</span>{" "}
+            <span className="font-bold" style={{ color: "var(--accent-gold)" }}>{used} analyses gratuites</span>{" "}
             aujourd&apos;hui. Passe Pro pour des analyses illimitées.
           </p>
 
           {/* Usage dots */}
           <div className="flex items-center gap-2 mb-7">
             {Array.from({ length: DAILY_FREE_LIMIT }).map((_, i) => (
-              <div key={i} className={`w-3 h-3 rounded-full ${i < used ? "bg-[#C9A84C]" : "bg-zinc-700"}`} />
+              <div
+                key={i}
+                className="w-3 h-3 rounded-full"
+                style={{ background: i < used ? "var(--accent-gold)" : "var(--border-default)" }}
+              />
             ))}
-            <span className="text-xs text-[#5d7289] ml-1">{used}/{DAILY_FREE_LIMIT}</span>
+            <span className="text-xs ml-1" style={{ color: "var(--text-tertiary)" }}>{used}/{DAILY_FREE_LIMIT}</span>
           </div>
 
           {/* What you're missing */}
-          <div className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] rounded-xl p-4 mb-6 text-left">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#5d7289] mb-3">Ce que tu débloques avec Pro</p>
+          <div
+            className="w-full rounded-xl p-4 mb-6 text-left border"
+            style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.06)" }}
+          >
+            <p className="text-[13px] font-medium mb-3" style={{ color: "var(--text-tertiary)" }}>Ce que tu débloques avec Pro</p>
             <div className="space-y-2">
               {["Analyses illimitées", "DCF interactif complet", "IA Bull & Bear", "SWOT & PESTLE", "Matrice de sensibilité"].map((f) => (
                 <div key={f} className="flex items-center gap-2 text-xs">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#C9A84C] flex-shrink-0" />
-                  <span className="text-zinc-300">{f}</span>
+                  <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "var(--accent-primary)" }} />
+                  <span style={{ color: "var(--text-secondary)" }}>{f}</span>
                 </div>
               ))}
             </div>
@@ -78,15 +94,16 @@ function PaywallModal({
 
           <button
             onClick={onUpgrade}
-            className="w-full py-3 px-6 bg-[#C9A84C] hover:bg-[#b8943d] text-[#0a1628] font-bold rounded-xl text-lg transition-all duration-200 shadow-lg shadow-[#C9A84C]/20 hover:scale-[1.02] mb-3 flex items-center justify-center gap-2"
+            className="btn-pro w-full py-3 px-6 rounded-xl text-lg transition-all duration-200 hover:scale-[1.02] mb-3 flex items-center justify-center gap-2"
           >
             Passer Pro — 12€/mois <ChevronRight size={18} />
           </button>
-          {error && <p className="text-[#ff4d6d] text-xs mb-2">{error}</p>}
-          <p className="text-zinc-400 text-sm mb-4">✓ Sans engagement · Annulable à tout moment</p>
+          {error && <p className="text-xs mb-2" style={{ color: "var(--color-danger)" }}>{error}</p>}
+          <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>✓ Sans engagement · Annulable à tout moment</p>
           <button
             onClick={onClose}
-            className="text-[#5d7289] text-sm hover:text-zinc-300 transition-colors"
+            className="text-sm transition-colors"
+            style={{ color: "var(--text-tertiary)" }}
           >
             Revenir demain
           </button>

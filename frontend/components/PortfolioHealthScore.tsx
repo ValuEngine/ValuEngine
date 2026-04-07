@@ -104,18 +104,22 @@ export default function PortfolioHealthScore({
   };
 
   return (
-    <div className="bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-2xl p-6 mb-8">
+    <div
+      className="backdrop-blur-sm rounded-2xl p-6 mb-8 border"
+      style={{ background: "var(--bg-surface)", borderColor: "var(--border-default)" }}
+    >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
+          <h3 className="text-sm font-bold" style={{ color: "var(--text-secondary)" }}>
             Score Sante Portefeuille
           </h3>
-          <Shield size={14} className="text-[#C9A84C]" />
+          <Shield size={14} style={{ color: "var(--accent-primary)" }} />
         </div>
         <button
           onClick={fetchHealthScore}
           disabled={loading || positions.length === 0}
-          className="flex items-center gap-2 border border-[#C9A84C]/40 text-[#C9A84C] hover:bg-[#C9A84C]/10 rounded-xl px-4 py-2 text-sm font-medium transition-all disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all disabled:opacity-50 border"
+          style={{ borderColor: "rgba(99,102,241,0.4)", color: "var(--accent-primary)" }}
         >
           {loading ? (
             <>
@@ -133,7 +137,7 @@ export default function PortfolioHealthScore({
           <div className="flex items-center gap-6">
             <div className="relative w-24 h-24 flex-shrink-0">
               <svg className="w-24 h-24 -rotate-90" viewBox="0 0 36 36">
-                <circle cx="18" cy="18" r="15.5" fill="none" stroke="#27272a" strokeWidth="2.5" />
+                <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--border-default)" strokeWidth="2.5" />
                 <circle
                   cx="18"
                   cy="18"
@@ -146,8 +150,8 @@ export default function PortfolioHealthScore({
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-black text-white">{healthData.score}</span>
-                <span className="text-[10px] text-zinc-500">/100</span>
+                <span className="text-2xl font-black" style={{ color: "var(--text-primary)" }}>{healthData.score}</span>
+                <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>/100</span>
               </div>
             </div>
             <div>
@@ -158,7 +162,7 @@ export default function PortfolioHealthScore({
                 >
                   {healthData.grade}
                 </span>
-                <span className="text-sm text-zinc-400">— {healthData.grade_label}</span>
+                <span className="text-sm" style={{ color: "var(--text-secondary)" }}>— {healthData.grade_label}</span>
               </div>
 
               {/* Issues */}
@@ -168,9 +172,9 @@ export default function PortfolioHealthScore({
                     <div key={i} className="flex items-center gap-1.5">
                       <AlertTriangle
                         size={12}
-                        className={issue.severity === "danger" ? "text-[#ff4d6d]" : "text-[#fb923c]"}
+                        style={{ color: issue.severity === "danger" ? "var(--color-danger)" : "var(--color-warning)" }}
                       />
-                      <span className="text-xs text-zinc-400">{issue.message}</span>
+                      <span className="text-xs" style={{ color: "var(--text-secondary)" }}>{issue.message}</span>
                     </div>
                   ))}
                 </div>
@@ -184,24 +188,26 @@ export default function PortfolioHealthScore({
               const item = healthData.breakdown[key];
               const pct = item.max > 0 ? (item.score / item.max) * 100 : 0;
               const Icon = CATEGORY_ICONS[key];
+              const barColor = pct >= 70 ? "var(--color-success)" : pct >= 40 ? "var(--accent-primary)" : "var(--color-danger)";
               return (
-                <div key={key} className="bg-[#09090b]/60 border border-[#27272a] rounded-xl p-3">
+                <div
+                  key={key}
+                  className="rounded-xl p-3 border"
+                  style={{ background: "var(--bg-base)", borderColor: "var(--border-default)" }}
+                >
                   <div className="flex items-center gap-1.5 mb-2">
-                    <Icon size={12} className="text-zinc-500" />
-                    <span className="text-xs font-semibold text-zinc-400">
+                    <Icon size={12} style={{ color: "var(--text-tertiary)" }} />
+                    <span className="text-xs font-semibold" style={{ color: "var(--text-secondary)" }}>
                       {CATEGORY_LABELS[key]}
                     </span>
-                    <span className="text-xs text-zinc-600 ml-auto">
+                    <span className="text-xs ml-auto" style={{ color: "var(--text-tertiary)" }}>
                       {item.score}/{item.max}
                     </span>
                   </div>
-                  <div className="w-full bg-[#27272a] rounded-full h-1.5">
+                  <div className="w-full rounded-full h-1.5" style={{ background: "var(--border-default)" }}>
                     <div
                       className="h-1.5 rounded-full transition-all"
-                      style={{
-                        width: `${pct}%`,
-                        backgroundColor: pct >= 70 ? "#00d4aa" : pct >= 40 ? "#C9A84C" : "#ff4d6d",
-                      }}
+                      style={{ width: `${pct}%`, backgroundColor: barColor }}
                     />
                   </div>
                 </div>
@@ -211,37 +217,43 @@ export default function PortfolioHealthScore({
 
           {/* AI Recommendations (Pro) */}
           {healthData.ai_recommendations && (
-            <div className="bg-[#09090b]/60 border border-[#C9A84C]/20 rounded-xl p-4 space-y-3">
+            <div
+              className="rounded-xl p-4 space-y-3 border"
+              style={{ background: "var(--bg-base)", borderColor: "rgba(99,102,241,0.2)" }}
+            >
               <div className="flex items-center gap-2">
-                <Sparkles size={14} className="text-[#C9A84C]" />
-                <span className="text-xs font-bold text-[#C9A84C] uppercase tracking-wider">
+                <Sparkles size={14} style={{ color: "var(--accent-primary)" }} />
+                <span className="text-[13px] font-medium" style={{ color: "var(--accent-primary)" }}>
                   Recommandations IA
                 </span>
-                <span className="text-[9px] font-bold uppercase tracking-wider text-[#C9A84C] bg-[rgba(201,168,76,0.1)] border border-[rgba(201,168,76,0.25)] px-1.5 py-0.5 rounded-full">
+                <span
+                  className="text-xs font-bold px-1.5 py-0.5 rounded-full border"
+                  style={{ color: "var(--accent-gold)", background: "rgba(201,168,76,0.1)", borderColor: "rgba(201,168,76,0.25)" }}
+                >
                   Pro
                 </span>
               </div>
 
-              <p className="text-sm text-zinc-300">{healthData.ai_recommendations.analyse}</p>
+              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{healthData.ai_recommendations.analyse}</p>
 
               {healthData.ai_recommendations.actions_prioritaires?.length > 0 && (
                 <div>
-                  <p className="text-xs font-bold text-[#ff4d6d] uppercase tracking-wider mb-1">
+                  <p className="text-[13px] font-medium mb-1" style={{ color: "var(--color-danger)" }}>
                     Actions prioritaires
                   </p>
                   {healthData.ai_recommendations.actions_prioritaires.map((a, i) => (
-                    <p key={i} className="text-xs text-zinc-400 mb-0.5">&#9888;&#65039; {a}</p>
+                    <p key={i} className="text-xs mb-0.5" style={{ color: "var(--text-secondary)" }}>&#9888;&#65039; {a}</p>
                   ))}
                 </div>
               )}
 
               {healthData.ai_recommendations.recommandations?.length > 0 && (
                 <div>
-                  <p className="text-xs font-bold text-[#00d4aa] uppercase tracking-wider mb-1">
+                  <p className="text-[13px] font-medium mb-1" style={{ color: "var(--color-success)" }}>
                     Recommandations
                   </p>
                   {healthData.ai_recommendations.recommandations.map((r, i) => (
-                    <p key={i} className="text-xs text-zinc-400 mb-0.5">&#10003; {r}</p>
+                    <p key={i} className="text-xs mb-0.5" style={{ color: "var(--text-secondary)" }}>&#10003; {r}</p>
                   ))}
                 </div>
               )}
@@ -250,7 +262,7 @@ export default function PortfolioHealthScore({
 
           {/* Non-Pro hint */}
           {!isPro && !healthData.ai_recommendations && (
-            <p className="text-xs text-zinc-600 italic">
+            <p className="text-xs italic" style={{ color: "var(--text-tertiary)" }}>
               Passe Pro pour obtenir des recommandations IA personnalisees.
             </p>
           )}
@@ -259,7 +271,7 @@ export default function PortfolioHealthScore({
 
       {/* Empty state */}
       {!healthData && !loading && (
-        <p className="text-sm text-zinc-600 italic">
+        <p className="text-sm italic" style={{ color: "var(--text-tertiary)" }}>
           Clique sur &quot;Calculer mon score&quot; pour obtenir un diagnostic complet de ton portefeuille.
         </p>
       )}

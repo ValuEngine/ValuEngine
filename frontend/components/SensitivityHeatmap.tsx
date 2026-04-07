@@ -21,7 +21,7 @@ export function SensitivityHeatmap({ data, currentPrice }: Props) {
   }
 
   function textColor(value: number): string {
-    return (value - currentPrice) / currentPrice > 0 ? "#00d4aa" : "#ff4d6d";
+    return (value - currentPrice) / currentPrice > 0 ? "var(--color-success)" : "var(--color-danger)";
   }
 
   return (
@@ -31,14 +31,14 @@ export function SensitivityHeatmap({ data, currentPrice }: Props) {
           <tr>
             <th className="p-2 text-left text-[#4a6070] font-semibold">FCF \ WACC</th>
             {data.columns.map((col) => (
-              <th key={col} className="p-2 text-center text-[#C9A84C] font-bold">{col}</th>
+              <th key={col} className="p-2 text-center font-bold" style={{ color: "var(--accent-primary)" }}>{col}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {data.values.map((row, ri) => (
             <tr key={ri}>
-              <td className="p-2 text-[#C9A84C] font-bold">{data.index[ri]}</td>
+              <td className="p-2 font-bold" style={{ color: "var(--accent-primary)" }}>{data.index[ri]}</td>
               {row.map((val, ci) => (
                 <td key={ci}
                   className="p-2 text-center font-bold rounded-lg"

@@ -68,10 +68,10 @@ export default function AnomaliesSection({ ticker, trialPro = false }: { ticker:
   if (loading) {
     return (
       <div className="mb-8">
-        <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C] mb-4">Signaux & Anomalies</p>
+        <p className="text-[13px] font-medium mb-4" style={{ color: "var(--accent-primary)" }}>Signaux & Anomalies</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[0, 1, 2, 3].map(i => (
-            <div key={i} className="bg-[#18181b]/80 rounded-2xl h-28 animate-pulse" />
+            <div key={i} className="rounded-2xl h-28 animate-pulse" style={{ background: "var(--bg-surface)" }} />
           ))}
         </div>
       </div>
@@ -81,7 +81,7 @@ export default function AnomaliesSection({ ticker, trialPro = false }: { ticker:
   if (error) {
     return (
       <div className="mb-8">
-        <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C] mb-4">Signaux & Anomalies</p>
+        <p className="text-[13px] font-medium mb-4" style={{ color: "var(--accent-primary)" }}>Signaux & Anomalies</p>
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400 text-sm">{error}</div>
       </div>
     );
@@ -94,17 +94,20 @@ export default function AnomaliesSection({ ticker, trialPro = false }: { ticker:
   return (
     <div className="mb-8 animate-[fadeIn_0.4s_ease-out]">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-xs font-bold uppercase tracking-[2px] text-[#C9A84C]">
+        <p className="text-[13px] font-medium" style={{ color: "var(--accent-primary)" }}>
           Signaux détectés : {anomalies.length}
         </p>
-        <span className="text-xs text-zinc-500">
+        <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
           vs {data.peer_count} pairs · {data.sector}
         </span>
       </div>
 
       {anomalies.length === 0 ? (
-        <div className="bg-[#18181b]/80 backdrop-blur-sm border border-[#27272a] rounded-2xl p-6 text-center">
-          <p className="text-zinc-400 text-sm">
+        <div
+          className="backdrop-blur-sm rounded-2xl p-6 text-center border"
+          style={{ background: "var(--bg-surface)", borderColor: "var(--border-default)" }}
+        >
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
             Aucune anomalie détectée — profil financier dans les normes sectorielles
           </p>
         </div>
@@ -119,7 +122,7 @@ export default function AnomaliesSection({ ticker, trialPro = false }: { ticker:
                   className={`${style.bg} border ${style.border} rounded-2xl p-5 transition-all hover:scale-[1.01]`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                    <span className="text-[13px] font-medium" style={{ color: "var(--text-tertiary)" }}>
                       {a.type}
                     </span>
                     <div className="flex items-center gap-2">
@@ -131,8 +134,8 @@ export default function AnomaliesSection({ ticker, trialPro = false }: { ticker:
                       </span>
                     </div>
                   </div>
-                  <p className="text-white font-semibold text-sm mb-1.5">{a.titre}</p>
-                  <p className="text-zinc-400 text-sm leading-relaxed">{a.detail}</p>
+                  <p className="font-semibold text-sm mb-1.5" style={{ color: "var(--text-primary)" }}>{a.titre}</p>
+                  <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{a.detail}</p>
                 </div>
               );
             })}
@@ -140,13 +143,16 @@ export default function AnomaliesSection({ ticker, trialPro = false }: { ticker:
 
           {/* Pro gate overlay */}
           {!canAccess && (
-            <div className="absolute inset-0 bg-[#09090b]/60 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center z-10">
-              <Sparkles size={20} className="text-[#C9A84C] mb-2" />
-              <p className="text-white font-bold mb-1">Signaux Pro</p>
-              <p className="text-zinc-400 text-xs mb-3">Détection d&apos;anomalies vs benchmarks sectoriels</p>
+            <div
+              className="absolute inset-0 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center z-10"
+              style={{ background: "rgba(var(--bg-base-rgb, 9,9,11), 0.6)" }}
+            >
+              <Sparkles size={20} className="mb-2" style={{ color: "var(--accent-primary)" }} />
+              <p className="font-bold mb-1" style={{ color: "var(--text-primary)" }}>Signaux Pro</p>
+              <p className="text-xs mb-3" style={{ color: "var(--text-secondary)" }}>Détection d&apos;anomalies vs benchmarks sectoriels</p>
               <button
                 onClick={() => window.location.href = "/dashboard"}
-                className="bg-gradient-to-r from-[#C9A84C] to-[#e8c55a] text-[#09090b] font-bold px-5 py-2 rounded-xl text-sm hover:shadow-[0_4px_16px_rgba(201,168,76,0.4)] transition-all"
+                className="btn-pro px-5 py-2 rounded-xl text-sm transition-all"
               >
                 Passer Pro
               </button>
