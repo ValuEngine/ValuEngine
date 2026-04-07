@@ -142,6 +142,7 @@ def run_backtest(
     # Max drawdown & volatility from chart data
     max_drawdown = 0.0
     volatility_annual = None
+    sharpe_ratio = None
     try:
         chart_hist = hist[(hist.index >= actual_buy_date) & (hist.index <= actual_sell_date)]
         if len(chart_hist) > 5:
@@ -159,6 +160,14 @@ def run_backtest(
             daily_returns = np.diff(closes) / closes[:-1]
             if len(daily_returns) > 1:
                 volatility_annual = round(float(np.std(daily_returns) * np.sqrt(252) * 100), 1)
+                # Sharpe ratio (assuming risk-free rate of 4%)
+                mean_annual_return = float(np.mean(daily_returns) * 252)
+                risk_free_rate = 0.04
+                vol_annual = float(np.std(daily_returns) * np.sqrt(252))
+                if vol_annual > 0:
+                    sharpe_ratio = round((mean_annual_return - risk_free_rate) / vol_annual, 2)
+                else:
+                    sharpe_ratio = None
     except Exception:
         pass
 
@@ -192,6 +201,7 @@ def run_backtest(
         "sp500_pnl_pct": sp500_pnl_pct,
         "max_drawdown": round(max_drawdown, 1),
         "volatility_annual": volatility_annual,
+        "sharpe_ratio": sharpe_ratio,
         "total_dividends": round(total_dividends, 2),
         "dividend_events": dividend_events,
         "total_return_with_dividends": round(pnl + total_dividends, 2),

@@ -166,6 +166,9 @@ def calculate_health_score(positions: list[dict]) -> dict:
     if win_rate < 0.4 and n >= 3:
         issues.append({"severity": "warning", "message": f"Seulement {winners}/{n} positions en profit"})
 
+    # Note: correlation data should be passed separately via calculate_correlation_matrix()
+    # and merged in the endpoint. This keeps health_score calculation fast & deterministic.
+
     return {
         "score": total_score,
         "grade": grade,
@@ -211,6 +214,103 @@ Retourne un JSON avec exactement cette structure :
 }}
 
 Sois concret et actionnable. En francais. Retourne UNIQUEMENT du JSON valide."""
+
+
+def calculate_correlation_matrix(tickers: list[str], period: str = "1y") -> dict:
+    """
+    Calculate pairwise correlation matrix for a list of tickers using yfinance.
+    Returns correlation matrix, portfolio variance info, and high-correlation alerts.
+    """
+    import numpy as np
+
+    if len(tickers) < 2:
+        return {"matrix": {}, "high_correlations": [], "portfolio_diversification_score": 100}
+
+    try:
+        import yfinance as yf
+        # Download all tickers at once
+        data = yf.download(tickers, period=period, auto_adjust=True, progress=False)
+
+        if data.empty:
+            return {"matrix": {}, "high_correlations": [], "portfolio_diversification_score": 100}
+
+        # Extract close prices
+        if len(tickers) == 1:
+            closes = data[["Close"]]
+            closes.columns = tickers
+        else:
+            closes = data["Close"]
+
+        # Drop tickers with insufficient data
+        closes = closes.dropna(axis=1, thresh=int(len(closes) * 0.5))
+        valid_tickers = list(closes.columns)
+
+        if len(valid_tickers) < 2:
+            return {"matrix": {}, "high_correlations": [], "portfolio_diversification_score": 100}
+
+        # Daily returns
+        returns = closes.pct_change().dropna()
+
+        if len(returns) < 20:
+            return {"matrix": {}, "high_correlations": [], "portfolio_diversification_score": 100}
+
+        # Correlation matrix
+        corr = returns.corr()
+
+        # Convert to serializable dict
+        corr_dict = {}
+        for t1 in valid_tickers:
+            corr_dict[t1] = {}
+            for t2 in valid_tickers:
+                corr_dict[t1][t2] = round(float(corr.loc[t1, t2]), 3)
+
+        # Find high correlations (>0.8)
+        high_correlations = []
+        seen = set()
+        for i, t1 in enumerate(valid_tickers):
+            for j, t2 in enumerate(valid_tickers):
+                if i < j:
+                    c = float(corr.loc[t1, t2])
+                    pair = tuple(sorted([t1, t2]))
+                    if pair not in seen and abs(c) > 0.8:
+                        seen.add(pair)
+                        high_correlations.append({
+                            "pair": [t1, t2],
+                            "correlation": round(c, 3),
+                            "warning": f"{t1} et {t2} sont très corrélés ({c:.0%})"
+                        })
+
+        # Average correlation as diversification metric
+        n = len(valid_tickers)
+        total_corr = 0
+        count = 0
+        for i in range(n):
+            for j in range(i + 1, n):
+                total_corr += abs(float(corr.iloc[i, j]))
+                count += 1
+        avg_corr = total_corr / count if count > 0 else 0
+
+        # Diversification score: 100 = perfectly uncorrelated, 0 = perfectly correlated
+        diversification_score = round(max(0, (1 - avg_corr)) * 100)
+
+        # Annualized volatility per ticker
+        volatilities = {}
+        for t in valid_tickers:
+            vol = float(returns[t].std() * np.sqrt(252) * 100)
+            volatilities[t] = round(vol, 1)
+
+        return {
+            "matrix": corr_dict,
+            "high_correlations": high_correlations,
+            "portfolio_diversification_score": diversification_score,
+            "avg_correlation": round(avg_corr, 3),
+            "volatilities": volatilities,
+            "tickers_analyzed": valid_tickers,
+        }
+
+    except Exception as e:
+        logger.error(f"[Correlation] Error: {e}")
+        return {"matrix": {}, "high_correlations": [], "portfolio_diversification_score": 100}
 
 
 def _empty_score() -> dict:

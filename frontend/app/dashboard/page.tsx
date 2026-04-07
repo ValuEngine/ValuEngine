@@ -233,7 +233,7 @@ export default function DashboardPage() {
     authedFetch(`${API_BASE}/api/referral/${user.id}`, getToken)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setReferralCount(d.count ?? 0); })
-      .catch(() => {});
+      .catch((err) => console.error("[Dashboard] referral fetch error:", err));
   }, [user?.id, getToken]);
 
   useEffect(() => {
@@ -242,7 +242,7 @@ export default function DashboardPage() {
     authedFetch(`${API_BASE}/api/usage/${user.id}`, getToken)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setUsage(d); })
-      .catch(() => {});
+      .catch((err) => console.error("[Dashboard] usage fetch error:", err));
   }, [user?.id, getToken]);
 
   const fetchWatchlist = useCallback(async () => {
@@ -795,7 +795,7 @@ export default function DashboardPage() {
           setShowOnboarding(false);
           if (user?.id) {
             const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
-            authedFetch(`${API_BASE}/api/user/onboarding-complete/${user.id}`, getToken, { method: "POST" }).catch(() => {});
+            authedFetch(`${API_BASE}/api/user/onboarding-complete/${user.id}`, getToken, { method: "POST" }).catch((err) => console.error("[Dashboard] onboarding-complete error:", err));
           }
           if (ticker) router.push(`/analyze?ticker=${ticker}`);
         }}
@@ -804,7 +804,7 @@ export default function DashboardPage() {
           setShowOnboarding(false);
           if (user?.id) {
             const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
-            authedFetch(`${API_BASE}/api/user/onboarding-complete/${user.id}`, getToken, { method: "POST" }).catch(() => {});
+            authedFetch(`${API_BASE}/api/user/onboarding-complete/${user.id}`, getToken, { method: "POST" }).catch((err) => console.error("[Dashboard] onboarding-complete error:", err));
           }
         }}
       />

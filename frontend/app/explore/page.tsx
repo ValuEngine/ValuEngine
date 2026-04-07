@@ -44,7 +44,7 @@ function TrendsTab() {
 
   useEffect(() => {
     fetch(`${API_BASE}/api/trends`)
-      .then((r) => r.json()).then(setData).catch(() => {})
+      .then((r) => r.json()).then(setData).catch((err) => console.error("[Explore] trends fetch error:", err))
       .finally(() => setLoading(false));
   }, []);
 
@@ -133,7 +133,7 @@ function ScreenerTab() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/screener/suggestions`).then(r => r.json()).then(d => setSuggestions(d.suggestions || [])).catch(() => {});
+    fetch(`${API_BASE}/api/screener/suggestions`).then(r => r.json()).then(d => setSuggestions(d.suggestions || [])).catch((err) => console.error("[Explore] suggestions fetch error:", err));
   }, []);
 
   const handleSearch = async () => {
@@ -222,7 +222,7 @@ function EarningsTab() {
     })
       .then(r => r.json())
       .then(d => setEvents(d.events || []))
-      .catch(() => {})
+      .catch((err) => console.error("[Explore] events fetch error:", err))
       .finally(() => setLoading(false));
   }, [getToken]);
 

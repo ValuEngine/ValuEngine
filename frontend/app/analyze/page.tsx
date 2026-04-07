@@ -21,6 +21,7 @@ import AnomaliesSection from "@/components/AnomaliesSection";
 import DCFScenariosSection from "@/components/DCFScenariosSection";
 import { useProStatus } from "@/hooks/useProStatus";
 import Tabs from "@/components/ui/Tabs";
+import LegalDisclaimer from "@/components/ui/LegalDisclaimer";
 
 /* ─────────────── helpers ────────────────────────────────────────────── */
 
@@ -459,7 +460,7 @@ function PriceAlertSection({ ticker, tickerName }: { ticker: string; tickerName:
     authedFetch(`${API_BASE}/api/alerts/${userId}`, getToken)
       .then(r => r.ok ? r.json() : [])
       .then((data: AlertItem[]) => setAlerts(data.filter(a => a.ticker === ticker && a.active)))
-      .catch(() => {})
+      .catch((err) => console.error("[Analyze] alerts fetch error:", err))
       .finally(() => setAlertsLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, ticker, API_BASE]);
@@ -670,7 +671,7 @@ function AnalyzePage() {
         intrinsic_value: result.dcf.intrinsic_value,
         upside_pct: result.dcf.upside_pct,
       }),
-    }).catch(() => {});
+    }).catch((err) => console.error("[Analyze] save analysis error:", err));
   };
 
   const handleExportPDF = async () => {
@@ -1474,8 +1475,8 @@ function AnalyzePage() {
                 </div>
               )}
 
-              <p className="text-xs text-center mt-8 pb-4" style={{ color: "var(--text-tertiary)" }}>
-                ValuEngine est un outil d&apos;analyse éducatif uniquement. Les analyses ne constituent pas des conseils en investissement au sens de la directive MIF II.
+              <LegalDisclaimer className="mt-8" />
+              <p className="text-xs text-center mt-3 pb-4" style={{ color: "var(--text-tertiary)" }}>
                 FCF issu des données Yahoo Finance. Tout investissement comporte des risques. · ValuEngine 2026
               </p>
             </div>

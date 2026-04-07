@@ -3,6 +3,8 @@ ValuEngine — DCF Engine
 Calcul de la valeur intrinsèque par actualisation des flux de trésorerie.
 """
 
+from __future__ import annotations
+
 import numpy as np
 
 
@@ -39,7 +41,14 @@ def calculate_dcf(
             "warning": "Shares outstanding non disponibles — DCF impossible",
         }
     if fcf == 0:
-        fcf = 1.0  # Évite division par zéro, mais valeur symbolique
+        return {
+            "enterprise_value_dcf": 0, "equity_value": 0, "intrinsic_value": 0,
+            "terminal_value_pv": 0, "terminal_value_undiscounted": 0,
+            "terminal_value_pct": 0, "terminal_growth_warning": False,
+            "confidence_warning": "high",
+            "fcf_projections": [], "pv_fcfs": [],
+            "warning": "Free Cash Flow nul — DCF non significatif",
+        }
     # FCF négatif : on garde le signe pour les projections (entreprise en perte)
     # Le résultat intrinsic_value sera négatif → clampé à 0 en sortie
     if wacc <= terminal_growth:
@@ -81,6 +90,7 @@ def calculate_dcf(
         "terminal_value_undiscounted": terminal_value,
         "terminal_value_pct":   tv_pct,
         "terminal_growth_warning": terminal_growth > 0.035,
+        "confidence_warning": "high" if tv_pct > 75 else ("medium" if tv_pct > 60 else "low"),
         "fcf_projections":      fcf_projections,
         "pv_fcfs":              pv_fcfs,
     }
@@ -164,3 +174,27 @@ def sensitivity_analysis(
         "columns": columns_labels,
         "values":  matrix,
     }
+
+
+# ── Sector-specific DCF defaults ────────────────────────────────────────
+
+SECTOR_DCF_DEFAULTS: dict[str, dict] = {
+    "Technology":          {"growth_rate": 0.12, "wacc": 0.10, "terminal_growth": 0.03, "horizon": 7},
+    "Healthcare":          {"growth_rate": 0.10, "wacc": 0.09, "terminal_growth": 0.03, "horizon": 7},
+    "Consumer Cyclical":   {"growth_rate": 0.08, "wacc": 0.10, "terminal_growth": 0.025, "horizon": 5},
+    "Consumer Defensive":  {"growth_rate": 0.05, "wacc": 0.08, "terminal_growth": 0.025, "horizon": 5},
+    "Financial Services":  {"growth_rate": 0.06, "wacc": 0.11, "terminal_growth": 0.03, "horizon": 5},
+    "Industrials":         {"growth_rate": 0.07, "wacc": 0.09, "terminal_growth": 0.025, "horizon": 6},
+    "Energy":              {"growth_rate": 0.04, "wacc": 0.11, "terminal_growth": 0.02, "horizon": 5},
+    "Utilities":           {"growth_rate": 0.03, "wacc": 0.07, "terminal_growth": 0.02, "horizon": 5},
+    "Real Estate":         {"growth_rate": 0.04, "wacc": 0.08, "terminal_growth": 0.025, "horizon": 5},
+    "Basic Materials":     {"growth_rate": 0.05, "wacc": 0.10, "terminal_growth": 0.02, "horizon": 5},
+    "Communication Services": {"growth_rate": 0.08, "wacc": 0.09, "terminal_growth": 0.03, "horizon": 6},
+}
+
+
+def get_sector_dcf_defaults(sector: str) -> dict:
+    """Return sector-appropriate DCF defaults. Falls back to moderate defaults."""
+    return SECTOR_DCF_DEFAULTS.get(sector, {
+        "growth_rate": 0.08, "wacc": 0.10, "terminal_growth": 0.03, "horizon": 5,
+    })

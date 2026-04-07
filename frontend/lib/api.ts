@@ -45,7 +45,7 @@ let _warmupDone = false;
 export function warmupBackend(): void {
   if (_warmupDone) return;
   _warmupDone = true;
-  fetch(`${API_BASE}/health`, { method: "GET" }).catch(() => {});
+  fetch(`${API_BASE}/health`, { method: "GET" }).catch((err) => console.error("[api] warmup error:", err));
 }
 
 export interface AnalyzeRequest {

@@ -13,7 +13,7 @@ export default function TickerTape() {
       fetch(`${API_BASE}/api/market-overview`)
         .then((r) => r.ok ? r.json() : [])
         .then((d: MarketItem[]) => { if (d.length) setTapeData(d); })
-        .catch(() => {});
+        .catch((err) => console.error("[TickerTape] fetch error:", err));
     };
     fetchMarket();
     const interval = setInterval(fetchMarket, 60_000);

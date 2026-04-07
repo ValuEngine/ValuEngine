@@ -148,7 +148,7 @@ export default function PortfolioPage() {
                 avg_price: p.avgPrice,
                 sector: sectorUpdates[p.ticker],
               }),
-            }).catch(() => {});
+            }).catch((err) => console.error("[Portfolio] position update error:", err));
           }
         });
         return updated;
@@ -1084,7 +1084,7 @@ export default function PortfolioPage() {
                     }
                   }
                 )
-                .catch(() => {});
+                .catch((err) => console.error("[Portfolio] delete position error:", err));
             }}
           />
         )}

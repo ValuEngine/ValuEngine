@@ -14,7 +14,7 @@ export default function TrackRecordPreview() {
     fetch("/api/track-record")
       .then((r) => r.ok ? r.json() : null)
       .then((d: TrackRecordData | null) => { if (d) setTrackData(d); })
-      .catch(() => {});
+      .catch((err) => console.error("[TrackRecordPreview] fetch error:", err));
   }, []);
 
   const recentAnalyses = trackData?.entries?.slice(0, 5) ?? [];

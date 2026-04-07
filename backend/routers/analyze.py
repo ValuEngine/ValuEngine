@@ -26,7 +26,7 @@ from models import (
     BullBearAnalysis, ExportPDFRequest, ScreenerSearchRequest, PortfolioAIRequest,
     TickerRequest,
 )
-from services.dcf import calculate_dcf, sensitivity_analysis, calculate_irr
+from services.dcf import calculate_dcf, sensitivity_analysis, calculate_irr, get_sector_dcf_defaults
 from services.ai_analyst import (
     get_bull_bear_analysis, get_deep_analysis, detect_anomalies,
     get_dcf_scenarios, ai_screen_stocks, _parse_json_response,
@@ -261,6 +261,8 @@ def analyze(request: Request, req: AnalyzeRequest):
         financial_warning=financial_warning,
         data_timestamp=data_timestamp,
         beta_info=beta_info if beta_info and beta_info.get("beta") else None,
+        confidence_warning=dcf_raw.get("confidence_warning"),
+        sector_dcf_defaults=get_sector_dcf_defaults(raw.get("sector", "")),
     )
 
 
@@ -603,10 +605,18 @@ async def portfolio_health_score(request: Request):
     if not positions or len(positions) < 1:
         raise HTTPException(status_code=400, detail="Au moins 1 position requise")
 
-    from services.portfolio_health import calculate_health_score, build_health_ai_prompt
+    from services.portfolio_health import calculate_health_score, build_health_ai_prompt, calculate_correlation_matrix
 
     # Always calculate deterministic score
     score_data = calculate_health_score(positions)
+
+    # Correlation matrix (async-friendly, separate from deterministic score)
+    tickers = [p.get("ticker") for p in positions if p.get("ticker")]
+    correlation_data = None
+    if len(tickers) >= 2:
+        correlation_data = calculate_correlation_matrix(tickers)
+
+    score_data["correlation"] = correlation_data
 
     # If Pro, enrich with AI recommendations
     is_pro = _is_user_pro(token_user_id)

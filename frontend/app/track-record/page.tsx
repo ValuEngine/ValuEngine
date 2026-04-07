@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { TrendingUp, Trophy, Target, BarChart3 } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
+import LegalDisclaimer from "@/components/ui/LegalDisclaimer";
 import type { TrackRecordEntry, TrackRecordResponse } from "@/app/api/track-record/route";
 
 /* ── Verdict Badge ──────────────────────────────────────────────────── */
@@ -121,7 +122,7 @@ export default function TrackRecordPage() {
     fetch("/api/track-record")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (d) setData(d); })
-      .catch(() => {})
+      .catch((err) => console.error("[TrackRecord] fetch error:", err))
       .finally(() => setLoading(false));
 
     // Fetch server-verified stats
@@ -129,7 +130,7 @@ export default function TrackRecordPage() {
     fetch(`${apiBase}/api/track-record/stats`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (d) setVerifiedStats(d); })
-      .catch(() => {});
+      .catch((err) => console.error("[TrackRecord] stats fetch error:", err));
   }, []);
 
   const s = data?.summary;
@@ -565,14 +566,8 @@ export default function TrackRecordPage() {
           </button>
         </div>
 
-        {/* Disclaimer */}
-        <div className="flex items-start gap-2 px-4 py-3 rounded-xl border mt-6" style={{ background: "rgba(255,184,77,0.04)", borderColor: "rgba(255,184,77,0.15)" }}>
-          <span style={{ color: "var(--color-warning)" }}>⚠️</span>
-          <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-            Les performances passées ne préjugent pas des performances futures. Les verdicts ValuEngine sont basés sur un modèle DCF mathématique
-            et ne constituent pas des conseils en investissement au sens de la directive MIF II. Consultez un conseiller agréé avant toute décision.
-          </p>
-        </div>
+        {/* Legal Disclaimer */}
+        <LegalDisclaimer className="mt-6" />
 
       </div>
     </AppLayout>

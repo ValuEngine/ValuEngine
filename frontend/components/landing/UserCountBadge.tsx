@@ -10,7 +10,7 @@ export default function UserCountBadge() {
     fetch(`${API_BASE}/api/stats/users-count`)
       .then((r) => r.ok ? r.json() : { count: 0 })
       .then((d: { count: number }) => { if (d.count > 0) setUsersCount(d.count); })
-      .catch(() => {});
+      .catch((err) => console.error("[UserCountBadge] fetch error:", err));
   }, []);
 
   if (usersCount < 10) return null;

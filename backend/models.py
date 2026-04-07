@@ -149,3 +149,5 @@ class AnalyzeResponse(BaseModel):
     financial_warning: Optional[str] = None
     data_timestamp: Optional[str] = None
     beta_info: Optional[dict] = None  # Dynamic beta regression info
+    confidence_warning: Optional[str] = None  # "high" | "medium" | "low"
+    sector_dcf_defaults: Optional[dict] = None  # Sector-specific DCF params

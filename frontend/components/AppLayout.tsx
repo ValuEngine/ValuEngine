@@ -20,7 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         body: ref ? JSON.stringify({ referred_by: ref }) : undefined,
       }).then(() => {
         if (ref) localStorage.removeItem("valuengine_ref");
-      }).catch(() => {});
+      }).catch((err) => console.error("[AppLayout] register user error:", err));
     }
   }, [user?.id]);
 
